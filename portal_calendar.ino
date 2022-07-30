@@ -80,6 +80,21 @@ void initDisplay()
     }
 }
 
+int getDaysInMonth(int month, int year)
+{
+    switch (month) {
+        case 2:
+            return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            return 30;
+        default:
+            return 31;
+    }
+}
+
 void updateCalendarDisplay(const tm *now)
 {
     initDisplay();
@@ -147,7 +162,7 @@ void displayError(String str)
 
 void deepSleep(time_t seconds)
 {
-    auto result = esp_sleep_enable_timer_wakeup((uint64_t)seconds * uS_PER_S);
+    esp_sleep_enable_timer_wakeup((uint64_t)seconds * uS_PER_S);
     esp_deep_sleep_start();
 }
 
@@ -248,21 +263,6 @@ time_t getSecondsToMidnight(tm *now)
     ++tomorrow.tm_mday; // mktime will handle day/month rolling over
     tomorrow.tm_hour = tomorrow.tm_min = tomorrow.tm_sec = 0;
     return (time_t)difftime(mktime(&tomorrow), mktime(now));
-}
-
-int getDaysInMonth(int month, int year)
-{
-    switch (month) {
-        case 2:
-            return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
-        case 4:
-        case 6:
-        case 9:
-        case 11:
-            return 30;
-        default:
-            return 31;
-    }
 }
 
 void setup()
