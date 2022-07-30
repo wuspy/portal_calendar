@@ -1,0 +1,5 @@
+# Prevent github from including generated source files in repository stats
+resource/*.h linguist-generated
+resource/**/*.h linguist-generated
+resource/image.h !linguist-generated
+resource/font/font.h !linguist-generated
