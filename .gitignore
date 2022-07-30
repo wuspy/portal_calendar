@@ -1,0 +1,5 @@
+.vscode
+__pycache__/
+build
+resource/font/*.ttf
+resource/font/*.otf
