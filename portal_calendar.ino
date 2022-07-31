@@ -248,12 +248,10 @@ String getPosixTz(String olsonOrGeoIp)
         recv += (char)udp.read();
     }
     udp.stop();
-    if (recv.substring(0, 6) == "ERROR ") {
-        return "";
-    }
     if (recv.substring(0, 3) == "OK ") {
         return recv.substring(recv.indexOf(" ", 4) + 1);
     }
+    return "";
 }
 
 #endif
