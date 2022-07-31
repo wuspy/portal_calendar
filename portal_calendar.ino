@@ -12,6 +12,10 @@
 #include "resource/icons.h"
 #include "resource/epd-portrait-test.h"
 
+#if !defined(AUTOMATIC_TIME_ZONE) && !defined(MANUAL_TIME_ZONE) && !defined(POSIX_TIME_ZONE)
+    #error No timezone configured
+#endif
+
 // #define LED_B           18
 // #define LED_G           17
 // #define LED_R           16
@@ -74,6 +78,14 @@ Display *display = nullptr;
  */
 RTC_DATA_ATTR int displayedYDay = 0;
 
+enum TimezoneType: uint8_t
+{
+    TZT_NONE,
+    TZT_POSIX,
+    TZT_MANUAL,
+    TZT_GEOIP,
+};
+
 /**
  * Controls if initTime() will try to sync with NTP when called.
  *
@@ -81,6 +93,9 @@ RTC_DATA_ATTR int displayedYDay = 0;
  * initTime() is the only place this should ever be changed to fale.
  */
 RTC_DATA_ATTR bool needsNtpSync = true;
+
+RTC_DATA_ATTR char savedTimezone[57];
+RTC_DATA_ATTR TimezoneType savedTimezoneType = TZT_NONE;
 
 void initDisplay()
 {
@@ -198,6 +213,81 @@ bool startWifi()
     return true;
 }
 
+#if defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
+
+/**
+ * Looks up a timezone by Olson name using the timezoned.rop.nl service, which is part of the ezTime project (https://github.com/ropg/ezTime),
+ * although I decided using the entirety of ezTime wasn't ideal.
+ * 
+ * This can also lookup timezone by IP address by passing "GeoIP", however I've found that pretty unreliable for where I live.
+ * 
+ * @return The POSIX timezone string, or empty string if unsuccessful
+ */
+String getPosixTz(String olsonOrGeoIp)
+{
+    WiFiUDP udp;
+    udp.flush();
+    udp.begin(2342);
+    unsigned long started = millis();
+    udp.beginPacket("timezoned.rop.nl", 2342);
+    udp.write((const uint8_t*)olsonOrGeoIp.c_str(), olsonOrGeoIp.length());
+    udp.endPacket();
+    
+    // Wait for packet or return false with timed out
+    while (!udp.parsePacket()) {
+        delay (1);
+        if (millis() - started > 2000) {
+            udp.stop();
+            return "";
+        }
+    }
+    // Stick result in String recv 
+    String recv;
+    recv.reserve(60);
+    while (udp.available()) {
+        recv += (char)udp.read();
+    }
+    udp.stop();
+    if (recv.substring(0, 6) == "ERROR ") {
+        return "";
+    }
+    if (recv.substring(0, 3) == "OK ") {
+        return recv.substring(recv.indexOf(" ", 4) + 1);
+    }
+}
+
+#endif
+
+#if defined(AUTOMATIC_TIME_ZONE)
+
+    /**
+     * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
+     * Currently, worldtimeapi.org doesn't return a POSIX timezone string, just the Olson name, so even
+     * if it's successful a call to timezoned.rop.nl is still required.
+     * 
+     * @return The POSIX timezone string, or empty string if unsuccessful 
+     */
+    String getGeoIpTz()
+    {
+        String olsonOrGeoIp = "GeoIP";
+        HTTPClient http;
+        http.begin("http://worldtimeapi.org/api/ip.txt");
+        if (http.GET() == 200) {
+            String response = http.getString();
+            int startIdx = response.indexOf("timezone: ");
+            if (startIdx != -1) {
+                int endIdx = response.indexOf('\n', startIdx);
+                if (endIdx != -1) {
+                    olsonOrGeoIp = response.substring(startIdx + 10, endIdx);
+                }
+            }
+        }
+        http.end();
+        return getPosixTz(olsonOrGeoIp);
+    }
+
+#endif
+
 /**
  * Returns true if t (or the current time if t isn't passed) is a recent time,
  * which probably means it has been set at some point.
@@ -214,10 +304,39 @@ bool isValidTime(const time_t *t = nullptr)
  */
 void initTime()
 {
-    setenv("TZ", POSIX_TIME_ZONE, 1);
-    tzset();
-    if (needsNtpSync) {
+    if (needsNtpSync || savedTimezoneType == TZT_NONE) {
         if (startWifi()) {
+            #if defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
+            String tz;
+            #endif
+            #if defined(AUTOMATIC_TIME_ZONE)
+            tz = getGeoIpTz();
+            if (!tz.isEmpty()) {
+                strcpy(savedTimezone, tz.c_str());
+                savedTimezoneType = TZT_GEOIP;
+            }
+            #endif
+            #if defined(MANUAL_TIME_ZONE)
+            if (savedTimezoneType <= TZT_MANUAL) {
+                tz = getPosixTz(MANUAL_TIME_ZONE);
+                if (!tz.isEmpty()) {
+                    strcpy(savedTimezone, tz.c_str());
+                    savedTimezoneType = TZT_MANUAL;
+                }
+            }
+            #endif
+            #if defined(POSIX_TIME_ZONE)
+            if (savedTimezoneType == TZT_NONE) {
+                strcpy(savedTimezone, POSIX_TIME_ZONE);
+                savedTimezoneType = TZT_POSIX;
+            }
+            #endif
+
+            if (savedTimezoneType == TZT_NONE) {
+                stopWifi();
+                displayError("Timezone lookup failed");
+                deepSleep(ONE_HOUR);
+            }
             bool ntpSuccessful = false;
 
             // Since the NTP client runs asynchronously, in order to know when it's actually
@@ -227,7 +346,7 @@ void initTime()
             timeval now = { .tv_sec=0, .tv_usec=0 };
             gettimeofday(&oldTime, nullptr);
             settimeofday(&now, nullptr);
-            configTzTime(POSIX_TIME_ZONE, NTP_SERVERS);
+            configTzTime(savedTimezone, NTP_SERVERS);
 
             // This loop is pretty similar to what getLocalTime in esp32-hal-time does, but it
             // can be simplified for our purpose
@@ -254,11 +373,19 @@ void initTime()
                 displayError("Time synchronization failed");
                 deepSleep(ONE_HOUR);
             }
-        } else if (!isValidTime()) {
+        } else if (isValidTime() && savedTimezoneType != TZT_NONE) {
+            // WiFi didn't connect, set timezone and keep using existing system time
+            setenv("TZ", savedTimezone, 1);
+            tzset();
+        } else {
             // WiFi didn't connect and we have no idea what time it is
             displayError("Couldn't connect to WiFi");
             deepSleep(ONE_HOUR);
         }
+    } else {
+        // Set timezone
+        setenv("TZ", savedTimezone, 1);
+        tzset();
     }
 }
 
