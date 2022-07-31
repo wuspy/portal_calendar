@@ -10,7 +10,6 @@
 #include "resource/aperture_logo.h"
 #include "resource/progress_bar.h"
 #include "resource/icons.h"
-#include "resource/epd-portrait-test.h"
 
 #if !defined(AUTOMATIC_TIME_ZONE) && !defined(MANUAL_TIME_ZONE) && !defined(POSIX_TIME_ZONE)
     #error No timezone configured
@@ -258,31 +257,31 @@ String getPosixTz(String olsonOrGeoIp)
 
 #if defined(AUTOMATIC_TIME_ZONE)
 
-    /**
-     * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
-     * Currently, worldtimeapi.org doesn't return a POSIX timezone string, just the Olson name, so even
-     * if it's successful a call to timezoned.rop.nl is still required.
-     * 
-     * @return The POSIX timezone string, or empty string if unsuccessful 
-     */
-    String getGeoIpTz()
-    {
-        String olsonOrGeoIp = "GeoIP";
-        HTTPClient http;
-        http.begin("http://worldtimeapi.org/api/ip.txt");
-        if (http.GET() == 200) {
-            String response = http.getString();
-            int startIdx = response.indexOf("timezone: ");
-            if (startIdx != -1) {
-                int endIdx = response.indexOf('\n', startIdx);
-                if (endIdx != -1) {
-                    olsonOrGeoIp = response.substring(startIdx + 10, endIdx);
-                }
+/**
+ * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
+ * Currently, worldtimeapi.org doesn't return a POSIX timezone string, just the Olson name, so even
+ * if it's successful a call to timezoned.rop.nl is still required.
+ * 
+ * @return The POSIX timezone string, or empty string if unsuccessful 
+ */
+String getGeoIpTz()
+{
+    String olsonOrGeoIp = "GeoIP";
+    HTTPClient http;
+    http.begin("http://worldtimeapi.org/api/ip.txt");
+    if (http.GET() == 200) {
+        String response = http.getString();
+        int startIdx = response.indexOf("timezone: ");
+        if (startIdx != -1) {
+            int endIdx = response.indexOf('\n', startIdx);
+            if (endIdx != -1) {
+                olsonOrGeoIp = response.substring(startIdx + 10, endIdx);
             }
         }
-        http.end();
-        return getPosixTz(olsonOrGeoIp);
     }
+    http.end();
+    return getPosixTz(olsonOrGeoIp);
+}
 
 #endif
 
