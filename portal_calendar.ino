@@ -17,24 +17,27 @@
 // #define LED_R           16
 
 #define uS_PER_S 1000000
-#define TEN_MINUTES 600
 #define ONE_HOUR 3600
 #define SIX_HOURS ONE_HOUR * 6
 
-// Time in seconds we'll wait for an NTP sync before giving up
+/**
+ * Time in seconds we'll wait for an NTP sync before giving up
+ */
 #define NTP_TIMEOUT 5
 
-// In normal operation, NTP is synced onec per day this many minutes (+/- however much the internal clock drifts in one day) before midnight.
-// This allows the time to be relatively accurate for the changeover, while also allowing the internal clock to be off by +/- this amount.
-#define MINUTES_BEFORE_MIDNIGHT_TO_SYNC 50
-
-// Controls how often initTime() will try to sync with NTP upon wakeup.
-//
-// Should not be less than MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2 as that could cause multiple NTP syncs per day if the internal
-// clock is running slow, which wastes battery.
-//
-// Should also not be too long, as that could cause inaccurate date changeover on the first day after initial poweron.
-#define NTP_STALE_AFTER_MINUTES MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2
+/**
+ * Controls how long before midnight the processor is woken up to sync with NTP so it can have an accurate time for the date changeover.
+ * This should be set to the maximum possible amount you expect the internal clock to be off in one day, since it will sleep for an entire day
+ * and be woken at this time.
+ * 
+ * If the clock is running +MINUTES_BEFORE_MIDNIGHT_TO_SYNC fast per day, then in reality it will be woken up MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2
+ * minutes before midnight, which is the maximum duration the NTP measurement will be deemed acceptable for. Any faster than that, and multiple
+ * NTP syncs will happen per day, which wastes battery.
+ * 
+ * If the clock is running -MINUTES_BEFORE_MIDNIGHT_TO_SYNC slow per day, then it will wake up and sync exactly at midnight. Any slower than that,
+ * and it won't wake wake up in time for midnight and the date changeover will be late.
+ */
+#define MINUTES_BEFORE_MIDNIGHT_TO_SYNC 30
 
 #define SMALL_FONT FONT_UNIVERS_65_BOLD_REGULAR_28PX
 #define LARGE_NUMBER_FONT FONT_UNIVERS_LT_49_LIGHT_ULTRA_CONDENSED_400PX
@@ -66,10 +69,18 @@ const char* DAYS[] = {
 
 Display *display = nullptr;
 
-// Stores the last time the clock was synced with NTP
-RTC_DATA_ATTR time_t lastTimeSync = 0;
-// Stores the current day of the year displayed
+/**
+ * Stores the current day of the year displayed
+ */
 RTC_DATA_ATTR int displayedYDay = 0;
+
+/**
+ * Controls if initTime() will try to sync with NTP when called.
+ *
+ * Can be set to true before going to sleep if a sync is desired on the next wakeup, however
+ * initTime() is the only place this should ever be changed to fale.
+ */
+RTC_DATA_ATTR bool needsNtpSync = true;
 
 void initDisplay()
 {
@@ -188,18 +199,12 @@ bool startWifi()
 }
 
 /**
- * Returns true if t (or the current time if t isn't passed) is a recent time
- * which probably means it has been set at some point.
+ * Returns true if t (or the current time if t isn't passed) is a recent time,
+ * which probably means it has been set at some point and.
  */
 bool isValidTime(const time_t *t = nullptr)
 {
     return (t ? *t : time(nullptr)) > 1455334225;
-}
-
-bool needsNtpUpdate()
-{
-    time_t now = time(nullptr);
-    return !isValidTime(&now) || now - lastTimeSync >= NTP_STALE_AFTER_MINUTES * 60;
 }
 
 /**
@@ -211,7 +216,7 @@ void initTime()
 {
     setenv("TZ", POSIX_TIME_ZONE, 1);
     tzset();
-    if (needsNtpUpdate()) {
+    if (needsNtpSync) {
         if (startWifi()) {
             bool ntpSuccessful = false;
 
@@ -237,7 +242,7 @@ void initTime()
 
             stopWifi();
             if (ntpSuccessful) {
-                time(&lastTimeSync);
+                needsNtpSync = false;
             } else if (isValidTime(&oldTime.tv_sec)) {
                 // Sync unsuccesful, restore old system time
                 gettimeofday(&now, nullptr);
@@ -289,27 +294,26 @@ void setup()
 
     // Go to sleep
 
-    getLocalTime(&now);
-    time_t secondsToMidnight = getSecondsToMidnight(&now);
-    if (secondsToMidnight <= MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60) {
-        if (needsNtpUpdate()) {
-            // initTime()'s attempt to sync with NTP failed.
-            // Keep trying to sync it every 10 minutes since we're close to (when we think) midnight is.
-            deepSleep(min(secondsToMidnight, (time_t)TEN_MINUTES));
+    getLocalTime(&now); // Update time measurement
+    time_t secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
+    if (needsNtpSync) {
+        // initTime()'s attempt to sync with NTP failed
+        if (secondsToMidnight <= MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60) {
+            // Keep trying to sync it often since we're close to (when we think) midnight is.
+            deepSleep(min(secondsToMidnight, (time_t)MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60 / 5));
         } else {
-            // Sleep until midnight
-            deepSleep(secondsToMidnight);
-        }
-    } else {
-        if (needsNtpUpdate()) {
-            // initTime()'s attempt to sync with NTP failed.
             // Keep trying to sync it every 6 hours, rather than waiting potentially another full day
             // and having the time be off by even more.
             deepSleep(min(secondsToMidnight - MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60, (time_t)SIX_HOURS));
-        } else {
-            // Sleep the rest of the day
-            deepSleep(secondsToMidnight - MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60);
         }
+    } else if (secondsToMidnight <= MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2 * 60) {
+        // Sleep until midnight
+        // (this checks MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2 becase we allow the clock to be running fast by that much)
+        deepSleep(secondsToMidnight);
+    } else {
+        // Sleep until the next NTP sync right before midnight
+        needsNtpSync = true;
+        deepSleep(secondsToMidnight - MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60);
     }
 }
 
