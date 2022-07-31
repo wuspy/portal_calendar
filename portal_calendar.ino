@@ -200,7 +200,7 @@ bool startWifi()
 
 /**
  * Returns true if t (or the current time if t isn't passed) is a recent time,
- * which probably means it has been set at some point and.
+ * which probably means it has been set at some point.
  */
 bool isValidTime(const time_t *t = nullptr)
 {
