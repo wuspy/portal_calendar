@@ -6,7 +6,7 @@
 // #define SHOW_YEAR
 
 /**
- * If timezone should be looked up based on IP address using an 3rd-party service.
+ * If timezone should be looked up based on IP address using a 3rd-party service.
  */
 #define AUTOMATIC_TIME_ZONE
 /**

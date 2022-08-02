@@ -89,7 +89,7 @@ enum TimezoneType: uint8_t
  * Controls if initTime() will try to sync with NTP when called.
  *
  * Can be set to true before going to sleep if a sync is desired on the next wakeup, however
- * initTime() is the only place this should ever be changed to fale.
+ * initTime() is the only place this should ever be changed to false.
  */
 RTC_DATA_ATTR bool needsNtpSync = true;
 
