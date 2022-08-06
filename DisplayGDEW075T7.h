@@ -6,7 +6,8 @@
 #ifndef DISPLAY_GDEW075T7_H
 #define DISPLAY_GDEW075T7_H
 
-class Display {
+class DisplayGDEW075T7
+{
 private:
     static const uint8_t _ALIGN_LEFT     = 0b000001;
     static const uint8_t _ALIGN_TOP      = 0b000010;
@@ -47,8 +48,8 @@ public:
         CENTER          = _ALIGN_HCENTER | _ALIGN_VCENTER,
     };
 
-    Display(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
-    ~Display();
+    DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
+    ~DisplayGDEW075T7();
     void clear(uint8_t color = WHITE);
     void test();
     void refresh();

@@ -9,7 +9,7 @@
 
 #include <Arduino.h>
 #include <stdlib.h>
-#include "display_GDEW075T7.h"
+#include "DisplayGDEW075T7.h"
 
 // Display commands
 const uint8_t CMD_PSR           = 0x00;
@@ -203,14 +203,14 @@ const uint8_t LUT_DTM2[] = {
     /* BLACK */ 1,
 };
 
-Display::~Display() {
+DisplayGDEW075T7::~DisplayGDEW075T7() {
     _spi->endTransaction();
     _spi->end();
     delete _spi;
     delete[] _frameBuffer;
 };
 
-Display::Display(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
+DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
 {
     _spiBus = spi_bus;
     _resetPin = reset_pin;
@@ -235,7 +235,7 @@ Display::Display(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_
     clear();
 };
 
-void Display::wakeup()
+void DisplayGDEW075T7::wakeup()
 {
     digitalWrite(_resetPin, HIGH);
     delay(20); 
@@ -305,19 +305,19 @@ void Display::wakeup()
     setLut(CMD_SET_LUTBD, LUT_WHITE_2BIT);
 }
 
-void Display::sendCommand(uint8_t command)
+void DisplayGDEW075T7::sendCommand(uint8_t command)
 {
     digitalWrite(_dcPin, LOW);
     _spi->transfer(command);
     digitalWrite(_dcPin, HIGH);
 }
 
-void Display::sendData(uint8_t data)
+void DisplayGDEW075T7::sendData(uint8_t data)
 {
     _spi->transfer(data);
 }
 
-void Display::waitUntilIdle()
+void DisplayGDEW075T7::waitUntilIdle()
 {
     uint8_t busy;
     do {
@@ -327,7 +327,7 @@ void Display::waitUntilIdle()
     delay(20);
 }
 
-void Display::setLut(uint8_t cmd, const uint8_t* lut)
+void DisplayGDEW075T7::setLut(uint8_t cmd, const uint8_t* lut)
 {
     sendCommand(cmd);	
     for (size_t i = 0; i < 42; ++i) {
@@ -335,7 +335,7 @@ void Display::setLut(uint8_t cmd, const uint8_t* lut)
     }
 }
 
-void Display::refresh()
+void DisplayGDEW075T7::refresh()
 {
     wakeup();
 
@@ -368,7 +368,7 @@ void Display::refresh()
     sleep();
 }
 
-void Display::sleep()
+void DisplayGDEW075T7::sleep()
 {
     sendCommand(CMD_POWEROFF);
     waitUntilIdle();
@@ -377,12 +377,12 @@ void Display::sleep()
     digitalWrite(_csPin, HIGH);
 }
 
-void Display::clear(uint8_t color)
+void DisplayGDEW075T7::clear(uint8_t color)
 {
     memset(_frameBuffer, (color << 6) | (color << 4) | (color << 2) | color, FRAMEBUFFER_LENGTH);
 }
 
-void Display::test()
+void DisplayGDEW075T7::test()
 {
     memset(
         _frameBuffer,
@@ -406,7 +406,7 @@ void Display::test()
     );
 }
 
-size_t Display::getPixelIndex(int32_t x, int32_t y)
+size_t DisplayGDEW075T7::getPixelIndex(int32_t x, int32_t y)
 {
     if (x < 0 || x > _width || y < 0 || y > _height) {
         return SIZE_MAX;
@@ -430,7 +430,7 @@ size_t Display::getPixelIndex(int32_t x, int32_t y)
     return NATIVE_WIDTH * y + x;
 }
 
-uint8_t Display::getPx(int32_t x, int32_t y)
+uint8_t DisplayGDEW075T7::getPx(int32_t x, int32_t y)
 {
     const uint32_t i = getPixelIndex(x, y);
     if (i != SIZE_MAX) {
@@ -440,7 +440,7 @@ uint8_t Display::getPx(int32_t x, int32_t y)
     }
 }
 
-void Display::setPx(int32_t x, int32_t y, uint8_t color)
+void DisplayGDEW075T7::setPx(int32_t x, int32_t y, uint8_t color)
 {
     const uint32_t i = getPixelIndex(x, y);
     if (i != SIZE_MAX) {
@@ -451,7 +451,7 @@ void Display::setPx(int32_t x, int32_t y, uint8_t color)
     }
 }
 
-void Display::drawImage(const Image image, int32_t x, int32_t y, Align align)
+void DisplayGDEW075T7::drawImage(const Image image, int32_t x, int32_t y, Align align)
 {
     adjustAlignment(&x, &y, image.width, image.height, align);
 
@@ -467,7 +467,7 @@ void Display::drawImage(const Image image, int32_t x, int32_t y, Align align)
     }
 }
 
-uint32_t Display::measureText(String str, const Font font, int32_t spacing)
+uint32_t DisplayGDEW075T7::measureText(String str, const Font font, int32_t spacing)
 {
     if (str.length() == 0) {
         return 0;
@@ -485,7 +485,7 @@ uint32_t Display::measureText(String str, const Font font, int32_t spacing)
     return length + spacing * (str.length() - 1);
 }
 
-void Display::drawText(String str, const Font font, int32_t x, int32_t y, int32_t spacing, Align align)
+void DisplayGDEW075T7::drawText(String str, const Font font, int32_t x, int32_t y, int32_t spacing, Align align)
 {
     if (align != TOP_LEFT) {
         uint32_t width = measureText(str, font);
@@ -503,7 +503,7 @@ void Display::drawText(String str, const Font font, int32_t x, int32_t y, int32_
     }
 }
 
-void Display::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
+void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
 {
     if (length < 0) {
         x += length;
@@ -519,7 +519,7 @@ void Display::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness
     }
 }
 
-void Display::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
+void DisplayGDEW075T7::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
 {
     if (length < 0) {
         y += length;
@@ -535,7 +535,7 @@ void Display::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness
     }
 }
 
-void Display::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color, Align align)
+void DisplayGDEW075T7::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color, Align align)
 {
     if (width < 0) {
         x += width;
@@ -554,7 +554,7 @@ void Display::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint
     }
 }
 
-void Display::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, uint8_t color, bool strokeOutside, Align align)
+void DisplayGDEW075T7::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, uint8_t color, bool strokeOutside, Align align)
 {
     if (width < 0) {
         x += width;
@@ -577,7 +577,7 @@ void Display::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, ui
     drawVLine(x + width, y, height, strokeWidth, color, TOP_RIGHT);
 }
 
-void Display::adjustAlignment(int32_t *x, int32_t *y, int32_t width, int32_t height, Align align)
+void DisplayGDEW075T7::adjustAlignment(int32_t *x, int32_t *y, int32_t width, int32_t height, Align align)
 {
     if (align & _ALIGN_HCENTER) {
         *x -= width / 2;
@@ -592,22 +592,22 @@ void Display::adjustAlignment(int32_t *x, int32_t *y, int32_t width, int32_t hei
     }
 }
 
-uint32_t Display::getWidth()
+uint32_t DisplayGDEW075T7::getWidth()
 {
     return _width;
 }
 
-uint32_t Display::getHeight()
+uint32_t DisplayGDEW075T7::getHeight()
 {
     return _height;
 }
 
-Display::Rotation Display::getRotation()
+DisplayGDEW075T7::Rotation DisplayGDEW075T7::getRotation()
 {
     return _rotation;
 }
 
-void Display::setRotation(Display::Rotation rotation)
+void DisplayGDEW075T7::setRotation(Rotation rotation)
 {
     _rotation = rotation;
     if (rotation == ROTATION_0 || rotation == ROTATION_180) {
@@ -619,12 +619,12 @@ void Display::setRotation(Display::Rotation rotation)
     }
 }
 
-uint8_t Display::getAlpha()
+uint8_t DisplayGDEW075T7::getAlpha()
 {
     return _alpha;
 }
 
-void Display::setAlpha(uint8_t alpha)
+void DisplayGDEW075T7::setAlpha(uint8_t alpha)
 {
     _alpha = alpha;
 }
