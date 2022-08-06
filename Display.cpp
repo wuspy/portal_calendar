@@ -6,6 +6,7 @@
 
 #include "resource/aperture_logo.h"
 #include "resource/progress_bar.h"
+#include "resource/error.h"
 #include "resource/cube_dispenser_on.h"
 #include "resource/cube_dispenser_off.h"
 #include "resource/cube_hazard_on.h"
@@ -32,6 +33,8 @@
 #define WIDTH RIGHT - LEFT
 #define ICON_SIZE 64
 #define ICON_SPACING 9
+// Part of the physical screen is covered by the bezel, this marks the horizontal centerline of the visible area
+#define H_CENTER 255
 
 #define SMALL_FONT FONT_UNIVERS_65_BOLD_REGULAR_28PX
 #define LARGE_NUMBER_FONT FONT_UNIVERS_LT_49_LIGHT_ULTRA_CONDENSED_400PX
@@ -94,6 +97,8 @@ void Display::init()
         _display = new DisplayGDEW075T7(SPI_BUS, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
         _display->setRotation(DisplayGDEW075T7::ROTATION_90);
         _display->setAlpha(DisplayGDEW075T7::WHITE);
+    } else {
+        _display->clear();
     }
 }
 
@@ -170,11 +175,12 @@ void Display::drawIcon(const Image icon, int32_t x, int32_t y)
 void Display::error(String message)
 {
     init();
+    _display->drawImage(IMG_ERROR, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::CENTER);
     _display->drawText(
         message,
         SMALL_FONT,
-        _display->getWidth() / 2,
-        _display->getHeight() / 2,
+        H_CENTER,
+        _display->getHeight() / 2 + IMG_ERROR.height / 2 + 30,
         0,
         DisplayGDEW075T7::CENTER
     );
