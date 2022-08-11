@@ -19,9 +19,9 @@
 #define SIX_HOURS ONE_HOUR * 6
 
 /**
- * Time in seconds we'll wait for an NTP sync before giving up
+ * How long we'll wait for an NTP sync before giving up
  */
-#define NTP_TIMEOUT 5
+#define NTP_TIMEOUT_SECONS 10
 
 /**
  * Controls how long before midnight the processor is woken up to sync with NTP so it can have an accurate time for the date changeover.
@@ -232,7 +232,7 @@ void initTime()
                     ntpSuccessful = true;
                     break;
                 }
-            } while (now.tv_sec < NTP_TIMEOUT);
+            } while (now.tv_sec < NTP_TIMEOUT_SECONS);
 
             stopWifi();
             if (ntpSuccessful) {
