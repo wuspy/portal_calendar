@@ -203,6 +203,8 @@ const uint8_t LUT_DTM2[] = {
     /* BLACK */ 1,
 };
 
+#define BUSY_TIMEOUT 5000
+
 DisplayGDEW075T7::~DisplayGDEW075T7() {
     _spi->endTransaction();
     _spi->end();
@@ -255,9 +257,8 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x3F);         // VDL=-15v
     sendData(0x11);         // VDHR=5.8v
   	
-    sendCommand(CMD_VDCS);  // VCOM DC Setting
-    // sendData(0x24);         // -1.9v, waveshare
-    sendData(0x26);         // -2.0v, GxEPD2
+    sendCommand(CMD_VDCS);  // VCOM DC Setting (min 0x00 = -0.1v, max 0x4F = -4.05v)
+    sendData(0x26);         // -2.0v
   
     sendCommand(CMD_BTST);  // Booster Setting
     sendData(0x27);
@@ -285,8 +286,9 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x00);
 
     sendCommand(CMD_VCOM_CDI);  // VCOM AND DATA INTERVAL SETTING
-    sendData(0x00);             // BDZ, BDV, N2OCP, and DDX value. Originally 0x10 from waveshare.
-    sendData(0x07);             // CDI value. Originally 0x00 from waveshare.
+    sendData(0x00);             // BDZ=0, BDV=00, N2OCP=0, DDX=00
+    // sendData(0x00);             // CDI=17
+    sendData(0x07);             // CDI=10
 
     sendCommand(CMD_TCON);      // TCON SETTING
     sendData(0x22);
@@ -319,11 +321,10 @@ void DisplayGDEW075T7::sendData(uint8_t data)
 
 void DisplayGDEW075T7::waitUntilIdle()
 {
-    uint8_t busy;
+    unsigned long start = millis();
     do {
-        sendCommand(CMD_FLG);
-        busy = digitalRead(_busyPin);
-    } while (busy == 0);
+        delay(5);
+    } while (digitalRead(_busyPin) == LOW && millis() - start < BUSY_TIMEOUT);
     delay(20);
 }
 

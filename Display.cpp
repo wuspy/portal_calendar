@@ -28,13 +28,14 @@
 #include "resource/cake_on.h"
 #include "resource/cake_off.h"
 
-#define LEFT 110
-#define RIGHT 470
-#define WIDTH RIGHT - LEFT
 #define ICON_SIZE 64
 #define ICON_SPACING 9
-// Part of the physical screen is covered by the bezel, this marks the horizontal centerline of the visible area
-#define H_CENTER 255
+#define LEFT 82
+#define RIGHT (LEFT + ICON_SIZE * 5 + ICON_SPACING * 4)
+#define WIDTH (RIGHT - LEFT)
+// Part of the physical screen is covered by the bezel to change the aspect ratio from 15:9 to 16:9,
+// this marks the horizontal centerline of the visible area
+#define H_CENTER 225
 
 #define SMALL_FONT FONT_UNIVERS_65_BOLD_REGULAR_28PX
 #define LARGE_NUMBER_FONT FONT_UNIVERS_LT_49_LIGHT_ULTRA_CONDENSED_400PX
@@ -95,7 +96,7 @@ void Display::init()
 {
     if (!_display) {
         _display = new DisplayGDEW075T7(SPI_BUS, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
-        _display->setRotation(DisplayGDEW075T7::ROTATION_90);
+        _display->setRotation(DisplayGDEW075T7::ROTATION_270);
         _display->setAlpha(DisplayGDEW075T7::WHITE);
     } else {
         _display->clear();
