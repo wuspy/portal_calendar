@@ -10,32 +10,11 @@
     #error No timezone configured
 #endif
 
-// #define LED_B           18
-// #define LED_G           17
-// #define LED_R           16
-
 #define uS_PER_S 1000000
-#define ONE_HOUR 3600
-#define SIX_HOURS ONE_HOUR * 6
 
-/**
- * How long we'll wait for an NTP sync before giving up
- */
-#define NTP_TIMEOUT_SECONS 10
-
-/**
- * Controls how long before midnight the processor is woken up to sync with NTP so it can have an accurate time for the date changeover.
- * This should be set to the maximum possible amount you expect the internal clock to be off in one day, since it will sleep for an entire day
- * and be woken at this time.
- * 
- * If the clock is running +MINUTES_BEFORE_MIDNIGHT_TO_SYNC fast per day, then in reality it will be woken up MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2
- * minutes before midnight, which is the maximum duration the NTP measurement will be deemed acceptable for. Any faster than that, and multiple
- * NTP syncs will happen per day, which wastes battery.
- * 
- * If the clock is running -MINUTES_BEFORE_MIDNIGHT_TO_SYNC slow per day, then it will wake up and sync exactly at midnight. Any slower than that,
- * and it won't wake wake up in time for midnight and the date changeover will be late.
- */
-#define MINUTES_BEFORE_MIDNIGHT_TO_SYNC 30
+#define ERROR_RETRY_INTERVAL_SECONDS            ERROR_RETRY_INTERVAL_MINUTES * 60
+#define ERROR_AFTER_SECONDS_WITHOUT_INTERNET    ERROR_AFTER_HOURS_WITHOUT_INTERNET * 3600
+#define SECONDS_BEFORE_MIDNIGHT_TO_SYNC         MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60
 
 Display display;
 
@@ -59,6 +38,7 @@ enum TimezoneType: uint8_t
  * initTime() is the only place this should ever be changed to false.
  */
 RTC_DATA_ATTR bool needsNtpSync = true;
+RTC_DATA_ATTR time_t lastNtpSync = 0;
 
 RTC_DATA_ATTR char savedTimezone[57];
 RTC_DATA_ATTR TimezoneType savedTimezoneType = TZT_NONE;
@@ -210,7 +190,7 @@ void initTime()
             if (savedTimezoneType == TZT_NONE) {
                 stopWifi();
                 display.error("Timezone lookup failed");
-                deepSleep(ONE_HOUR);
+                deepSleep(ERROR_RETRY_INTERVAL_SECONDS);
             }
             bool ntpSuccessful = false;
 
@@ -232,12 +212,13 @@ void initTime()
                     ntpSuccessful = true;
                     break;
                 }
-            } while (now.tv_sec < NTP_TIMEOUT_SECONS);
+            } while (now.tv_sec < NTP_TIMEOUT_SECONDS);
 
             stopWifi();
             if (ntpSuccessful) {
                 needsNtpSync = false;
-            } else if (isValidTime(&oldTime.tv_sec)) {
+                time(&lastNtpSync);
+            } else if (isValidTime(&oldTime.tv_sec) && (time_t)difftime(oldTime.tv_sec, lastNtpSync) < ERROR_AFTER_SECONDS_WITHOUT_INTERNET) {
                 // Sync unsuccesful, restore old system time
                 gettimeofday(&now, nullptr);
                 now.tv_sec += oldTime.tv_sec + (now.tv_usec + oldTime.tv_usec) / uS_PER_S;
@@ -246,16 +227,16 @@ void initTime()
             } else {
                 // Sync unsuccesful and we have no idea what time it is
                 display.error("Time synchronization failed");
-                deepSleep(ONE_HOUR);
+                deepSleep(ERROR_RETRY_INTERVAL_SECONDS);
             }
-        } else if (isValidTime() && savedTimezoneType != TZT_NONE) {
+        } else if (isValidTime() && savedTimezoneType != TZT_NONE && (time_t)difftime(time(nullptr), lastNtpSync) < ERROR_AFTER_SECONDS_WITHOUT_INTERNET) {
             // WiFi didn't connect, set timezone and keep using existing system time
             setenv("TZ", savedTimezone, 1);
             tzset();
         } else {
             // WiFi didn't connect and we have no idea what time it is
             display.error("Couldn't connect to WiFi");
-            deepSleep(ONE_HOUR);
+            deepSleep(ERROR_RETRY_INTERVAL_SECONDS);
         }
     } else {
         // Set timezone
@@ -274,13 +255,6 @@ time_t getSecondsToMidnight(tm *now)
 
 void setup()
 {
-    // pinMode(LED_B, OUTPUT);
-    // pinMode(LED_G, OUTPUT);
-    // pinMode(LED_R, OUTPUT);
-    // digitalWrite(LED_B, HIGH);
-    // digitalWrite(LED_G, HIGH);
-    // digitalWrite(LED_R, HIGH);
-
     // Figure out what time it is
 
     initTime();
@@ -300,22 +274,21 @@ void setup()
     time_t secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
     if (needsNtpSync) {
         // initTime()'s attempt to sync with NTP failed
-        if (secondsToMidnight <= MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60) {
+        if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC) {
             // Keep trying to sync it often since we're close to (when we think) midnight is.
-            deepSleep(min(secondsToMidnight, (time_t)MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60 / 5));
+            deepSleep(min(secondsToMidnight, (time_t)SECONDS_BEFORE_MIDNIGHT_TO_SYNC / 5));
         } else {
-            // Keep trying to sync it every 6 hours, rather than waiting potentially another full day
-            // and having the time be off by even more.
-            deepSleep(min(secondsToMidnight - MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60, (time_t)SIX_HOURS));
+            // Keep trying to sync it several more times before showing an error
+            deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC, (time_t)ERROR_AFTER_SECONDS_WITHOUT_INTERNET / 5));
         }
-    } else if (secondsToMidnight <= MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2 * 60) {
+    } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC * 2) {
         // Sleep until midnight
-        // (this checks MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 2 becase we allow the clock to be running fast by that much)
+        // (this checks SECONDS_BEFORE_MIDNIGHT_TO_SYNC * 2 becase we allow the clock to be running fast by that much)
         deepSleep(secondsToMidnight);
     } else {
         // Sleep until the next NTP sync right before midnight
         needsNtpSync = true;
-        deepSleep(secondsToMidnight - MINUTES_BEFORE_MIDNIGHT_TO_SYNC * 60);
+        deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC);
     }
 }
 
