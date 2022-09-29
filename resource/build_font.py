@@ -15,8 +15,8 @@ class Glyph:
         self.char = char
         self.index = index
         self.left, self.top, right, bottom = font.getbbox(char)
-        self.width = right - self.left
-        self.height = bottom - self.top
+        self.width = right - self.left + 1
+        self.height = bottom - self.top + 1
 
     def empty(self) -> bool:
         return self.width * self.height == 0
@@ -30,6 +30,7 @@ class Glyph:
 parser = argparse.ArgumentParser()
 parser.add_argument("font", type=str, help="Name or path of the font to be compiled")
 parser.add_argument("size", type=int, help="The size in pixels of the compiled bitmap font")
+parser.add_argument("name", type=str, help="Name for the generated bitmap font")
 parser.add_argument("-start", type=str, required=False, default='!', help="The beginning of the range of ASCII characters to include")
 parser.add_argument("-end", type=str, required=False, default='~', help="The end of the range of ASCII characters to include")
 parser.add_argument("-fg", type=int, required=False, default=0, help="The foreground color, 0-255, defaults to 0 (black)")
@@ -45,9 +46,11 @@ fontSize = args.size
 fgColor = args.fg
 bgColor = args.bg
 fontPath = args.font  # '/dir/my-font.ttf'
-fontName = "{}_{}px".format(path.basename(path.splitext(fontPath)[0]), fontSize) # 'my-font_24px'
-outputFileName = "{}_{}px.h".format(path.splitext(fontPath)[0], fontSize) # '/dir/my-font_24px.h'
-fontCName = "FONT_{}".format(fontName.upper().replace(".", "_").replace("-", "_").replace(" ", "_")) # 'FONT_MY_FONT_24PX'
+fontName = args.name # 'output-font-name'
+outputFileName = "{}/{}.h".format(path.dirname(fontPath), fontName) # '/dir/output-font-name.h'
+fontCName = "FONT_{}".format(fontName.upper().replace(".", "_").replace("-", "_").replace(" ", "_")) # 'FONT_OUTPUT_FONT_NAME'
+
+print("Building font '{0}'".format(fontPath))
 
 font = ImageFont.truetype(fontPath, fontSize)
 ascent, descent = font.getmetrics()

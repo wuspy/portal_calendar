@@ -3,8 +3,8 @@
 #include "resource/image.h"
 #include "resource/font/font.h"
 
-#ifndef DISPLAY_GDEW075T7_H
-#define DISPLAY_GDEW075T7_H
+#ifndef PORTALCALENDAR_DISPLAY_GDEW075T7_H
+#define PORTALCALENDAR_DISPLAY_GDEW075T7_H
 
 class DisplayGDEW075T7
 {
@@ -92,4 +92,4 @@ private:
     size_t getPixelIndex(int32_t x, int32_t y);
 };
 
-#endif /* DISPLAY_GDEW075T7_H */
+#endif // PORTALCALENDAR_DISPLAY_GDEW075T7_H

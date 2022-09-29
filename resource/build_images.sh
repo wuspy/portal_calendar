@@ -1,6 +1,7 @@
 python build_image.py aperture_logo.gif
 python build_image.py progress_bar.gif
 python build_image.py error.gif
+
 python build_image.py cube_dispenser_on.gif
 python build_image.py cube_dispenser_off.gif
 python build_image.py cube_hazard_on.gif

@@ -1,8 +1,8 @@
 #include "Display.h"
 #include "config.h"
 
-#include "resource/font/Univers 65 Bold Regular_28px.h"
-#include "resource/font/Univers LT 49 Light Ultra Condensed_400px.h"
+#include "resource/font/regular.h"
+#include "resource/font/chamber_number.h"
 
 #include "resource/aperture_logo.h"
 #include "resource/progress_bar.h"
@@ -33,12 +33,10 @@
 #define LEFT 82
 #define RIGHT (LEFT + ICON_SIZE * 5 + ICON_SPACING * 4)
 #define WIDTH (RIGHT - LEFT)
+#define ICON_TOP 550
 // Part of the physical screen is covered by the bezel to change the aspect ratio from 15:9 to 16:9,
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
-
-#define SMALL_FONT FONT_UNIVERS_65_BOLD_REGULAR_28PX
-#define LARGE_NUMBER_FONT FONT_UNIVERS_LT_49_LIGHT_ULTRA_CONDENSED_400PX
 
 const char* MONTHS[] = {
     "JANUARY",
@@ -106,7 +104,9 @@ void Display::init()
 void Display::update(const tm *now)
 {
     init();
-    int daysInMonth = getDaysInMonth(now->tm_mon + 1, now->tm_year + 1900);
+    char buffer[10];
+    const int year = now->tm_year + 1900;
+    const int daysInMonth = getDaysInMonth(now->tm_mon, year);
 
     // Static lines
     _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
@@ -117,30 +117,27 @@ void Display::update(const tm *now)
     _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
 
     // BIG date
-    char bigDay[3];
-    sprintf(bigDay, "%02d", now->tm_mday);
-    _display->drawText(bigDay, LARGE_NUMBER_FONT, LEFT, 16, 10);
+    sprintf(buffer, "%02d", now->tm_mday);
+    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, 10);
 
     // Small "XX/XX" date
-    char smallDay[6];
-    sprintf(smallDay, "%02d/%02d", now->tm_mday, daysInMonth);
-    _display->drawText(smallDay, SMALL_FONT, LEFT, 394);
+    sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
+    _display->drawText(buffer, FONT_REGULAR, LEFT, 394);
 
     #ifdef SHOW_DAY
     // Day name
-    _display->drawText(DAYS[now->tm_wday], SMALL_FONT, RIGHT, 394, 0, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(DAYS[now->tm_wday], FONT_REGULAR, RIGHT, 394, 0, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     #ifdef SHOW_MONTH
     // Month name
-    _display->drawText(MONTHS[now->tm_mon], SMALL_FONT, LEFT, 14, 0);
+    _display->drawText(MONTHS[now->tm_mon], FONT_REGULAR, LEFT, 14, 0);
     #endif
 
     #ifdef SHOW_YEAR
     // Year
-    char year[5];
-    sprintf(year, "%d", now->tm_year + 1900);
-    _display->drawText(year, SMALL_FONT, RIGHT, 14, 0, DisplayGDEW075T7::TOP_RIGHT);
+    sprintf(buffer, "%d", year);
+    _display->drawText(buffer, FONT_REGULAR, RIGHT, 14, 0, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     // Progress bar
@@ -164,12 +161,12 @@ void Display::update(const tm *now)
     _display->refresh();
 }
 
-void Display::drawIcon(const Image icon, int32_t x, int32_t y)
+void Display::drawIcon(const Image& icon, int32_t x, int32_t y)
 {
     _display->drawImage(
         icon,
         LEFT + x * (ICON_SIZE + ICON_SPACING),
-        550 + y * (ICON_SIZE + ICON_SPACING)
+        ICON_TOP + y * (ICON_SIZE + ICON_SPACING)
     );
 }
 
@@ -179,7 +176,7 @@ void Display::error(String message)
     _display->drawImage(IMG_ERROR, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::CENTER);
     _display->drawText(
         message,
-        SMALL_FONT,
+        FONT_REGULAR,
         H_CENTER,
         _display->getHeight() / 2 + IMG_ERROR.height / 2 + 30,
         0,

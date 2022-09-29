@@ -2,8 +2,8 @@
 #include "DisplayGDEW075T7.h"
 #include "resource/image.h"
 
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef PORTALCALENDAR_DISPLAY_H
+#define PORTALCALENDAR_DISPLAY_H
 
 class Display
 {
@@ -15,8 +15,8 @@ public:
 
 private:
     void init();
-    void drawIcon(const Image icon, int32_t x, int32_t y);
+    void drawIcon(const Image& icon, int32_t x, int32_t y);
     DisplayGDEW075T7 *_display;
 };
 
-#endif // DISPLAY_H
+#endif // PORTALCALENDAR_DISPLAY_H
