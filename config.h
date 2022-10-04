@@ -9,17 +9,79 @@
  * If timezone should be looked up based on IP address using a 3rd-party service.
  */
 #define AUTOMATIC_TIME_ZONE
+
 /**
  * The Olson name for your timezone. Requires connection with a 3rd-party service to translate this to
  * the POSIX timezone specification. If AUTOMATIC_TIME_ZONE is set, this will only serve as a backup to that.
  */
 #define MANUAL_TIME_ZONE "America/Chicago"
+
 /**
  * The full POSIX specification for your timezone. If AUTOMATIC_TIME_ZONE or MANUAL_TIME_ZONE are set, this will
  * only serve as a backup to those. If not, then no 3rd-party timezone services will be used, however this will
  * need to be changed if your timezone or DST laws change in the future.
  */
 #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
+
+/**
+ * Show weather forecast in place of the chamber hazard icons
+ */
+#define SHOW_WEATHER
+
+/**
+ * 1: Show a 5-day weather forecast
+ * 2: Show today's weather forecast in 3-hour intervals
+ */
+#define WEATHER_DISPLAY_TYPE 1
+
+/**
+ * If you choose to show today's weather in 3-hour intervals, this selects what other information is shown under
+ * the temperature (in 5-day forecast mode, the high and low temperature are shown so this isn't an option).
+ * 
+ * 1: Chance of precipitation
+ * 2: Humidity
+ */
+#define SECONDARY_WEATHER_INFORMATION 1
+
+/**
+ * If you choose to show today's weather in 3-hour intervals, this will display times in 24-hour format instead of 12-hour.
+ */
+// #define SHOW_24_HOUR_TIME
+
+/**
+ * metric or imperial
+ */
+#define WEATHER_UNITS "imperial"
+
+/**
+ * The location to get weather information for. Can also be a zip code for US locations.
+ */
+#define WEATHER_LOCATION u8"Oklahoma City, Oklahoma, US"
+
+/**
+ * The latitude and longitude for weather information. Optional. Overrides WEATHER_LOCATION if set.
+ */
+// #define WEATHER_LOCATION_LATITUDE 0.0
+// #define WEATHER_LOCATION_LONGITUDE 0.0
+
+/**
+ * Show what the day's weather will be for the next 12 hours, starting at this hour (in 24-hour time).
+ * 9 = 9am, 12 = 12pm, 15 = 3pm, etc
+ */
+#define WEATHER_START_HOUR 9
+
+/**
+ * Your API key for openweathermap.org
+ * 
+ * https://home.openweathermap.org/api_keys
+ */
+#define OPENWEATHERMAP_API_KEY ""
+
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+//   You probably don't need to edit anything below here   //
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 
 #define NTP_SERVERS "pool.ntp.org", "time.google.com"
 #define TIMEZONED_SERVERS "timezoned.rop.nl"

@@ -22,3 +22,18 @@ python build_image.py dirty_water_on.gif
 python build_image.py dirty_water_off.gif
 python build_image.py cake_on.gif
 python build_image.py cake_off.gif
+
+python build_image.py weather_frame.gif
+python build_image.py weather_frame_empty.gif
+python build_image.py weather_cloudy.gif
+python build_image.py weather_fog.gif
+python build_image.py weather_thunderstorms.gif
+python build_image.py weather_showers.gif
+python build_image.py weather_snow.gif
+python build_image.py weather_day_clear.gif
+python build_image.py weather_night_clear.gif
+python build_image.py weather_partly_cloudy_day.gif
+python build_image.py weather_partly_cloudy_night.gif
+python build_image.py weather_scattered_showers_day.gif
+python build_image.py weather_scattered_showers_night.gif
+python build_image.py weather_unknown.gif
