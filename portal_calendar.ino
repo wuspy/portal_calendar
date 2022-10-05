@@ -209,7 +209,7 @@ void setup()
     // Update display if needed
     bool needsDisplayUpdate = now.tm_yday != displayedYDay;
     #ifdef SHOW_WEATHER
-    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) < SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
+    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
     #endif
     if (needsDisplayUpdate) {
         DEBUG_PRINT("Updating display for %d-%d-%d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday);
