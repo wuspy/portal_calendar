@@ -12,6 +12,8 @@
 #ifdef SHOW_WEATHER
 #include "resource/font/weather_frame.h"
 #include "resource/font/weather_info.h"
+#include "resource/weather_info_degree_symbol.h"
+#include "resource/weather_info_percent_symbol.h"
 #include "resource/weather_frame.h"
 #include "resource/weather_frame_empty.h"
 #include "resource/weather_cloudy.h"
@@ -231,6 +233,19 @@ const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool d
     }
 }
 
+void Display::drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y)
+{
+    if (symbol) {
+        uint32_t textWidth = _display->measureText(text, FONT_WEATHER_INFO);
+        // The extra /2 gives less weight to the symbol so the text appears more centered
+        x -= (textWidth + symbol->width / 2) / 2;
+        _display->drawText(text, FONT_WEATHER_INFO, x, y);
+        _display->drawImage(*symbol, x + textWidth, y);
+    } else {
+        _display->drawText(text, FONT_WEATHER_INFO, x, y, 0, DisplayGDEW075T7::TOP_CENTER);
+    }
+}
+
 void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 {
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
@@ -253,18 +268,18 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP, 0);
+    _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, 0, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
 
     // Draw high temp
     sprintf(text, "%d", weather.highTemp);
-    _display->drawText(text, FONT_WEATHER_INFO, x + 32, ICON_TOP + 83, 0, DisplayGDEW075T7::TOP_CENTER);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
 
     // Draw low temp
     sprintf(text, "%d", weather.lowTemp);
-    _display->drawText(text, FONT_WEATHER_INFO, x + 32, ICON_TOP + 108, 0, DisplayGDEW075T7::TOP_CENTER);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 108);
 }
 
 void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
@@ -304,15 +319,15 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
 
     // Draw temperature
     sprintf(text, "%d", weather.temp);
-    _display->drawText(text, FONT_WEATHER_INFO, x + 32, ICON_TOP + 83, 0, DisplayGDEW075T7::TOP_CENTER);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
 
     // Draw secondary info
     #if SECONDARY_WEATHER_INFORMATION == 1 // Precipitation
     sprintf(text, "%d", weather.pop);
-    _display->drawText(text, FONT_WEATHER_INFO, x + 32, ICON_TOP + 108, 0, DisplayGDEW075T7::TOP_CENTER);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
     #elif SECONDARY_WEATHER_INFORMATION == 2 // Humidity
     sprintf(text, "%d", weather.humidity);
-    _display->drawText(text, FONT_WEATHER_INFO, x + 32, ICON_TOP + 108, 0, DisplayGDEW075T7::TOP_CENTER);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
     #endif
 }
 

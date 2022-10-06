@@ -10,6 +10,16 @@
 #define FONT_WEATHER_INFO_H
 
 const uint8_t _FONT_WEATHER_INFO_DATA[] = {
+    // ','
+    0x3E,0x0F,0x43,0xC1,0xE0,0x10,0x00,0x00,
+    // '-'
+    0x7F,0xF4,0x7F,0xF4,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    // '.'
+    0x2A,0x1F,0x87,0xE0,0x00,
+    // '/'
+    0x00,0x0F,0x00,0x01,0xE0,0x00,0x2D,0x00,0x03,0xC0,0x00,0x7C,0x00,0x07,0x80,0x00,0xB4,0x00,0x0F,0x00,
+    0x01,0xE0,0x00,0x2D,0x00,0x03,0xC0,0x00,0x78,0x00,0x07,0x80,0x00,0xB4,0x00,0x0F,0x00,0x01,0xE0,0x00,
+    0x2D,0x00,0x03,0xC0,0x00,0x00,0x00,0x00,
     // '0'
     0x0B,0xF8,0x02,0xFB,0xE0,0x3D,0x1F,0x03,0xD1,0xF0,0x3C,0x1F,0x03,0xC1,0xF0,0x3C,0x1F,0x03,0xC1,0xF0,
     0x3C,0x1F,0x03,0xC1,0xF0,0x3C,0x1F,0x03,0xC1,0xF0,0x3C,0x1F,0x03,0xC1,0xF0,0x3D,0x1F,0x03,0xD1,0xF0,
@@ -53,20 +63,24 @@ const uint8_t _FONT_WEATHER_INFO_DATA[] = {
 };
 
 const FontGlyph _FONT_WEATHER_INFO_GLYPHS[] = {
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[0] }, // '0'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[48] }, // '1'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[96] }, // '2'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[144] }, // '3'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[192] }, // '4'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[240] }, // '5'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[288] }, // '6'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[336] }, // '7'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[384] }, // '8'
-    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[432] }, // '9'
+    { .width=5, .height=6, .top=20, .left=0, .data=&_FONT_WEATHER_INFO_DATA[0] }, // ','
+    { .width=8, .height=8, .top=16, .left=0, .data=&_FONT_WEATHER_INFO_DATA[8] }, // '-'
+    { .width=5, .height=4, .top=20, .left=0, .data=&_FONT_WEATHER_INFO_DATA[24] }, // '.'
+    { .width=10, .height=19, .top=5, .left=-1, .data=&_FONT_WEATHER_INFO_DATA[29] }, // '/'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[77] }, // '0'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[125] }, // '1'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[173] }, // '2'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[221] }, // '3'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[269] }, // '4'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[317] }, // '5'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[365] }, // '6'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[413] }, // '7'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[461] }, // '8'
+    { .width=10, .height=19, .top=5, .left=0, .data=&_FONT_WEATHER_INFO_DATA[509] }, // '9'
 };
 
 const Font FONT_WEATHER_INFO {
-    .rangeStart=0x30, // 0
+    .rangeStart=0x2C, // ,
     .rangeEnd=0x39, // 9
     .fgColor=0b11,
     .bgColor=0b00,

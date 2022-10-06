@@ -23,6 +23,8 @@ python build_image.py dirty_water_off.gif
 python build_image.py cake_on.gif
 python build_image.py cake_off.gif
 
+python build_image.py weather_info_degree_symbol.gif
+python build_image.py weather_info_percent_symbol.gif
 python build_image.py weather_frame.gif
 python build_image.py weather_frame_empty.gif
 python build_image.py weather_cloudy.gif
@@ -36,4 +38,3 @@ python build_image.py weather_partly_cloudy_day.gif
 python build_image.py weather_partly_cloudy_night.gif
 python build_image.py weather_scattered_showers_day.gif
 python build_image.py weather_scattered_showers_night.gif
-python build_image.py weather_unknown.gif

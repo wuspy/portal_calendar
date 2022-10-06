@@ -452,7 +452,7 @@ void DisplayGDEW075T7::setPx(int32_t x, int32_t y, uint8_t color)
     }
 }
 
-void DisplayGDEW075T7::drawImage(const Image image, int32_t x, int32_t y, Align align)
+void DisplayGDEW075T7::drawImage(const Image &image, int32_t x, int32_t y, Align align)
 {
     adjustAlignment(&x, &y, image.width, image.height, align);
 
@@ -468,7 +468,7 @@ void DisplayGDEW075T7::drawImage(const Image image, int32_t x, int32_t y, Align 
     }
 }
 
-uint32_t DisplayGDEW075T7::measureText(String str, const Font font, int32_t spacing)
+uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t spacing)
 {
     if (str.length() == 0) {
         return 0;
@@ -486,7 +486,7 @@ uint32_t DisplayGDEW075T7::measureText(String str, const Font font, int32_t spac
     return length + spacing * (str.length() - 1);
 }
 
-void DisplayGDEW075T7::drawText(String str, const Font font, int32_t x, int32_t y, int32_t spacing, Align align)
+void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, int32_t spacing, Align align)
 {
     if (align != TOP_LEFT) {
         uint32_t width = measureText(str, font);
