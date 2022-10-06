@@ -93,7 +93,7 @@ String getPosixTz(String olsonOrGeoIp)
 
 #endif // defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
 
-#if true
+#if defined(AUTOMATIC_TIME_ZONE)
 
 /**
  * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
