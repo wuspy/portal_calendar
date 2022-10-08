@@ -468,7 +468,7 @@ void DisplayGDEW075T7::drawImage(const Image &image, int32_t x, int32_t y, Align
     }
 }
 
-uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t spacing)
+uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t tracking)
 {
     if (str.length() == 0) {
         return 0;
@@ -483,24 +483,53 @@ uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t spa
             length += glyph.width + glyph.left;
         }
     }
-    return length + spacing * (str.length() - 1);
+    return length + tracking * (str.length() - 1);
 }
 
-void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, int32_t spacing, Align align)
+void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, Align align, int32_t tracking)
 {
     if (align != TOP_LEFT) {
-        uint32_t width = measureText(str, font);
+        uint32_t width;
+        // Measurement isn't needed and width isn't used by adjustAligment if horizontal alignment is left
+        if (!(align & _ALIGN_LEFT)) {
+            width = measureText(str, font);
+        }
         adjustAlignment(&x, &y, width, font.ascent + font.descent, align);
     }
     for (char c : str) {
         if (c == ' ' || c < font.rangeStart || c > font.rangeEnd) {
-            x += font.spaceWidth;
+            x += font.spaceWidth + tracking;
         } else  {
             const FontGlyph glyph = font.glyphs[c - font.rangeStart];
             x += glyph.left;
             drawImage({ width: glyph.width, height: glyph.height, data: glyph.data }, x, y + glyph.top);
-            x += glyph.width + spacing;
+            x += glyph.width + tracking;
         }
+    }
+}
+
+void DisplayGDEW075T7::drawMultilineText(
+    std::initializer_list<String> lines,
+    const Font &font,
+    int32_t x,
+    int32_t y,
+    Align align,
+    int32_t tracking,
+    int32_t leading
+) {
+    // This implementation is simple because it assumes justification equals the horizontal alignment,
+    // and that's all I needed it to do.
+    leading += font.ascent + font.descent;
+
+    if (!(align & _ALIGN_TOP)) {
+        adjustAlignment(&x, &y, 0, leading * lines.size(), align);
+    }
+
+    // Use top alignment for each line since that axis has already been adjusted for the whole block
+    align = (Align)(align & ~_ALIGN_BOTTOM & ~_ALIGN_VCENTER | _ALIGN_TOP);
+    for (String str : lines) {
+        drawText(str, font, x, y, align, tracking);
+        y += leading;
     }
 }
 

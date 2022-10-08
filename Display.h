@@ -14,7 +14,7 @@ class Display
 public:
     Display();
     ~Display();
-    void error(String message);
+    void error(std::initializer_list<String> messageLines);
     void update(const tm *now);
 
 private:

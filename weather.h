@@ -30,20 +30,29 @@
 /**
  * OWM weather conditions, ordered by severity
  */
-enum WeatherCondition: uint8_t
+enum class WeatherCondition: uint8_t
 {
-    WEATHER_CONDITION_UNKNOWN = 0,
-    WEATHER_CONDITION_CLEAR,
-    WEATHER_CONDITION_FEW_CLOUDS,
-    WEATHER_CONDITION_SCATTERED_CLOUDS,
-    WEATHER_CONDITION_BROKEN_CLOUDS,
-    WEATHER_CONDITION_OVERCAST_CLOUDS,
-    WEATHER_CONDITION_FOG,
-    WEATHER_CONDITION_SCATTERED_SHOWERS,
-    WEATHER_CONDITION_SHOWERS,
-    WEATHER_CONDITION_THUNDERSTORM,
-    WEATHER_CONDITION_FREEZING_RAIN,
-    WEATHER_CONDITION_SNOW,
+    UNKNOWN = 0,
+    CLEAR,
+    FEW_CLOUDS,
+    SCATTERED_CLOUDS,
+    BROKEN_CLOUDS,
+    OVERCAST_CLOUDS,
+    FOG,
+    SCATTERED_SHOWERS,
+    SHOWERS,
+    THUNDERSTORM,
+    FREEZING_RAIN,
+    SNOW,
+};
+
+enum class OwmResult
+{
+    SUCCESS,
+    INVALID_LOCATION,
+    INVALID_API_KEY,
+    MALFORMED_RESPONSE,
+    NO_RESPONSE,
 };
 
 /**
@@ -79,6 +88,6 @@ struct WeatherEntry {
 time_t getLastWeatherSync();
 void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5]);
 void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5]);
-bool refreshWeather();
+OwmResult refreshWeather();
 
 #endif // PORTALCALENDAR_WEATHER_H

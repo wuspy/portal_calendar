@@ -62,12 +62,30 @@ public:
     uint8_t getPx(int32_t x, int32_t y);
     void setPx(int32_t x, int32_t y, uint8_t color);
     void drawImage(const Image &image, int32_t x, int32_t y, Align align = TOP_LEFT);
-    uint32_t measureText(String str, const Font &font, int32_t spacing = 0);
-    void drawText(String str, const Font &font, int32_t x, int32_t y, int32_t spacing = 0, Align align = TOP_LEFT);
+    uint32_t measureText(String str, const Font &font, int32_t tracking = 0);
+    void drawText(String str, const Font &font, int32_t x, int32_t y, Align align = TOP_LEFT, int32_t tracking = 0);
+    void drawMultilineText(
+        std::initializer_list<String> lines,
+        const Font &font,
+        int32_t x,
+        int32_t y,
+        Align align = TOP_LEFT,
+        int32_t tracking = 0,
+        int32_t leading = 0
+    );
     void drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align = TOP_CENTER);
     void drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align = LEFT_CENTER);
     void fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color, Align align = TOP_LEFT);
-    void strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, uint8_t color, bool strokeOutside = false, Align align = TOP_LEFT);
+    void strokeRect(
+        int32_t x,
+        int32_t y,
+        int32_t width,
+        int32_t height,
+        uint32_t strokeWidth,
+        uint8_t color,
+        bool strokeOutside = false,
+        Align align = TOP_LEFT
+    );
  
 private:
     uint8_t _spiBus;

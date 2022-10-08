@@ -89,7 +89,11 @@ bool startWifi()
     }
     DEBUG_PRINT("Starting WiFi");
     unsigned long start = millis();
+    #ifdef WIFI_PASS
     WiFi.begin(WIFI_NAME, WIFI_PASS);
+    #else
+    WiFi.begin(WIFI_NAME);
+    #endif
     if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
         DEBUG_PRINT("WiFi connection failed after %lums", millis() - start);
         stopWifi();
@@ -99,13 +103,105 @@ bool startWifi()
     return true;
 }
 
-void deepSleepWithError(const char *message)
+void error(std::initializer_list<String> message)
 {
     DEBUG_PRINT("Sleeping with error '%s'", message);
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
     display.error(message);
-    deepSleep(ERROR_RETRY_INTERVAL_SECONDS);
+    deepSleep(SECONDS_PER_HOUR);
 }
+
+void errorNoWifi()
+{
+    error({
+        "NO WIFI CONNECTION",
+        "",
+        "Your WiFi network is either down, out of range,",
+        "or you entered the wrong password.",
+        "",
+        "WiFi Name:",
+        "\"" WIFI_NAME "\""
+    });
+}
+
+void errorNtpFailed()
+{
+    error({
+        "NO INTERNET CONNECTION",
+        "",
+        "Your WiFi network works, but the NTP servers didn't",
+        "respond. This probably means your WiFi has no internet",
+        "connection. Or, you configured the NTP servers yourself,",
+        "in which case you might have messed something up.",
+    });
+}
+
+#ifdef AUTOMATIC_TIME_ZONE
+
+void errorGeoIpTzFailed()
+{
+    error({
+        "GEOIP TIMEZONE LOOKUP FAILED",
+        "",
+        "WorldTimeApi.org is either down, or it couldn't find",
+        "a timezone for your IP address. It's recommended that",
+        "you set a manual timezone in the configuration as well."
+    });
+}
+
+#endif // AUTOMATIC_TIME_ZONE
+
+#ifdef MANUAL_TIME_ZONE
+
+void errorManualTzFailed()
+{
+    error({
+        "TIMEZONE LOOKUP FAILED",
+        "",
+        "Your timezone is either invalid, or the timezone servers",
+        "are down. If you configured the timezone servers",
+        "yourself, you might have messed something up.",
+        "",
+        "Your timezone: \"" MANUAL_TIME_ZONE "\""
+    });
+}
+
+#endif // MANUAL_TIME_ZONE
+
+#ifdef SHOW_WEATHER
+
+void errorInvalidOwmApiKey()
+{
+    error({
+        "INVALID OPENWEATHERMAP API KEY",
+        "",
+        "OpenWeatherMap.org says your API key is invalid.",
+        "You probably have an issue with your configuration.",
+        "Go to your account -> My API Keys and make sure",
+        "the one there matches the one you entered. Or, just",
+        "disable the weather feature entirely."
+    });
+}
+
+#ifdef WEATHER_LOCATION
+
+void errorInvalidOwmLocation()
+{
+    error({
+        "INVALID WEATHER LOCATION",
+        "",
+        "OpenWeatherMap.org couldn't find any results",
+        "for the weather location you entered. You",
+        "probably have an issue with your configuration.",
+        "",
+        "You Location:",
+        "\"" WEATHER_LOCATION "\""
+    });
+}
+
+#endif // WEATHER_LOCATION
+
+#endif // SHOW_WEATHER
 
 int getSecondsToMidnight(tm *now)
 {
@@ -138,16 +234,19 @@ void setup()
             #endif
             #ifdef AUTOMATIC_TIME_ZONE
             tz = getGeoIpTz();
-            if (!tz.isEmpty()) {
+            bool geoIpFailed = tz.isEmpty();
+            if (geoIpFailed) {
                 strcpy(savedTimezone, tz.c_str());
                 savedTimezoneType = TZT_GEOIP;
                 needsTimezoneSync = false;
             }
             #endif
             #ifdef MANUAL_TIME_ZONE
+            bool manualFailed = false; 
             if (savedTimezoneType <= TZT_MANUAL) {
                 tz = getPosixTz(MANUAL_TIME_ZONE);
-                if (!tz.isEmpty()) {
+                manualFailed = tz.isEmpty();
+                if (manualFailed) {
                     strcpy(savedTimezone, tz.c_str());
                     savedTimezoneType = TZT_MANUAL;
                     needsTimezoneSync = false;
@@ -160,14 +259,23 @@ void setup()
                 savedTimezoneType = TZT_POSIX;
                 needsTimezoneSync = false;
             }
-            #endif
-
+            #else
             if (savedTimezoneType == TZT_NONE) {
-                deepSleepWithError("Timezone lookup failed");
+                #ifdef MANUAL_TIME_ZONE
+                if (manualFailed) {
+                    errorManualTzFailed();
+                }
+                #endif // MANUAL_TIME_ZONE
+                #ifdef AUTOMATIC_TIME_ZONE
+                if (geoIpFailed) {
+                    errorGeoIpTzFailed();
+                }
+                #endif // AUTOMATIC_TIME_ZONE
             }
+            #endif // POSIX_TIME_ZONE
         } else if (savedTimezoneType == TZT_NONE) {
             // WiFi didn't connect and we have no idea what timezone we're in
-            deepSleepWithError("WiFi connection failed");
+            errorNoWifi();
         }
     }
 
@@ -184,11 +292,11 @@ void setup()
                 needsNtpSync = false;
             } else if (syncMandatory) {
                 // Sync unsuccesful and we have no idea what time it is
-                deepSleepWithError("Time syncronization failed");
+                errorNtpFailed();
             }
         } else if (syncMandatory) {
             // WiFi didn't connect and we have no idea what time it is
-            deepSleepWithError("WiFi connection failed");
+            errorNoWifi();
         }
     }
 
@@ -196,11 +304,24 @@ void setup()
     localtime_r(&t, &now);
 
     #ifdef SHOW_WEATHER
+
     // Sync weather
 
-    if (needsWeatherSync && startWifi() && refreshWeather()) {
-        needsWeatherSync = false;
-    }
+    if (needsWeatherSync && startWifi()) {
+        OwmResult result = refreshWeather();
+        switch (result) {
+            case OwmResult::SUCCESS:
+                needsWeatherSync = false;
+                break;
+            case OwmResult::INVALID_API_KEY:
+                errorInvalidOwmApiKey();
+            case OwmResult::INVALID_LOCATION:
+                errorInvalidOwmLocation();
+            default:
+                // Ignore other OWM errors because weather isn't critical
+                break;
+        }
+    } // Critical WiFi connection errors will be handled by the NTP/timezone syncs
 
     #endif
 

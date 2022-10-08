@@ -1,8 +1,23 @@
-#define WIFI_NAME "name"
-#define WIFI_PASS "password"
+/**
+ * Enter the WiFi network you want to connect to, for getting the current time and other information.
+ * If for some reason your WiFi doesn't have a password, you can comment that out.
+ */
+#define WIFI_NAME "your wifi name here"
+#define WIFI_PASS "your wifi password here"
 
+/**
+ * Show the day name on the right side (next to the XX/XX day)
+ */
 #define SHOW_DAY
+
+/**
+ * Show the month name on the top
+ */
 #define SHOW_MONTH
+
+/**
+ * Show the current year on the top right
+ */
 // #define SHOW_YEAR
 
 /**
@@ -13,6 +28,9 @@
 /**
  * The Olson name for your timezone. Requires connection with a 3rd-party service to translate this to
  * the POSIX timezone specification. If AUTOMATIC_TIME_ZONE is set, this will only serve as a backup to that.
+ * 
+ * You can find a list of Olson timezone names here:
+ * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
  */
 #define MANUAL_TIME_ZONE "America/Chicago"
 
@@ -21,7 +39,7 @@
  * only serve as a backup to those. If not, then no 3rd-party timezone services will be used, however this will
  * need to be changed if your timezone or DST laws change in the future.
  */
-#define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
+// #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
 
 /**
  * Show weather forecast in place of the chamber hazard icons
@@ -56,7 +74,7 @@
 /**
  * The location to get weather information for. Can also be a zip code for US locations.
  */
-#define WEATHER_LOCATION u8"Oklahoma City, Oklahoma, US"
+#define WEATHER_LOCATION "Oklahoma City, Oklahoma, US"
 
 /**
  * The latitude and longitude for weather information. Optional. Overrides WEATHER_LOCATION if set.
@@ -75,7 +93,7 @@
  * 
  * https://home.openweathermap.org/api_keys
  */
-#define OPENWEATHERMAP_API_KEY ""
+#define OPENWEATHERMAP_API_KEY "your api key here"
 
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
@@ -121,11 +139,6 @@
  * clock in the ESP32 is usually off by double-digit minutes per day.
  */
 #define ERROR_AFTER_HOURS_WITHOUT_INTERNET 24
-
-/**
- * How long to wait before retrying after an error connecting to WiFi or syncing with NTP.
- */
-#define ERROR_RETRY_INTERVAL_MINUTES 60
 
 /**
  * Measure drift in the system clock and apply a correction factor for more accurate deep sleep.

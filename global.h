@@ -11,7 +11,8 @@
 #endif
 
 #define uS_PER_S 1000000
-#define SECONDS_PER_DAY 86400
+#define SECONDS_PER_HOUR 3600
+#define SECONDS_PER_DAY (SECONDS_PER_HOUR * 24)
 
 #define clamp(x, y) min(max(x, -y), y)
 

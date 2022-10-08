@@ -2,7 +2,8 @@
 #include "global.h"
 #include "time.h"
 
-#include "resource/font/regular.h"
+#include "resource/font/medium.h"
+#include "resource/font/small.h"
 #include "resource/font/chamber_number.h"
 
 #include "resource/aperture_logo.h"
@@ -11,7 +12,6 @@
 
 #ifdef SHOW_WEATHER
 #include "resource/font/weather_frame.h"
-#include "resource/font/weather_info.h"
 #include "resource/weather_info_degree_symbol.h"
 #include "resource/weather_info_percent_symbol.h"
 #include "resource/weather_frame.h"
@@ -135,26 +135,26 @@ void Display::update(const tm *now)
 
     // BIG date
     sprintf(buffer, "%02d", now->tm_mday);
-    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, 10);
+    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, DisplayGDEW075T7::TOP_LEFT, 10);
 
     // Small "XX/XX" date
     sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
-    _display->drawText(buffer, FONT_REGULAR, LEFT, 394);
+    _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);
 
     #ifdef SHOW_DAY
     // Day name
-    _display->drawText(DAYS[now->tm_wday], FONT_REGULAR, RIGHT, 394, 0, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     #ifdef SHOW_MONTH
     // Month name
-    _display->drawText(MONTHS[now->tm_mon], FONT_REGULAR, LEFT, 14, 0);
+    _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     #endif
 
     #ifdef SHOW_YEAR
     // Year
     sprintf(buffer, "%d", year);
-    _display->drawText(buffer, FONT_REGULAR, RIGHT, 14, 0, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, 0, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     // Progress bar
@@ -209,24 +209,24 @@ void Display::update(const tm *now)
 const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool day)
 {
     switch (condition) {
-        case WEATHER_CONDITION_CLEAR:
-        case WEATHER_CONDITION_FEW_CLOUDS:
+        case WeatherCondition::CLEAR:
+        case WeatherCondition::FEW_CLOUDS:
             return day ? &IMG_WEATHER_DAY_CLEAR : &IMG_WEATHER_NIGHT_CLEAR;
-        case WEATHER_CONDITION_SCATTERED_CLOUDS:
-        case WEATHER_CONDITION_BROKEN_CLOUDS:
+        case WeatherCondition::SCATTERED_CLOUDS:
+        case WeatherCondition::BROKEN_CLOUDS:
             return day ? &IMG_WEATHER_PARTLY_CLOUDY_DAY : &IMG_WEATHER_PARTLY_CLOUDY_NIGHT;
-        case WEATHER_CONDITION_OVERCAST_CLOUDS:
+        case WeatherCondition::OVERCAST_CLOUDS:
             return &IMG_WEATHER_CLOUDY;
-        case WEATHER_CONDITION_SCATTERED_SHOWERS:
+        case WeatherCondition::SCATTERED_SHOWERS:
             return day ? &IMG_WEATHER_SCATTERED_SHOWERS_DAY : &IMG_WEATHER_SCATTERED_SHOWERS_NIGHT;
-        case WEATHER_CONDITION_SHOWERS:
+        case WeatherCondition::SHOWERS:
             return &IMG_WEATHER_SHOWERS;
-        case WEATHER_CONDITION_THUNDERSTORM:
+        case WeatherCondition::THUNDERSTORM:
             return &IMG_WEATHER_THUNDERSTORMS;
-        case WEATHER_CONDITION_FOG:
+        case WeatherCondition::FOG:
             return &IMG_WEATHER_FOG;
-        case WEATHER_CONDITION_FREEZING_RAIN:
-        case WEATHER_CONDITION_SNOW:
+        case WeatherCondition::FREEZING_RAIN:
+        case WeatherCondition::SNOW:
             return &IMG_WEATHER_SNOW;
         default:
             return nullptr;
@@ -236,13 +236,13 @@ const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool d
 void Display::drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y)
 {
     if (symbol) {
-        uint32_t textWidth = _display->measureText(text, FONT_WEATHER_INFO);
+        uint32_t textWidth = _display->measureText(text, FONT_SMALL);
         // The extra /2 gives less weight to the symbol so the text appears more centered
         x -= (textWidth + symbol->width / 2) / 2;
-        _display->drawText(text, FONT_WEATHER_INFO, x, y);
+        _display->drawText(text, FONT_SMALL, x, y);
         _display->drawImage(*symbol, x + textWidth, y);
     } else {
-        _display->drawText(text, FONT_WEATHER_INFO, x, y, 0, DisplayGDEW075T7::TOP_CENTER);
+        _display->drawText(text, FONT_SMALL, x, y, DisplayGDEW075T7::TOP_CENTER);
     }
 }
 
@@ -270,7 +270,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
     _display->setAlpha(DisplayGDEW075T7::BLACK);
     _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, 0, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
 
     // Draw high temp
@@ -314,7 +314,7 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     #endif
 
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, 0, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, DisplayGDEW075T7::TOP_CENTER);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
 
     // Draw temperature
@@ -342,17 +342,16 @@ void Display::drawIcon(const Image& icon, int32_t x, int32_t y)
     );
 }
 
-void Display::error(String message)
+void Display::error(std::initializer_list<String> messageLines)
 {
     init();
-    _display->drawImage(IMG_ERROR, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::CENTER);
-    _display->drawText(
-        message,
-        FONT_REGULAR,
-        H_CENTER,
-        _display->getHeight() / 2 + IMG_ERROR.height / 2 + 30,
-        0,
-        DisplayGDEW075T7::CENTER
-    );
+    const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
+    _display->drawImage(IMG_ERROR, H_CENTER, y, DisplayGDEW075T7::BOTTOM_CENTER);
+    _display->drawMultilineText(messageLines, FONT_SMALL, H_CENTER, y + FONT_SMALL.ascent + FONT_SMALL.descent, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawMultilineText({
+        "Will try again in 1 hour. Or, press the BOOT button",
+        "on the back of the device to retry now.",
+    }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
+
     _display->refresh();
 }

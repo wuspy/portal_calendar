@@ -5,7 +5,7 @@
 #include "time.h"
 
 const WeatherEntry EMPTY_WEATHER_ENTRY = {
-    .condition = WEATHER_CONDITION_UNKNOWN,
+    .condition = WeatherCondition::UNKNOWN,
     .temp = INT16_MAX,
     .daylight = false,
     .clouds = -1,
@@ -19,7 +19,7 @@ const WeatherEntry EMPTY_WEATHER_ENTRY = {
 };
 
 const DailyWeather EMPTY_DAILY_WEATHER = {
-    .condition = WEATHER_CONDITION_UNKNOWN,
+    .condition = WeatherCondition::UNKNOWN,
     .highTemp = INT16_MIN,
     .lowTemp = INT16_MAX,
     .daylight = false,
@@ -53,14 +53,12 @@ time_t getLastWeatherSync()
 String urlEncode(String str)
 {
     const char* hex = "0123456789ABCDEF";
-    const int len = str.length();
     String result;
-    result.reserve(len);
-    for (int i = 0; i < len; ++i) {
-        char c = str.charAt(i);
+    result.reserve(str.length());
+    for (char c : str) {
         if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
             result += c;
-        } else if (str[i] == ' ') {
+        } else if (c == ' ') {
             result += '+';
         } else {
             result += '%';
@@ -85,48 +83,48 @@ bool isDaylight(time_t t)
 WeatherCondition getWeatherConditionByCloudCover(int clouds)
 {
     if (clouds < 10) {
-        return WEATHER_CONDITION_CLEAR;
+        return WeatherCondition::CLEAR;
     } else if (clouds < 26) {
-        return WEATHER_CONDITION_FEW_CLOUDS;
+        return WeatherCondition::FEW_CLOUDS;
     } else if (clouds < 51) {
-        return WEATHER_CONDITION_SCATTERED_CLOUDS;
+        return WeatherCondition::SCATTERED_CLOUDS;
     } else if (clouds < 85) {
-        return WEATHER_CONDITION_BROKEN_CLOUDS;
+        return WeatherCondition::BROKEN_CLOUDS;
     } else {
-        return WEATHER_CONDITION_OVERCAST_CLOUDS;
+        return WeatherCondition::OVERCAST_CLOUDS;
     }
 }
 
 WeatherCondition parseOWMWeatherConditionId(int id)
 {
     if (id < 200) {
-        return WEATHER_CONDITION_UNKNOWN;
+        return WeatherCondition::UNKNOWN;
     } else if (id < 300) {
-        return WEATHER_CONDITION_THUNDERSTORM;
+        return WeatherCondition::THUNDERSTORM;
     } else if (id < 400) {
-        return WEATHER_CONDITION_SHOWERS;
+        return WeatherCondition::SHOWERS;
     } else if (id < 505) {
-        return WEATHER_CONDITION_SCATTERED_SHOWERS;
+        return WeatherCondition::SCATTERED_SHOWERS;
     } else if (id == 511) {
-        return WEATHER_CONDITION_FREEZING_RAIN;
+        return WeatherCondition::FREEZING_RAIN;
     } else if (id < 600) {
-        return WEATHER_CONDITION_SHOWERS;
+        return WeatherCondition::SHOWERS;
     } else if (id < 700) {
-        return WEATHER_CONDITION_SNOW;
+        return WeatherCondition::SNOW;
     } else if (id < 800) {
-        return WEATHER_CONDITION_FOG;
+        return WeatherCondition::FOG;
     } else if (id == 800) {
-        return WEATHER_CONDITION_CLEAR;
+        return WeatherCondition::CLEAR;
     } else if (id == 801) {
-        return WEATHER_CONDITION_FEW_CLOUDS;
+        return WeatherCondition::FEW_CLOUDS;
     } else if (id == 802) {
-        return WEATHER_CONDITION_SCATTERED_CLOUDS;
+        return WeatherCondition::SCATTERED_CLOUDS;
     } else if (id == 803) {
-        return WEATHER_CONDITION_BROKEN_CLOUDS;
+        return WeatherCondition::BROKEN_CLOUDS;
     } else if (id == 804) {
-        return WEATHER_CONDITION_OVERCAST_CLOUDS;
+        return WeatherCondition::OVERCAST_CLOUDS;
     } else {
-        return WEATHER_CONDITION_UNKNOWN;
+        return WeatherCondition::UNKNOWN;
     }
 }
 
@@ -194,16 +192,14 @@ void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
 
 void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
 {
-    DailyWeather *day;
     WeatherEntry *entry;
     int j = 0;
     int conditionStart, conditionEnd;
     float clouds, daylight;
     int sampleCount;
 
-    for (int i = 0; i < 5; ++i) {
-        day = &result[i];
-        *day = EMPTY_DAILY_WEATHER;
+    for (DailyWeather day : result) {
+        day = EMPTY_DAILY_WEATHER;
 
         j = findWeatherEntry(month, mday, 0, j);
         if (j == -1) {
@@ -212,9 +208,9 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
             continue;
         }
 
-        day->month = month;
-        day->mday = mday;
-        day->wday = weatherEntries[j].wday;
+        day.month = month;
+        day.mday = mday;
+        day.wday = weatherEntries[j].wday;
 
         clouds = 0.0;
         daylight = 0.0;
@@ -229,28 +225,28 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
                 break;
             }
             // Calculate high/low temp for entire 24-hour day
-            day->highTemp = max(day->highTemp, entry->temp);
-            day->lowTemp = min(day->lowTemp, entry->temp);
+            day.highTemp = max(day.highTemp, entry->temp);
+            day.lowTemp = min(day.lowTemp, entry->temp);
             // Calculate overall condition only for the 12 hour period after WEATHER_START_HOUR
             if (j >= conditionStart && j <= conditionEnd) {
                 ++sampleCount;
-                day->condition = max(day->condition, entry->condition);
+                day.condition = max(day.condition, entry->condition);
                 clouds = (clouds * (sampleCount - 1) + (float)entry->clouds) / sampleCount;
                 daylight = (daylight * (sampleCount - 1) + (entry->daylight ? 100.0 : 0.0)) / sampleCount;
             }
         }        
 
         DEBUG_PRINT("Found %d weather condition samples for %d/%d/%d", sampleCount, month + 1, mday, year);
-        day->daylight = daylight >= 50.0;
-        if (day->condition != WEATHER_CONDITION_UNKNOWN && day->condition <= WEATHER_CONDITION_OVERCAST_CLOUDS) {
+        day.daylight = daylight >= 50.0;
+        if (day.condition != WeatherCondition::UNKNOWN && day.condition <= WeatherCondition::OVERCAST_CLOUDS) {
             // Use average daily cloud cover for a more representative weather icon
-            day->condition = getWeatherConditionByCloudCover((int)clouds);
+            day.condition = getWeatherConditionByCloudCover((int)clouds);
         }
         advanceDay(month, mday, year);
     }
 }
 
-bool refreshWeather()
+OwmResult refreshWeather()
 {
     char url[200];
     if (latitude == 0.0 || longitude == 0.0) {
@@ -275,12 +271,12 @@ bool refreshWeather()
             DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
             if (error) {
                 DEBUG_PRINT("Failed to parse response: %s", error.c_str());
-                return false;
+                return OwmResult::MALFORMED_RESPONSE;
             }
             JsonVariant result = response[0];
             if (result.isNull()) {
                 DEBUG_PRINT("No location results from openweathermap");
-                return false;
+                return OwmResult::INVALID_LOCATION;
             }
             latitude = result["lat"].as<float>();
             longitude = result["lon"].as<float>();
@@ -288,7 +284,7 @@ bool refreshWeather()
         } else {
             http.end();
             DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
-            return false;
+            return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
         }
     }
 
@@ -325,7 +321,7 @@ bool refreshWeather()
         DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
         if (error) {
             DEBUG_PRINT("Failed to parse response: %s", error.c_str());
-            return false;
+            return OwmResult::MALFORMED_RESPONSE;
         }
         
         // Get sunrise and sunet hours for this location
@@ -344,10 +340,10 @@ bool refreshWeather()
             weatherEntries[i] = EMPTY_WEATHER_ENTRY;
         }
         time(&lastWeatherSync);
-        return true;
+        return OwmResult::SUCCESS;
     } else {
         http.end();
         DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
-        return false;
+        return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
     }
 }
