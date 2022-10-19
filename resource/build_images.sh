@@ -22,6 +22,22 @@ python build_image.py dirty_water_on.gif
 python build_image.py dirty_water_off.gif
 python build_image.py cake_on.gif
 python build_image.py cake_off.gif
+python build_image.py bridge_shield_on.gif
+python build_image.py bridge_shield_off.gif
+python build_image.py cube_button_on.gif
+python build_image.py cube_button_off.gif
+python build_image.py faith_plate_on.gif
+python build_image.py faith_plate_off.gif
+python build_image.py laser_hazard_on.gif
+python build_image.py laser_hazard_off.gif
+python build_image.py laser_redirection_on.gif
+python build_image.py laser_redirection_off.gif
+python build_image.py laser_sensor_on.gif
+python build_image.py laser_sensor_off.gif
+python build_image.py light_bridge_on.gif
+python build_image.py light_bridge_off.gif
+python build_image.py player_button_on.gif
+python build_image.py player_button_off.gif
 
 python build_image.py weather_info_degree_symbol.gif
 python build_image.py weather_info_percent_symbol.gif

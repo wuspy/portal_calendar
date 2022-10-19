@@ -48,6 +48,190 @@
 #include "resource/dirty_water_off.h"
 #include "resource/cake_on.h"
 #include "resource/cake_off.h"
+#include "resource/bridge_shield_on.h"
+#include "resource/bridge_shield_off.h"
+#include "resource/cube_button_on.h"
+#include "resource/cube_button_off.h"
+#include "resource/faith_plate_on.h"
+#include "resource/faith_plate_off.h"
+#include "resource/laser_hazard_on.h"
+#include "resource/laser_hazard_off.h"
+#include "resource/laser_redirection_on.h"
+#include "resource/laser_redirection_off.h"
+#include "resource/laser_sensor_on.h"
+#include "resource/laser_sensor_off.h"
+#include "resource/light_bridge_on.h"
+#include "resource/light_bridge_off.h"
+#include "resource/player_button_on.h"
+#include "resource/player_button_off.h"
+
+const Image* CHAMBER_ICON_SETS[][10] = {{
+    // P1 Chamber 1
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+// }, {
+//     // P1 Chamber 2
+//     &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+//     &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+// }, {
+//     // P1 Chamber 3
+//     &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+//     &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 4
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 5
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 6
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+// }, {
+//     // P1 Chamber 7
+//     &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_OFF,
+//     &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 8
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_ON,        &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 9
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 10
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 11
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_ON,        &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 12
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 13
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 14
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_ON,        &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 15
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_ON,        &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 16
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_ON,      &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 17
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_OFF,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 18
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_ON,      &IMG_DIRTY_WATER_ON,        &IMG_CAKE_OFF,
+}, {
+    // P1 Chamber 19
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_ON,        &IMG_CAKE_ON,
+}, {
+    // P2 The Cold Boot Chamber 1
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_OFF, &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_OFF,
+    &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,      &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 2
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_ON,  &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 3
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_ON,  &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 4
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_ON,
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_OFF, &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 5
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_ON,
+    &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_FAITH_PLATE_ON,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Cold Boot Chamber 6
+//     &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_ON,
+//     &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_FAITH_PLATE_ON,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 7
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_WATER_HAZARD_OFF,      &IMG_FLING_ENTER_ON,
+    &IMG_FLING_EXIT_ON,         &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_OFF, &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Cold Boot Chamber 8
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_WATER_HAZARD_OFF,      &IMG_FLING_ENTER_OFF,
+    &IMG_FLING_EXIT_OFF,        &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_ON,  &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 9
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_ON,  &IMG_FAITH_PLATE_ON,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 10
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_WATER_HAZARD_OFF,      &IMG_LASER_SENSOR_ON,
+    &IMG_LASER_REDIRECTION_ON,  &IMG_FAITH_PLATE_ON,        &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 11
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_ON,
+    &IMG_LIGHT_BRIDGE_ON,       &IMG_TURRET_HAZARD_OFF,     &IMG_BRIDGE_SHIELD_OFF,     &IMG_LASER_REDIRECTION_OFF, &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Return Chamber 12
+//     &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_ON,
+//     &IMG_LIGHT_BRIDGE_ON,       &IMG_TURRET_HAZARD_OFF,     &IMG_BRIDGE_SHIELD_OFF,     &IMG_LASER_REDIRECTION_OFF, &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 13
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+    &IMG_LIGHT_BRIDGE_OFF,      &IMG_TURRET_HAZARD_ON,      &IMG_BRIDGE_SHIELD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Return Chamber 14
+//     &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+//     &IMG_LASER_REDIRECTION_ON,  &IMG_LASER_SENSOR_ON,       &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 15
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_OFF,     &IMG_WATER_HAZARD_OFF,
+    &IMG_LIGHT_BRIDGE_ON,       &IMG_TURRET_HAZARD_ON,      &IMG_BRIDGE_SHIELD_ON,      &IMG_FAITH_PLATE_ON,        &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Return Chamber 16
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_ON,      &IMG_WATER_HAZARD_OFF,
+    &IMG_LASER_REDIRECTION_ON,  &IMG_LASER_SENSOR_ON,       &IMG_TURRET_HAZARD_ON,      &IMG_LASER_HAZARD_ON,       &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Return Chamber 17
+//     &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_OFF,      &IMG_WATER_HAZARD_OFF,
+//     &IMG_LIGHT_BRIDGE_ON,       &IMG_LASER_SENSOR_ON,       &IMG_TURRET_HAZARD_OFF,     &IMG_BRIDGE_SHIELD_OFF,      &IMG_DIRTY_WATER_OFF,
+}, {
+    // P2 The Surprise Chamber 18
+    &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_ON,        &IMG_WATER_HAZARD_ON,       &IMG_LIGHT_BRIDGE_ON,
+    &IMG_LASER_SENSOR_ON,       &IMG_LASER_REDIRECTION_ON,  &IMG_TURRET_HAZARD_ON,      &IMG_BRIDGE_SHIELD_ON,      &IMG_LASER_HAZARD_ON,
+}, {
+    // P2 The Surprise Chamber 19
+    &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_BUTTON_OFF,       &IMG_CUBE_HAZARD_OFF,       &IMG_PLAYER_BUTTON_OFF,     &IMG_LASER_SENSOR_ON,
+    &IMG_LASER_REDIRECTION_ON,  &IMG_FAITH_PLATE_ON,        &IMG_TURRET_HAZARD_ON,      &IMG_LASER_HAZARD_ON,       &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Surprise Chamber 20
+//     &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_LIGHT_BRIDGE_OFF,      &IMG_PLAYER_BUTTON_OFF,     &IMG_LASER_SENSOR_ON,
+//     &IMG_LASER_REDIRECTION_ON,  &IMG_FAITH_PLATE_OFF,       &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_DIRTY_WATER_OFF,
+// }, {
+//     // P2 The Surprise Chamber 21
+//     &IMG_LIGHT_BRIDGE_ON,       &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_BUTTON_ON,        &IMG_CUBE_HAZARD_ON,        &IMG_LASER_SENSOR_OFF,
+//     &IMG_LASER_REDIRECTION_OFF, &IMG_TURRET_HAZARD_OFF,     &IMG_LASER_HAZARD_OFF,      &IMG_WATER_HAZARD_ON,       &IMG_DIRTY_WATER_OFF,
+}};
+
+static_assert(
+    sizeof(CHAMBER_ICON_SETS) / sizeof(Image*[10]) == 31,
+    "There must be 31 sets of chamber icons"
+);
+
 #endif // SHOW_WEATHER
 
 #define ICON_SIZE 64
@@ -164,6 +348,8 @@ void Display::update(const tm *now)
 
     #ifdef SHOW_WEATHER
 
+    // Weather
+
     #if WEATHER_DISPLAY_TYPE == 1
 
     DailyWeather weather[5];
@@ -182,25 +368,28 @@ void Display::update(const tm *now)
         drawWeatherEntry(weather[i], i);
     }
 
-    #endif
+    #else
+
+    #error Invalid value for WEATHER_DISPLAY_TYPE
+
+    #endif // WEATHER_DISPLAY_TYPE
 
     #else
 
-    // Icons, random for now
-    srand(millis());
-    drawIcon(rand() % 2 ? IMG_CUBE_DISPENSER_ON : IMG_CUBE_DISPENSER_OFF, 0, 0);
-    drawIcon(rand() % 2 ? IMG_CUBE_HAZARD_ON : IMG_CUBE_HAZARD_OFF, 1, 0);
-    drawIcon(rand() % 2 ? IMG_PELLET_HAZARD_ON : IMG_PELLET_HAZARD_OFF, 2, 0);
-    drawIcon(rand() % 2 ? IMG_PELLET_CATCHER_ON : IMG_PELLET_CATCHER_OFF, 3, 0);
-    drawIcon(rand() % 2 ? IMG_WATER_HAZARD_ON : IMG_WATER_HAZARD_OFF, 4, 0);
-    drawIcon(rand() % 2 ? IMG_FLING_ENTER_ON : IMG_FLING_ENTER_OFF, 0, 1);
-    drawIcon(rand() % 2 ? IMG_FLING_EXIT_ON : IMG_FLING_EXIT_OFF, 1, 1);
-    drawIcon(rand() % 2 ? IMG_TURRET_HAZARD_ON : IMG_TURRET_HAZARD_OFF, 2, 1);
-    drawIcon(rand() % 2 ? IMG_DIRTY_WATER_ON : IMG_DIRTY_WATER_OFF, 3, 1);
-    drawIcon(rand() % 2 ? IMG_CAKE_ON : IMG_CAKE_OFF, 4, 1);
+    // Chamber icons
+    if (now->tm_mon == 1 && now->tm_mday == 29) {
+        // Special icon set for leap day
+        for (int i = 0; i < 8; ++i) {
+            drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
+        }
+    } else if (now->tm_mday <= 31) {
+        for (int i = 0; i < 10; ++i) {
+            drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+        }
+    }
 
-    #endif
-    
+    #endif // SHOW_WEATHER
+
     _display->refresh();
 }
 
@@ -328,12 +517,40 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     #elif SECONDARY_WEATHER_INFORMATION == 2 // Humidity
     sprintf(text, "%d", weather.humidity);
     drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+    #else
+    #error Invalid value for SECONDARY_WEATHER_INFORMATION
     #endif
 }
 
-#endif // SHOW_WEATHER
+#else
 
-void Display::drawIcon(const Image& icon, int32_t x, int32_t y)
+void Display::testChamberIcons()
+{
+    const Image* allIcons[] = {
+        &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
+        &IMG_CUBE_DISPENSER_OFF,    &IMG_CUBE_HAZARD_OFF,       &IMG_PELLET_HAZARD_OFF,     &IMG_PELLET_CATCHER_OFF,    &IMG_WATER_HAZARD_OFF,
+        &IMG_FLING_ENTER_ON,        &IMG_FLING_EXIT_ON,         &IMG_TURRET_HAZARD_ON,      &IMG_DIRTY_WATER_ON,        &IMG_CAKE_ON,
+        &IMG_FLING_ENTER_OFF,       &IMG_FLING_EXIT_OFF,        &IMG_TURRET_HAZARD_OFF,     &IMG_DIRTY_WATER_OFF,       &IMG_CAKE_OFF,
+        &IMG_CUBE_BUTTON_ON,        &IMG_PLAYER_BUTTON_ON,      &IMG_LIGHT_BRIDGE_ON,       &IMG_FAITH_PLATE_ON,        &IMG_LASER_SENSOR_ON,
+        &IMG_CUBE_BUTTON_OFF,       &IMG_PLAYER_BUTTON_OFF,     &IMG_LIGHT_BRIDGE_OFF,      &IMG_FAITH_PLATE_OFF,       &IMG_LASER_SENSOR_OFF,
+        &IMG_LASER_REDIRECTION_ON,  &IMG_BRIDGE_SHIELD_ON,      &IMG_LASER_HAZARD_ON,       nullptr,                    nullptr,
+        &IMG_LASER_REDIRECTION_OFF, &IMG_BRIDGE_SHIELD_OFF,     &IMG_LASER_HAZARD_OFF,
+    };
+
+    init();
+    for (int i = 0; i < sizeof(allIcons) / sizeof(Image*); ++i) {
+        if (allIcons[i] != nullptr) {
+            _display->drawImage(
+                *allIcons[i],
+                20 + (i % 5) * (ICON_SIZE + ICON_SPACING),
+                20 + (i / 5) * (ICON_SIZE + ICON_SPACING)
+            );
+        }
+    }
+    _display->refresh();
+}
+
+void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
 {
     _display->drawImage(
         icon,
@@ -341,6 +558,8 @@ void Display::drawIcon(const Image& icon, int32_t x, int32_t y)
         ICON_TOP + y * (ICON_SIZE + ICON_SPACING)
     );
 }
+
+#endif // SHOW_WEATHER
 
 void Display::error(std::initializer_list<String> messageLines)
 {
