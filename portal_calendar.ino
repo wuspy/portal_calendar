@@ -132,7 +132,7 @@ void errorNtpFailed()
         "Your WiFi network works, but the NTP servers didn't",
         "respond. This probably means your WiFi has no internet",
         "connection. Or, you configured the NTP servers yourself,",
-        "in which case you might have messed something up.",
+        "in which case you might have messed something up."
     });
 }
 
@@ -162,7 +162,8 @@ void errorManualTzFailed()
         "are down. If you configured the timezone servers",
         "yourself, you might have messed something up.",
         "",
-        "Your timezone: \"" MANUAL_TIME_ZONE "\""
+        "Your timezone:",
+        "\"" MANUAL_TIME_ZONE "\""
     });
 }
 
