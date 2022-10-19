@@ -42,9 +42,9 @@
 // #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
 
 /**
- * Show weather forecast in place of the chamber hazard icons
+ * Show weather forecast in place of the chamber icons
  */
-#define SHOW_WEATHER
+// #define SHOW_WEATHER
 
 /**
  * 1: Show a 5-day weather forecast
@@ -164,4 +164,4 @@
 /**
  * If debug logs should be printed over serial
  */
-#define DEBUG
+// #define DEBUG
