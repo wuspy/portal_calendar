@@ -1,6 +1,6 @@
 #include "global.h"
 
-#if !defined(AUTOMATIC_TIME_ZONE) && !defined(MANUAL_TIME_ZONE) && !defined(POSIX_TIME_ZONE)
+#if !defined(TIME_ZONE) && !defined(POSIX_TIME_ZONE)
 #error No timezone configured
 #endif
 
@@ -20,7 +20,7 @@ int getDaysInMonth(int month, int year);
 
 void advanceDay(int& month, int& mday, int& year);
 
-#if defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
+#ifdef TIME_ZONE
 
 /**
  * Looks up a timezone by Olson name using the timezoned.rop.nl service, which is part of the ezTime project (https://github.com/ropg/ezTime),
@@ -30,22 +30,9 @@ void advanceDay(int& month, int& mday, int& year);
  * 
  * @return The POSIX timezone string, or empty string if unsuccessful
  */
-String getPosixTz(String olsonOrGeoIp);
+String getPosixTz(String name);
 
-#endif // defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
-
-#if defined(AUTOMATIC_TIME_ZONE)
-
-/**
- * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
- * Currently, worldtimeapi.org doesn't return a POSIX timezone string, just the Olson name, so even
- * if it's successful a call to timezoned.rop.nl is still required.
- * 
- * @return The POSIX timezone string, or empty string if unsuccessful 
- */
-String getGeoIpTz();
-
-#endif // defined(AUTOMATIC_TIME_ZONE)
+#endif // TIME_ZONE
 
 /**
  * Based on the queryNTP function from ezTime

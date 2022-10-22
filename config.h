@@ -21,23 +21,17 @@
 // #define SHOW_YEAR
 
 /**
- * If timezone should be looked up based on IP address using a 3rd-party service.
- */
-#define AUTOMATIC_TIME_ZONE
-
-/**
- * The Olson name for your timezone. Requires connection with a 3rd-party service to translate this to
- * the POSIX timezone specification. If AUTOMATIC_TIME_ZONE is set, this will only serve as a backup to that.
+ * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
  * 
- * You can find a list of Olson timezone names here:
+ * You can find a list of timezone names here:
  * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
  */
-#define MANUAL_TIME_ZONE "America/Chicago"
+#define TIME_ZONE "America/Chicago"
 
 /**
- * The full POSIX specification for your timezone. If AUTOMATIC_TIME_ZONE or MANUAL_TIME_ZONE are set, this will
- * only serve as a backup to those. If not, then no 3rd-party timezone services will be used, however this will
- * need to be changed if your timezone or DST laws change in the future.
+ * The full POSIX specification for your timezone. If TIME_ZONE is set, this will only serve as a backup to that.
+ * If not, then no 3rd-party timezone services will be used, however this will need to be changed if your timezone
+ * or DST laws change in the future.
  */
 // #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
 

@@ -6,14 +6,6 @@
 #include "weather.h"
 #endif
 
-enum TimezoneType: uint8_t
-{
-    TZT_NONE,
-    TZT_POSIX,
-    TZT_MANUAL,
-    TZT_GEOIP,
-};
-
 /**
  * Stores the current day of the year displayed
  */
@@ -24,16 +16,21 @@ RTC_DATA_ATTR int displayedYDay = 0;
  */
 RTC_DATA_ATTR bool needsNtpSync = true;
 
+#ifdef TIME_ZONE
 /**
  * Controls if timezone information will be synced on wakeup
  */
 RTC_DATA_ATTR bool needsTimezoneSync = true;
+#endif // TIME_ZONE
 
 /**
- * Stores the current timezone
+ * Caches the current POSIX timezone string
  */
-RTC_DATA_ATTR char savedTimezone[57];
-RTC_DATA_ATTR TimezoneType savedTimezoneType = TZT_NONE;
+#ifdef POSIX_TIME_ZONE
+    RTC_DATA_ATTR char savedTimezone[57] = POSIX_TIME_ZONE;
+#else
+    RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
+#endif // POSIX_TIME_ZONE
 
 #ifdef SHOW_WEATHER
 /**
@@ -41,7 +38,7 @@ RTC_DATA_ATTR TimezoneType savedTimezoneType = TZT_NONE;
  */
 RTC_DATA_ATTR bool needsWeatherSync = true;
 RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
-#endif
+#endif // SHOW_WEATHER
 
 Display display;
 
@@ -105,7 +102,7 @@ bool startWifi()
 
 void error(std::initializer_list<String> message)
 {
-    DEBUG_PRINT("Sleeping with error '%s'", message);
+    DEBUG_PRINT("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
     display.error(message);
     deepSleep(SECONDS_PER_HOUR);
@@ -136,24 +133,9 @@ void errorNtpFailed()
     });
 }
 
-#ifdef AUTOMATIC_TIME_ZONE
+#ifdef TIME_ZONE
 
-void errorGeoIpTzFailed()
-{
-    error({
-        "GEOIP TIMEZONE LOOKUP FAILED",
-        "",
-        "WorldTimeApi.org is either down, or it couldn't find",
-        "a timezone for your IP address. It's recommended that",
-        "you set a manual timezone in the configuration as well."
-    });
-}
-
-#endif // AUTOMATIC_TIME_ZONE
-
-#ifdef MANUAL_TIME_ZONE
-
-void errorManualTzFailed()
+void errorTzLookupFailed()
 {
     error({
         "TIMEZONE LOOKUP FAILED",
@@ -163,11 +145,11 @@ void errorManualTzFailed()
         "yourself, you might have messed something up.",
         "",
         "Your timezone:",
-        "\"" MANUAL_TIME_ZONE "\""
+        "\"" TIME_ZONE "\""
     });
 }
 
-#endif // MANUAL_TIME_ZONE
+#endif // TIME_ZONE
 
 #ifdef SHOW_WEATHER
 
@@ -228,58 +210,23 @@ void setup()
 
     // Set timezone
 
-    if (needsTimezoneSync || savedTimezoneType == TZT_NONE) {
+    #ifdef TIME_ZONE
+    if (needsTimezoneSync || savedTimezone[0] == '\0') {
         if (startWifi()) {
-            #if defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
-            String tz;
-            #endif
-            #ifdef AUTOMATIC_TIME_ZONE
-            tz = getGeoIpTz();
-            bool geoIpFailed = tz.isEmpty();
-            if (geoIpFailed) {
+            String tz = getPosixTz(TIME_ZONE);
+            if (!tz.isEmpty()) {
                 strcpy(savedTimezone, tz.c_str());
-                savedTimezoneType = TZT_GEOIP;
-                needsTimezoneSync = false;
+            } else if (savedTimezone[0] == '\0') {
+                errorTzLookupFailed();
             }
-            #endif
-            #ifdef MANUAL_TIME_ZONE
-            bool manualFailed = false; 
-            if (savedTimezoneType <= TZT_MANUAL) {
-                tz = getPosixTz(MANUAL_TIME_ZONE);
-                manualFailed = tz.isEmpty();
-                if (manualFailed) {
-                    strcpy(savedTimezone, tz.c_str());
-                    savedTimezoneType = TZT_MANUAL;
-                    needsTimezoneSync = false;
-                }
-            }
-            #endif
-            #ifdef POSIX_TIME_ZONE
-            if (savedTimezoneType <= TZT_POSIX) {
-                strcpy(savedTimezone, POSIX_TIME_ZONE);
-                savedTimezoneType = TZT_POSIX;
-                needsTimezoneSync = false;
-            }
-            #else
-            if (savedTimezoneType == TZT_NONE) {
-                #ifdef MANUAL_TIME_ZONE
-                if (manualFailed) {
-                    errorManualTzFailed();
-                }
-                #endif // MANUAL_TIME_ZONE
-                #ifdef AUTOMATIC_TIME_ZONE
-                if (geoIpFailed) {
-                    errorGeoIpTzFailed();
-                }
-                #endif // AUTOMATIC_TIME_ZONE
-            }
-            #endif // POSIX_TIME_ZONE
-        } else if (savedTimezoneType == TZT_NONE) {
+        } else if (savedTimezone[0] == '\0') {
             // WiFi didn't connect and we have no idea what timezone we're in
             errorNoWifi();
         }
     }
-
+    #endif // TIME_ZONE
+    
+    DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
     setenv("TZ", savedTimezone, 1);
     tzset();
 
@@ -347,6 +294,7 @@ void setup()
     time(&t); // Update time measurement
     localtime_r(&t, &now);
     int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
+    // syncFailed doesn't care about timezone sync because as long as we've got it once it's probably still correct
     bool syncFailed = needsNtpSync;
     #ifdef SHOW_WEATHER
     syncFailed |= needsWeatherSync;
@@ -375,7 +323,9 @@ void setup()
     } else {
         // Sleep until first NTP sync
         needsNtpSync = true;
+        #ifdef TIME_ZONE
         needsTimezoneSync = true;
+        #endif
         #ifdef SHOW_WEATHER
         needsWeatherSync = true;
         #endif

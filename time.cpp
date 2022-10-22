@@ -7,6 +7,16 @@
 const char* NTP_SERVER_LIST[] = {NTP_SERVERS};
 const char* TIMEZONED_SERVER_LIST[] = {TIMEZONED_SERVERS};
 
+static_assert(
+    sizeof(NTP_SERVER_LIST) / sizeof(char*) > 0,
+    "No NTP servers configured"
+);
+
+static_assert(
+    sizeof(TIMEZONED_SERVER_LIST) / sizeof(char*) > 0,
+    "No timezoned servers configured"
+);
+
 RTC_DATA_ATTR time_t lastNtpSync = 0;
 
 time_t getLastNtpSync()
@@ -51,19 +61,19 @@ void advanceDay(int& month, int& mday, int& year)
     }
 }
 
-#if defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
+#ifdef TIME_ZONE
 
-String getPosixTz(String olsonOrGeoIp)
+String getPosixTz(String name)
 {
     for (int i = 0; i < sizeof(TIMEZONED_SERVER_LIST) / sizeof(char*); ++i) {
         const char* server = TIMEZONED_SERVER_LIST[i];
-        DEBUG_PRINT("Looking up POSIX timezone for %s from %s", olsonOrGeoIp.c_str(), server);
+        DEBUG_PRINT("Looking up POSIX timezone for %s from %s", name.c_str(), server);
         WiFiUDP udp;
         udp.flush();
         udp.begin(TIMEZONED_LOCAL_PORT);
         unsigned long started = millis();
         udp.beginPacket(server, 2342);
-        udp.write((const uint8_t*)olsonOrGeoIp.c_str(), olsonOrGeoIp.length());
+        udp.write((const uint8_t*)name.c_str(), name.length());
         udp.endPacket();
         
         // Wait for packet or return false with timed out
@@ -91,48 +101,7 @@ String getPosixTz(String olsonOrGeoIp)
     return "";
 }
 
-#endif // defined(AUTOMATIC_TIME_ZONE) || defined(MANUAL_TIME_ZONE)
-
-#if defined(AUTOMATIC_TIME_ZONE)
-
-/**
- * Looks up a timezone by IP address using worldtimeapi.org and timezoned.rop.nl.
- * Currently, worldtimeapi.org doesn't return a POSIX timezone string, just the Olson name, so even
- * if it's successful a call to timezoned.rop.nl is still required.
- * 
- * @return The POSIX timezone string, or empty string if unsuccessful 
- */
-String getGeoIpTz()
-{
-    DEBUG_PRINT("Looking up GeoIP timezone");
-    HTTPClient http;
-    unsigned long start = millis();
-    http.setConnectTimeout(TZ_LOOKUP_TIMEOUT_MS);
-    http.begin("http://worldtimeapi.org/api/ip");
-    int status = http.GET();
-    if (status == 200) {
-        StaticJsonDocument<64> filter;
-        filter["timezone"] = true;
-        StaticJsonDocument<256> response;
-        DeserializationError error = deserializeJson(response, http.getStream(), DeserializationOption::Filter(filter));
-        http.end();
-        DEBUG_PRINT("Request to worldtimeapi took %lums", millis() - start);
-        if (error) {
-            DEBUG_PRINT("Failed to parse response: %s", error.c_str());
-            return getPosixTz("GeoIP");
-        }
-        JsonVariant timezone = response["timezone"];
-        if (!timezone.isNull()) {
-            DEBUG_PRINT("Got timezone '%s' for GeoIP", timezone.as<char*>());
-            return getPosixTz(timezone.as<char*>());
-        }
-    } else {
-        DEBUG_PRINT("Request to worldtimeapi failed with %d after %lums", status, millis() - start);
-        return getPosixTz("GeoIP");
-    }
-}
-
-#endif // defined(AUTOMATIC_TIME_ZONE)
+#endif // TIME_ZONE
 
 /**
  * Based on the queryNTP function from ezTime
