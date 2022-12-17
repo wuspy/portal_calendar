@@ -192,14 +192,16 @@ void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
 
 void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
 {
+    DailyWeather *day;
     WeatherEntry *entry;
     int j = 0;
     int conditionStart, conditionEnd;
     float clouds, daylight;
     int sampleCount;
 
-    for (DailyWeather day : result) {
-        day = EMPTY_DAILY_WEATHER;
+    for (int i = 0; i < 5; ++i) {
+        day = &result[i];
+        *day = EMPTY_DAILY_WEATHER;
 
         j = findWeatherEntry(month, mday, 0, j);
         if (j == -1) {
@@ -208,9 +210,9 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
             continue;
         }
 
-        day.month = month;
-        day.mday = mday;
-        day.wday = weatherEntries[j].wday;
+        day->month = month;
+        day->mday = mday;
+        day->wday = weatherEntries[j].wday;
 
         clouds = 0.0;
         daylight = 0.0;
@@ -225,22 +227,22 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
                 break;
             }
             // Calculate high/low temp for entire 24-hour day
-            day.highTemp = max(day.highTemp, entry->temp);
-            day.lowTemp = min(day.lowTemp, entry->temp);
+            day->highTemp = max(day->highTemp, entry->temp);
+            day->lowTemp = min(day->lowTemp, entry->temp);
             // Calculate overall condition only for the 12 hour period after WEATHER_START_HOUR
             if (j >= conditionStart && j <= conditionEnd) {
                 ++sampleCount;
-                day.condition = max(day.condition, entry->condition);
+                day->condition = max(day->condition, entry->condition);
                 clouds = (clouds * (sampleCount - 1) + (float)entry->clouds) / sampleCount;
                 daylight = (daylight * (sampleCount - 1) + (entry->daylight ? 100.0 : 0.0)) / sampleCount;
             }
         }        
 
         DEBUG_PRINT("Found %d weather condition samples for %d/%d/%d", sampleCount, month + 1, mday, year);
-        day.daylight = daylight >= 50.0;
-        if (day.condition != WeatherCondition::UNKNOWN && day.condition <= WeatherCondition::OVERCAST_CLOUDS) {
+        day->daylight = daylight >= 50.0;
+        if (day->condition != WeatherCondition::UNKNOWN && day->condition <= WeatherCondition::OVERCAST_CLOUDS) {
             // Use average daily cloud cover for a more representative weather icon
-            day.condition = getWeatherConditionByCloudCover((int)clouds);
+            day->condition = getWeatherConditionByCloudCover((int)clouds);
         }
         advanceDay(month, mday, year);
     }
