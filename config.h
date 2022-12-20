@@ -41,6 +41,13 @@
 // #define SHOW_WEATHER
 
 /**
+ * Your API key for openweathermap.org, which is the service used to get the weather for your location.
+ * This is REQUIRED to use the weather feature. Create a free account with them and get your API key here:
+ * https://home.openweathermap.org/api_keys
+ */
+#define OPENWEATHERMAP_API_KEY "your api key here"
+
+/**
  * 1: Show a 5-day weather forecast
  * 2: Show today's weather forecast in 3-hour intervals
  */
@@ -79,15 +86,13 @@
 /**
  * Show what the day's weather will be for the next 12 hours, starting at this hour (in 24-hour time).
  * 9 = 9am, 12 = 12pm, 15 = 3pm, etc
+ * 
+ * Since openweathermap gives us the weather in 3-hour intervals, and the hours they have data for are based on UTC,
+ * the weather shown may not exactly line up with the hour you enter here. For example, in my timezone (America/Chicago),
+ * openweathermap returns the weather for 10AM-10PM, even though I really want the weather for 9AM-9PM. So expect this
+ * to be up to an hour and a half off depending on where you live.
  */
 #define WEATHER_START_HOUR 9
-
-/**
- * Your API key for openweathermap.org
- * 
- * https://home.openweathermap.org/api_keys
- */
-#define OPENWEATHERMAP_API_KEY "your api key here"
 
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
@@ -113,7 +118,7 @@
 /**
  * Controls how long before midnight the processor is woken up for the first and second NTP syncs.
  * 
- * Two NTP syncs per day are performed because the internal clock in the ESP32 is very inaccurate.
+ * Two NTP syncs per day are performed per day because the internal clock in the ESP32 is very inaccurate.
  * 
  * The first time should be set to the maximum possible amount you expect the internal clock to be off in one day, since it will sleep for an entire day
  * and be woken at this time. The second one should be set to the maximum possible amount it will drift in the time betwen the first sync and midnight.
@@ -124,6 +129,8 @@
  * 
  * If the clock is running -MINUTES_BEFORE_MIDNIGHT_TO_SYNC_1 slow per day, then it will wake up and sync exactly at midnight. Any slower than that,
  * and it won't wake wake up in time for midnight and the date changeover will be late.
+ * 
+ * The default values correspond to the maximum inaccuracy specified in the ESP32's datasheet, I recommend you don't touch them.
  */
 #define MINUTES_BEFORE_MIDNIGHT_TO_SYNC_1 72
 #define MINUTES_BEFORE_MIDNIGHT_TO_SYNC_2 8
@@ -135,7 +142,10 @@
 #define ERROR_AFTER_HOURS_WITHOUT_INTERNET 24
 
 /**
- * Measure drift in the system clock and apply a correction factor for more accurate deep sleep.
+ * Measure drift in the system clock and apply a correction factor for more accurate timekeeping.
+ * 
+ * Since the ESP32's internal clock drifts significantly based on temperature, this can be pretty effective at improving the clock's accuracy
+ * assuming the clock is placed in a relatively temperature-stable environment. Like, you know, indoors.
  */
 #define ENABLE_RTC_CORRECTION
 #define MAX_RTC_CORRECTION_FACTOR 0.025
