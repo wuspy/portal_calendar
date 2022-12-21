@@ -46,7 +46,7 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 
 This project requires soldering, I'm sorry. Unfortunately I didn't take many pictures during the assembly of mine but it should be fairly straightforward how things go together.
 
-1. Print [front.stl](frame/front.stl) and [back.stl](frame/back.stl). Once those are done you can start putting things together, and get [cover.stl](frame/cover.stl) printing while you work.
+1. Print [front.stl](frame/front.stl) and [back.stl](frame/back.stl). Once those are done you can start putting things together, and get [cover.stl](frame/cover.stl) printing while you work. Print with a **0.2mm layer height**, other than that print settings really don't matter that much.
 2. Remove the protective film on the front of the e-ink display if it has one (there should be a red or green tab in one corner you can pull).
 3. Insert the display into [front.stl](frame/front.stl), oriented so the ribbon cable goes into slot on the side. The easiest way to do this is to gently pre-bend the ribbon cable, then slide the display in from the opposite side.
 
