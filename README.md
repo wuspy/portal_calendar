@@ -86,6 +86,8 @@ This project requires soldering, I'm sorry. Unfortunately I didn't take many pic
 
 8.  Make sure all the wires are inside the recess on the back cover so they aren't pinched, and make sure the ESP32 is seated in its recess. Then you can install [cover.stl](frame/cover.stl) and secure it with an **M3x8** screw in each corner, and one in the center above the battery holder.
 
+    ![](images/cover.jpg)
+
     There's no point in putting the batteries in yet since the ESP32 still needs to be programmed.
 
 # Firmware
