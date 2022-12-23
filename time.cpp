@@ -70,21 +70,25 @@ String getPosixTz(String name)
         DEBUG_PRINT("Looking up POSIX timezone for %s from %s", name.c_str(), server);
         WiFiUDP udp;
         udp.flush();
-        udp.begin(TIMEZONED_LOCAL_PORT);
+        udp.begin(TIMEZONED_LOCAL_PORT_START + i); // Each server must be called on a different port in case a packet comes in late
         unsigned long started = millis();
         udp.beginPacket(server, 2342);
         udp.write((const uint8_t*)name.c_str(), name.length());
         udp.endPacket();
         
-        // Wait for packet or return false with timed out
-        while (!udp.parsePacket()) {
-            delay (1);
-            if (millis() - started > TZ_LOOKUP_TIMEOUT_MS) {
-                udp.stop();
-                DEBUG_PRINT("Timeout for %s", server);
-                return "";
-            }
+        // Wait for packet until timeout
+        bool parsedPacket;
+        do {
+            delay(1);
+            parsedPacket = udp.parsePacket();
+        } while (!parsedPacket && millis() - started < TZ_LOOKUP_TIMEOUT_MS);
+
+        if (!parsedPacket) {
+            DEBUG_PRINT("Timeout for server %s", server);
+            udp.stop();
+            continue;
         }
+
         DEBUG_PRINT("Request to %s request took %lums", server, millis() - started);
         // Stick result in String recv 
         String recv;
@@ -136,7 +140,7 @@ bool syncNtp()
         udp.write(buffer, NTP_PACKET_SIZE);
         udp.endPacket();
 
-        // Wait for packet or return false with timed out
+        // Wait for packet until timeout
         bool parsedPacket;
         do {
             delay(1);

@@ -154,7 +154,7 @@
  * Port assignments
  */
 #define NTP_LOCAL_PORT_START 4242
-#define TIMEZONED_LOCAL_PORT 2342
+#define TIMEZONED_LOCAL_PORT_START 2342
 
 /**
  * Pin assignments

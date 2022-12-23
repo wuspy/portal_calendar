@@ -561,16 +561,19 @@ void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
 
 #endif // SHOW_WEATHER
 
-void Display::error(std::initializer_list<String> messageLines)
+void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 {
     init();
     const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
     _display->drawImage(IMG_ERROR, H_CENTER, y, DisplayGDEW075T7::BOTTOM_CENTER);
     _display->drawMultilineText(messageLines, FONT_SMALL, H_CENTER, y + FONT_SMALL.ascent + FONT_SMALL.descent, DisplayGDEW075T7::TOP_CENTER);
-    _display->drawMultilineText({
-        "Will try again in 1 hour. Or, press the BOOT button",
-        "on the back of the device to retry now.",
-    }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
+
+    if (willRetry) {
+        _display->drawMultilineText({
+            "Will try again in 1 hour. Or, press the BOOT button",
+            "on the back of the device to retry now.",
+        }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
+    }
 
     _display->refresh();
 }

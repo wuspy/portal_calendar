@@ -14,7 +14,7 @@ class Display
 public:
     Display();
     ~Display();
-    void error(std::initializer_list<String> messageLines);
+    void error(std::initializer_list<String> messageLines, bool willRetry);
     void update(const tm *now);
     #ifndef SHOW_WEATHER
     void testChamberIcons();

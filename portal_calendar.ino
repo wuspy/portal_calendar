@@ -104,7 +104,7 @@ void error(std::initializer_list<String> message)
 {
     DEBUG_PRINT("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
-    display.error(message);
+    display.error(message, true);
     deepSleep(SECONDS_PER_HOUR);
 }
 
@@ -186,6 +186,23 @@ void errorInvalidOwmLocation()
 
 #endif // SHOW_WEATHER
 
+void errorBrownout()
+{
+    // Brownout was likely caused by the wifi radio, so hopefully there's still
+    // enough power to refresh the display
+    DEBUG_PRINT("Brownout detected");
+    display.error({
+        "REPLACE BATTERIES",
+        "",
+        "If the device does not restart automatically",
+        "after new batteries have been inserted,",
+        "press the BOOT button on the back."
+    }, false);
+    // Sleep forever
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_deep_sleep_start();
+}
+
 int getSecondsToMidnight(tm *now)
 {
     tm tomorrow = *now;
@@ -207,6 +224,10 @@ void setup()
     strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now);
     DEBUG_PRINT("Waking up at %s", timestr);
     #endif
+
+    if (esp_reset_reason() == ESP_RST_BROWNOUT) {
+        errorBrownout();
+    }
 
     // Set timezone
 
