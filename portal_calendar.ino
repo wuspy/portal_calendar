@@ -237,6 +237,7 @@ void setup()
             String tz = getPosixTz(TIME_ZONE);
             if (!tz.isEmpty()) {
                 strcpy(savedTimezone, tz.c_str());
+                needsTimezoneSync = false;
             } else if (savedTimezone[0] == '\0') {
                 errorTzLookupFailed();
             }
