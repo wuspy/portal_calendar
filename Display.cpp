@@ -338,7 +338,7 @@ void Display::update(const tm *now)
     #ifdef SHOW_YEAR
     // Year
     sprintf(buffer, "%d", year);
-    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, 0, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     // Progress bar
