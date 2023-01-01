@@ -94,7 +94,13 @@ This project requires soldering, I'm sorry. Unfortunately I didn't take many pic
 
 Read through [config.h](config.h) and fill out the required values. At a minimum, you need to fill out `WIFI_NAME`, `WIFI_PASS`, and `TIME_ZONE`. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
 
-The firmware can be built and flashed with the Arduino IDE once you've installed the esp32 boards package. Go to `Tools -> Boards -> Boards Manager...` and search for 'esp32'
+The firmware can be built and flashed with the Arduino IDE after you've installed the ESP32 boards package 2.0+ and ArduinoJson 6.20+.
+
+To install the ESP32 boards package, go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+
+    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+Then, go to `Tools -> Boards -> Boards Manager...` and search for esp32
 
 ![](images/arduino1.png)
 
