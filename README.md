@@ -34,7 +34,7 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 
 - **EzSBC ESP32 breakout board**
 
-    Available [here](https://www.ezsbc.com/product/esp32-breakout-and-development-board/). This will run on any ESP32, but this particular board is perfect for alkaline battery power due to its efficient voltage regulator and flexible input voltage. If you use a different board, you will need to modify the case and come up with your own power solution.
+    Available [here](https://www.ezsbc.com/product/esp32-breakout-and-development-board/) or [here](https://www.tindie.com/products/ddebeer/esp32-dev-board-wifibluetooth/). This will run on any ESP32, but this particular board is perfect for alkaline battery power due to its efficient voltage regulator and flexible input voltage. If you use a different board, you will need to modify the case and come up with your own power solution.
 
 - **4xAAA battery holder**
 
