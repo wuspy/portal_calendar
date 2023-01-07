@@ -203,6 +203,13 @@ const uint8_t LUT_DTM2[] = {
     /* BLACK */ 1,
 };
 
+const uint8_t LUT_1BIT[] = {
+    /* WHITE */ 0,
+    /* LGREY */ 0,
+    /* DGREY */ 1,
+    /* BLACK */ 1,
+};
+
 #define BUSY_TIMEOUT 5000
 
 DisplayGDEW075T7::~DisplayGDEW075T7() {
@@ -299,12 +306,19 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x00);
     sendData(0x00);
 
-    setLut(CMD_SET_LUTVCOM, LUT_VCOM_2BIT);
-    setLut(CMD_SET_LUTWW, LUT_WHITE_2BIT);
-    setLut(CMD_SET_LUTBW, LUT_DGREY_2BIT);
-    setLut(CMD_SET_LUTWB, LUT_LGREY_2BIT);
-    setLut(CMD_SET_LUTBB, LUT_BLACK_2BIT);
-    setLut(CMD_SET_LUTBD, LUT_WHITE_2BIT);
+    // setLut(CMD_SET_LUTVCOM, LUT_VCOM_2BIT);
+    // setLut(CMD_SET_LUTWW, LUT_WHITE_2BIT);
+    // setLut(CMD_SET_LUTBW, LUT_DGREY_2BIT);
+    // setLut(CMD_SET_LUTWB, LUT_LGREY_2BIT);
+    // setLut(CMD_SET_LUTBB, LUT_BLACK_2BIT);
+    // setLut(CMD_SET_LUTBD, LUT_WHITE_2BIT);
+
+    setLut(CMD_SET_LUTVCOM, LUT_VCOM_1BIT);
+    setLut(CMD_SET_LUTWW, LUT_WW_1BIT);
+    setLut(CMD_SET_LUTBW, LUT_BW_1BIT);
+    setLut(CMD_SET_LUTWB, LUT_WB_1BIT);
+    setLut(CMD_SET_LUTBB, LUT_BB_1BIT);
+    setLut(CMD_SET_LUTBD, LUT_WW_1BIT);
 }
 
 void DisplayGDEW075T7::sendCommand(uint8_t command)
@@ -344,24 +358,34 @@ void DisplayGDEW075T7::refresh()
     uint16_t chunk; // Holds 8px of frame_buffer
     uint8_t data;   // Holds 8px of display output
 
-    sendCommand(CMD_DTM1);
-    for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
-        data = 0;
-        chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
-        for (uint8_t j = 0; j < 8; ++j) {
-            data |= LUT_DTM1[(chunk >> (j * 2)) & 0b11] << j;
-        }
-        sendData(data);
-    }
     sendCommand(CMD_DTM2);
     for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
         data = 0;
         chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
         for (uint8_t j = 0; j < 8; ++j) {
-            data |= LUT_DTM2[(chunk >> (j * 2)) & 0b11] << j;
+            data |= LUT_1BIT[(chunk >> (j * 2)) & 0b11] << j;
         }
         sendData(data);
     }
+
+    // sendCommand(CMD_DTM1);
+    // for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
+    //     data = 0;
+    //     chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
+    //     for (uint8_t j = 0; j < 8; ++j) {
+    //         data |= LUT_DTM1[(chunk >> (j * 2)) & 0b11] << j;
+    //     }
+    //     sendData(data);
+    // }
+    // sendCommand(CMD_DTM2);
+    // for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
+    //     data = 0;
+    //     chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
+    //     for (uint8_t j = 0; j < 8; ++j) {
+    //         data |= LUT_DTM2[(chunk >> (j * 2)) & 0b11] << j;
+    //     }
+    //     sendData(data);
+    // }
 
     sendCommand(CMD_REFRESH);
     delay(100);
