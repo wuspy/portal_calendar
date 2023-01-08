@@ -257,7 +257,7 @@ void DisplayGDEW075T7::wakeup()
 
     // Most of this is Waveshare's defaults
 
-    sendCommand(CMD_PWR);   // power setting
+    sendCommand(CMD_PWR);   // power setting 6 1 2 3
     sendData(0x17);         // BD_EN=1, VSR_EN=1, VS_EN=1, VG_EN=1, waveshare
     sendData(0x17);         // VPP_EN=0, VCOM_SLEW=1, VGH=20v, VGL=-20v
     sendData(0x3F);         // VDH=15v
@@ -265,7 +265,8 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x11);         // VDHR=5.8v
   	
     sendCommand(CMD_VDCS);  // VCOM DC Setting (min 0x00 = -0.1v, max 0x4F = -4.05v)
-    sendData(0x26);         // -2.0v
+    // sendData(0x26);         // -2.0v
+    sendData(0x24);         // -1.8v
   
     sendCommand(CMD_BTST);  // Booster Setting
     sendData(0x27);
@@ -293,9 +294,10 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x00);
 
     sendCommand(CMD_VCOM_CDI);  // VCOM AND DATA INTERVAL SETTING
-    sendData(0x00);             // BDZ=0, BDV=00, N2OCP=0, DDX=00
-    // sendData(0x00);             // CDI=17
-    sendData(0x07);             // CDI=10
+    sendData(0x10);
+    // sendData(0x00);             // BDZ=0, BDV=00, N2OCP=0, DDX=00
+    sendData(0x00);             // CDI=17
+    // sendData(0x07);             // CDI=10
 
     sendCommand(CMD_TCON);      // TCON SETTING
     sendData(0x22);
@@ -318,7 +320,6 @@ void DisplayGDEW075T7::wakeup()
     setLut(CMD_SET_LUTBW, LUT_BW_1BIT);
     setLut(CMD_SET_LUTWB, LUT_WB_1BIT);
     setLut(CMD_SET_LUTBB, LUT_BB_1BIT);
-    setLut(CMD_SET_LUTBD, LUT_WW_1BIT);
 }
 
 void DisplayGDEW075T7::sendCommand(uint8_t command)
