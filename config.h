@@ -4,6 +4,10 @@
  */
 #define WIFI_NAME "your wifi name here"
 #define WIFI_PASS "your wifi password here"
+#define WIFI_AP_NAME "Aperture Science Guest WiFi"
+
+// Must be at least 8 chars or AP setup will fail.
+#define WIFI_AP_PASSWORD "Aperture"
 
 /**
  * Show the day name on the right side (next to the XX/XX day)
@@ -168,4 +172,4 @@
 /**
  * If debug logs should be printed over serial
  */
-// #define DEBUG
+#define DEBUG

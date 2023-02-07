@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <WiFiManager.h>  
 #include "global.h"
 #include "time.h"
 #include "Display.h"
@@ -41,6 +42,7 @@ RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
 #endif // SHOW_WEATHER
 
 Display display;
+WiFiManager wifiManager;
 
 void deepSleep(uint64_t seconds)
 {
@@ -73,7 +75,9 @@ void stopWifi()
     if (WiFi.getMode() != WIFI_OFF) {
         DEBUG_PRINT("Stopping WiFi");
         unsigned long start = millis();
-        WiFi.disconnect(true, true);
+        wifiManager.disconnect();
+        
+        // Disable the WiFi hardware as well for power preservation.
         WiFi.mode(WIFI_OFF);
         DEBUG_PRINT("WiFi shutdown took %lums", millis() - start);
     }
@@ -81,23 +85,114 @@ void stopWifi()
 
 bool startWifi()
 {
-    if (WiFi.status() == WL_CONNECTED) {
-        return true;
-    }
-    DEBUG_PRINT("Starting WiFi");
-    unsigned long start = millis();
-    #ifdef WIFI_PASS
-    WiFi.begin(WIFI_NAME, WIFI_PASS);
-    #else
-    WiFi.begin(WIFI_NAME);
-    #endif
-    if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
-        DEBUG_PRINT("WiFi connection failed after %lums", millis() - start);
-        stopWifi();
-        return false;
-    }
-    DEBUG_PRINT("WiFi connection took %lums", millis() - start);
+  // Ensure the device is in Station Mode
+  WiFi.mode(WIFI_STA);
+
+  // If we're already connected, don't bother trying to connect again
+  if(wifiManager.getLastConxResult() == WL_CONNECTED) {
     return true;
+  }
+
+  DEBUG_PRINT("Starting WiFi");
+  unsigned long start = millis();
+  
+  // If we're not already connected, attempt to connect. By default WiFiManager will automatically
+  // try to start an Access Point if connection fails (so you can connect to WiFiManager and configure)
+  // but we suppress that behavior, so that we can display some info to the user.
+  wifiManager.setEnableConfigPortal(false);
+  wifiManager.setWiFiAutoReconnect(false); 
+  wifiManager.setConnectTimeout(10); // Attempt to connect for ten seconds, then fail.
+
+  // If there's no credentails to try and connect with, don't bother with the connection attempt.
+  bool result = wifiManager.getWiFiIsSaved();
+  if(!result) {
+    DEBUG_PRINT("No WiFi Credentials Saved, moving user to AP Setup Flow");
+
+    // We call stopWiFi to clean up and shut down WiFi as much as possible
+    stopWifi();
+    return false;
+  }
+
+  // If they do have credentials saved, attempt a connection.
+  result = wifiManager.autoConnect();
+  if(!result) {
+    DEBUG_PRINT("WiFi connection failed after %lums, moving user to AP Setup Flow", millis() - start);
+
+    stopWifi();
+    return false;
+  }
+
+  // If we got this far then they managed to connect to WiFi!
+  DEBUG_PRINT("WiFi connection succeeded, took %lums", millis() - start);
+  return true;
+}
+
+void doDeviceConfigurationFlow()
+{
+    // To configure the device, the ESP32 will create an Access Point with a username/password.
+    // The user will then connect to it via their phone, setup the access to the real WiFi
+    // and then the ESP32 will close the Access Point and attempt to connect to the user-specified one.
+    
+    // We want to inform the user how to configure their Aperture Science Non-Sentient Device,
+    // so we will take advantage of the screen to display some info + a QR Code to scan with the phone.
+    // We can't use the standard error(...) function as that will enter deep sleep and prevent us from
+    // ever starting the webportal.
+    DEBUG_PRINT("Starting Device Configuration Flow");
+    unsigned long start = millis();
+
+    // Configure the Wifi Manager with custom fields for the various Calendar settings.
+    //setupUserParametersOnAP();
+
+    // ToDo: Find out if the ESP is WPA2 or WEP when in AP mode
+    // To generate a QR Code that helps auto-connect your phone to a WiFi network, the
+    // QR Code needs to have the following pattern, where H: means "Hidden" and is optional.
+    // The trailing ";;" is important. Side note: This could probably be rewritten to cause
+    // less heap fragmentation, since this info is the hard-coded Device AP, not user AP.
+    // WIFI:S:<SSID>;T:<WEP|WPA|blank>;P:<PASSWORD>;H:<true|false|blank>;;
+    /*String QRCodeData = String("WIFI:S:") + WIFI_AP_NAME + String(";T:WPA;P:") + WIFI_AP_PASSWORD + String(";H:false;;");
+
+    // Now that we have the data as a string, we will generate a qr code.
+    qrcodegen::QrCode qrCode = qrcodegen::QrCode::EncodeText(*QRCodeData, QrCode::Ecc::MEDIUM);
+
+    // Finally, we refresh the display to show this information to the user. We could probably write a native QR Code drawing
+    // routine for the display... or we could encode the QR Code as text and re-use the existing routine for displaying text. :)
+    // (this is definitely not great for heap fragmentation, but also there's like 160kb of it...)
+    String qrCodeAsString;
+    int border = 4;
+    for(int y = -border; y < qrCode.getSize() + border; y++)
+    {
+        for(int x  = - border; x < qrCode.getSize() + border; x++)
+        {
+          qrCodeAsString += qrCode.getModule(x, y) ? "##" : "  ";
+        }
+        qrCodeAsString += "\n";
+    }*/
+
+    std::initializer_list<String> userText = 
+    {
+      "Welcome to your Aperture Science Non-Sentient Device.",
+      "Please configure your device by using another WiFi",
+      "capable Device (such as your phone) and connecting",
+      "to the WiFi Network:",
+      "",
+      "SSID: \""WIFI_AP_NAME"\"",
+      "Password: \""WIFI_AP_PASSWORD"\"",
+      "",
+      "Alternatively, you can scan the QR Code below to",
+      "automatically be connected.",
+      "",
+      "",
+      //qrCodeAsString
+    };
+
+    // Draw our QR Code + User Prompt to Display, reusing the routine for displaying an error.
+    const bool bWillRetry = false;
+    display.error(userText, bWillRetry);
+
+    // The startConfigPortal will block until the user confirms information.
+    wifiManager.setConfigPortalBlocking(true);
+    wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASSWORD);
+    DEBUG_PRINT("User has finished Config Portal configuration. Reboot the device now.");
 }
 
 void error(std::initializer_list<String> message)
@@ -119,6 +214,17 @@ void errorNoWifi()
         "WiFi Name:",
         "\"" WIFI_NAME "\""
     });
+}
+
+void errorNotOnUSBPowerToStartAP()
+{
+  error({
+    "NOT ON USB POWER",
+    "",
+    "To continue setup the ESP32 needs to be running",
+    "on USB power. Please plug in via USB and then",
+    "press \"BOOT\" on the back."
+  });
 }
 
 void errorNtpFailed()
@@ -211,6 +317,17 @@ int getSecondsToMidnight(tm *now)
     return (int)difftime(mktime(&tomorrow), mktime(now));
 }
 
+/**
+ * On the EzSBC breakout board, pin 19 is connected to Vusb through an LED and a 1k resistor, meaning it is pulled
+ * high if the board is on USB power.
+ */
+bool isOnUsbPower()
+{
+    return true;
+    pinMode(19, INPUT_PULLDOWN);
+    return digitalRead(19) == HIGH;
+}
+
 void setup()
 {
     time_t t;
@@ -218,6 +335,10 @@ void setup()
     
     #ifdef DEBUG
     Serial.begin(115200);
+    wifiManager.setDebugOutput(true);
+    // wifiManager.resetSettings();
+
+    // Convert timestamp and print it over Serial
     time(&t);
     localtime_r(&t, &now);
     char timestr[30];
@@ -225,34 +346,39 @@ void setup()
     DEBUG_PRINT("Waking up at %s", timestr);
     #endif
 
+    // If we're rebooting because we ran out of power, print an error
+    // (and this function never returns, the rest of setup is not run)
     if (esp_reset_reason() == ESP_RST_BROWNOUT) {
         errorBrownout();
     }
 
-    // Set timezone
+    // Attempt to connect to the WiFi. If connection fails then either credentials are wrong,
+    // it's never been set up, or it's out of range. 
+    bool bConnectedWiFi = startWifi();
 
-    #ifdef TIME_ZONE
-    if (needsTimezoneSync || savedTimezone[0] == '\0') {
-        if (startWifi()) {
-            String tz = getPosixTz(TIME_ZONE);
-            if (!tz.isEmpty()) {
-                strcpy(savedTimezone, tz.c_str());
-                needsTimezoneSync = false;
-            } else if (savedTimezone[0] == '\0') {
-                errorTzLookupFailed();
-            }
-        } else if (savedTimezone[0] == '\0') {
-            // WiFi didn't connect and we have no idea what timezone we're in
-            errorNoWifi();
+    if(!bConnectedWiFi)
+    {
+        // We failed to connect to the WiFi. We're going to ask the user to plug into USB power
+        // instead of running the AP without them realizing it.
+        if(!isOnUsbPower())
+        {
+            // If they're not currently on USB power, we will print an error message
+            // asking them to plug in via USB, then restart. This function will never
+            // return (enters deep sleep).
+            errorNotOnUSBPowerToStartAP();
         }
-    }
-    #endif // TIME_ZONE
-    
-    DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
-    setenv("TZ", savedTimezone, 1);
-    tzset();
 
-    // Set time
+        // If we are on usb power, we're going to start an Access Point that the user
+        // can connect to with their phone to configure this display. This will print
+        // some info to the screen
+        doDeviceConfigurationFlow();
+
+        // If we've made it to here then the user has finished connecting it to a
+        // real Access Point, and we can move onto time synchronization.
+    }
+
+
+    // Set timezone
 
     time_t lastNtpSync = getLastNtpSync();
     if (needsNtpSync || !lastNtpSync) {
