@@ -1,6 +1,7 @@
 #include "Display.h"
 #include "global.h"
 #include "time.h"
+#include "qrcodegen/qrcodegen.h"
 
 #include "resource/font/medium.h"
 #include "resource/font/small.h"
@@ -577,3 +578,30 @@ void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 
     _display->refresh();
 }
+
+void Display::showQRCodeSetup(uint8_t qrCode[], std::initializer_list<String> messageLines)
+{
+  init();
+
+  int qrSize = qrcodegen_getSize(qrCode);
+  const int32_t pxPerPixel = 8;
+
+  int32_t xOffsetGlobal = H_CENTER - (((qrSize+1) * pxPerPixel) / 2);
+  // Center the QR code in the top center of the frame
+  int32_t yOffsetGlobal = xOffsetGlobal;
+
+  for(int y = 0; y < qrSize; y++)
+  {
+    for(int x = 0; x < qrSize; x++)
+    {
+      int32_t xOffset = (x*pxPerPixel);
+      int32_t yOffset = (y*pxPerPixel);
+      uint8_t color = qrcodegen_getModule(qrCode, x, y) ? 255 : 0;
+      _display->fillRect(xOffset + xOffsetGlobal, yOffset + yOffsetGlobal, pxPerPixel, pxPerPixel, color); 
+    }
+  }
+  yOffsetGlobal += (qrSize *pxPerPixel) + 32;
+  _display->drawMultilineText(messageLines, FONT_SMALL, H_CENTER, yOffsetGlobal + FONT_SMALL.ascent + FONT_SMALL.descent, DisplayGDEW075T7::TOP_CENTER);
+  _display->refresh();
+}
+

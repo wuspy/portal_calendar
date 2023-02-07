@@ -15,6 +15,7 @@ public:
     Display();
     ~Display();
     void error(std::initializer_list<String> messageLines, bool willRetry);
+    void showQRCodeSetup(uint8_t qrCode[], std::initializer_list<String> messageLines);
     void update(const tm *now);
     #ifndef SHOW_WEATHER
     void testChamberIcons();

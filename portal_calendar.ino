@@ -6,6 +6,7 @@
 #ifdef SHOW_WEATHER
 #include "weather.h"
 #endif
+#include "qrcodegen/qrcodegen.h"
 
 /**
  * Stores the current day of the year displayed
@@ -149,45 +150,65 @@ void doDeviceConfigurationFlow()
     // The trailing ";;" is important. Side note: This could probably be rewritten to cause
     // less heap fragmentation, since this info is the hard-coded Device AP, not user AP.
     // WIFI:S:<SSID>;T:<WEP|WPA|blank>;P:<PASSWORD>;H:<true|false|blank>;;
-    /*String QRCodeData = String("WIFI:S:") + WIFI_AP_NAME + String(";T:WPA;P:") + WIFI_AP_PASSWORD + String(";H:false;;");
+    String QRCodeData = String("WIFI:S:") + WIFI_AP_NAME + String(";T:WPA;P:") + WIFI_AP_PASSWORD + String(";H:false;;");
+    DEBUG_PRINT("Generated QRCodeDataStr");
 
     // Now that we have the data as a string, we will generate a qr code.
-    qrcodegen::QrCode qrCode = qrcodegen::QrCode::EncodeText(*QRCodeData, QrCode::Ecc::MEDIUM);
+    enum qrcodegen_Ecc errCorLvl = qrcodegen_Ecc_LOW;  // Error correction level
+    DEBUG_PRINT("SetECCLvl");
 
-    // Finally, we refresh the display to show this information to the user. We could probably write a native QR Code drawing
-    // routine for the display... or we could encode the QR Code as text and re-use the existing routine for displaying text. :)
-    // (this is definitely not great for heap fragmentation, but also there's like 160kb of it...)
-    String qrCodeAsString;
-    int border = 4;
-    for(int y = -border; y < qrCode.getSize() + border; y++)
+ 
+    uint8_t qrcode[qrcodegen_BUFFER_LEN_FOR_VERSION(MAX_QRCODE_VERSION)];
+    DEBUG_PRINT("AllocatedBuffer");
+    uint8_t tempBuffer[qrcodegen_BUFFER_LEN_FOR_VERSION(MAX_QRCODE_VERSION)];
+    DEBUG_PRINT("Allocated Second Buffer");
+
+    bool bOk = qrcodegen_encodeText(QRCodeData.c_str(), tempBuffer, qrcode, errCorLvl,
+    qrcodegen_VERSION_MIN, MAX_QRCODE_VERSION, qrcodegen_Mask_AUTO, true);
+
+    DEBUG_PRINT("QRCode Version: %d Length: %d", MAX_QRCODE_VERSION, qrcodegen_BUFFER_LEN_FOR_VERSION(MAX_QRCODE_VERSION));
+
+    
+    /*std::vector<bool> qrCodeAsString;
+    if(bOk)
     {
-        for(int x  = - border; x < qrCode.getSize() + border; x++)
-        {
-          qrCodeAsString += qrCode.getModule(x, y) ? "##" : "  ";
-        }
-        qrCodeAsString += "\n";
+      // Finally, we refresh the display to show this information to the user. We could probably write a native QR Code drawing
+      // routine for the display... or we could encode the QR Code as text and re-use the existing routine for displaying text. :)
+      // (this is definitely not great for heap fragmentation, but also there's like 160kb of it...)
+
+      int border = 4;
+      int size = qrcodegen_getSize(qrcode);
+      for(int y = 0; y < size; y++)
+      {
+          String newLine;
+          for(int x  = 0; x < size; x++)
+          {
+            qrCodeAsString += qrcodegen_getModule(qrcode, x, y) ? "#" : "  ";
+          }
+          qrCodeAsString.push_back(newLine);
+      }
+    }
+    else
+    {
+      qrCodeAsString.push_back(String("Error generating QRCode."));
     }*/
 
     std::initializer_list<String> userText = 
     {
       "Welcome to your Aperture Science Non-Sentient Device.",
-      "Please configure your device by using another WiFi",
-      "capable Device (such as your phone) and connecting",
-      "to the WiFi Network:",
+      "Please configure your device by using another Wi-Fi",
+      "capable device (such as your phone) and connecting",
+      "to the Wi-Fi network:",
       "",
       "SSID: \""WIFI_AP_NAME"\"",
       "Password: \""WIFI_AP_PASSWORD"\"",
       "",
-      "Alternatively, you can scan the QR Code below to",
-      "automatically be connected.",
-      "",
-      "",
-      //qrCodeAsString
+      "Alternatively, you can scan the QR code above to be",
+      "automatically connected.",
     };
 
-    // Draw our QR Code + User Prompt to Display, reusing the routine for displaying an error.
-    const bool bWillRetry = false;
-    display.error(userText, bWillRetry);
+    // Draw our QR Code + User Prompt to Display
+    display.showQRCodeSetup(qrcode, userText);
 
     // The startConfigPortal will block until the user confirms information.
     wifiManager.setConfigPortalBlocking(true);
