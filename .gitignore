@@ -4,3 +4,4 @@ build
 resource/font/*.ttf
 resource/font/*.otf
 private
+.pio/

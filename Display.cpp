@@ -1,6 +1,6 @@
 #include "Display.h"
 #include "global.h"
-#include "time.h"
+#include "time_misc.h"
 
 #include "resource/font/medium.h"
 #include "resource/font/small.h"
