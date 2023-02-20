@@ -2,6 +2,7 @@
 #include "global.h"
 #include "time_util.h"
 #include "Display.h"
+#include "driver/rtc_io.h"
 #ifdef SHOW_WEATHER
 #include "weather.h"
 #endif
@@ -37,7 +38,10 @@ RTC_DATA_ATTR bool needsTimezoneSync = true;
  * Controls if weather information will be synced on wakeup
  */
 RTC_DATA_ATTR bool needsWeatherSync = true;
+RTC_DATA_ATTR bool showWeather = true;
 RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
+#else
+bool showWeather = false;
 #endif // SHOW_WEATHER
 
 Display display;
@@ -64,6 +68,11 @@ void deepSleep(uint64_t seconds)
     }
     #endif
     uint64_t duration = millis() - start;
+
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    rtc_gpio_pullup_en(GPIO_NUM_0);
+    rtc_gpio_pulldown_dis(GPIO_NUM_0);
+    esp_sleep_enable_ext1_wakeup(0x1 << GPIO_NUM_0, ESP_EXT1_WAKEUP_ALL_LOW);
     esp_sleep_enable_timer_wakeup(seconds * uS_PER_S - duration * 1000);
     esp_deep_sleep_start();
 }
@@ -215,7 +224,7 @@ void setup()
 {
     time_t t;
     tm now;
-    
+
     #ifdef DEBUG
     time(&t);
     Serial.begin(115200);
@@ -247,7 +256,7 @@ void setup()
         }
     }
     #endif // TIME_ZONE
-    
+
     DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
     setenv("TZ", savedTimezone, 1);
     tzset();
@@ -273,7 +282,19 @@ void setup()
     time(&t);
     localtime_r(&t, &now);
 
+    // Update display if needed
+    bool needsDisplayUpdate = now.tm_yday != displayedYDay;
     #ifdef SHOW_WEATHER
+    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
+    #endif
+
+    #ifdef SHOW_WEATHER
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
+        DEBUG_PRINT("Wake from button press changing showWeather from %u to %u", showWeather, !showWeather);
+        showWeather = !showWeather;
+        needsDisplayUpdate = true;
+        needsWeatherSync = showWeather;
+    }
 
     // Sync weather
 
@@ -297,14 +318,9 @@ void setup()
 
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
 
-    // Update display if needed
-    bool needsDisplayUpdate = now.tm_yday != displayedYDay;
-    #ifdef SHOW_WEATHER
-    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
-    #endif
     if (needsDisplayUpdate) {
         DEBUG_PRINT("Updating display for %d-%d-%d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday);
-        display.update(&now);
+        display.update(&now, showWeather);
         displayedYDay = now.tm_yday;
         #ifdef SHOW_WEATHER
         displayedWeatherVersion = getLastWeatherSync();

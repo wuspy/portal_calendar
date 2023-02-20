@@ -10,7 +10,6 @@
 #include "resources/progress_bar.h"
 #include "resources/error.h"
 
-#ifdef SHOW_WEATHER
 #include "resources/font/weather_frame.h"
 #include "resources/weather_info_degree_symbol.h"
 #include "resources/weather_info_percent_symbol.h"
@@ -27,7 +26,7 @@
 #include "resources/weather_partly_cloudy_night.h"
 #include "resources/weather_scattered_showers_day.h"
 #include "resources/weather_scattered_showers_night.h"
-#else
+
 #include "resources/cube_dispenser_on.h"
 #include "resources/cube_dispenser_off.h"
 #include "resources/cube_hazard_on.h"
@@ -232,8 +231,6 @@ static_assert(
     "There must be 31 sets of chamber icons"
 );
 
-#endif // SHOW_WEATHER
-
 #define ICON_SIZE 64
 #define ICON_SPACING 9
 #define LEFT 82
@@ -302,7 +299,7 @@ void Display::init()
     }
 }
 
-void Display::update(const tm *now)
+void Display::update(const tm *now, bool showWeather)
 {
     init();
     char buffer[10];
@@ -346,54 +343,48 @@ void Display::update(const tm *now)
     int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
     _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
 
-    #ifdef SHOW_WEATHER
+    if (showWeather) {
+        // Weather
 
-    // Weather
+        #if WEATHER_DISPLAY_TYPE == 1
 
-    #if WEATHER_DISPLAY_TYPE == 1
+        DailyWeather weather[5];
+        get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
 
-    DailyWeather weather[5];
-    get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
+        for (int i = 0; i < 5; ++i) {
+            drawDailyWeather(weather[i], i);
+        }
 
-    for (int i = 0; i < 5; ++i) {
-        drawDailyWeather(weather[i], i);
-    }
+        #elif WEATHER_DISPLAY_TYPE == 2
 
-    #elif WEATHER_DISPLAY_TYPE == 2
+        WeatherEntry weather[5];
+        getTodaysWeather(now->tm_mon, now->tm_mday, weather);
 
-    WeatherEntry weather[5];
-    getTodaysWeather(now->tm_mon, now->tm_mday, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawWeatherEntry(weather[i], i);
-    }
-
+        for (int i = 0; i < 5; ++i) {
+            drawWeatherEntry(weather[i], i);
+        }
     #else
 
     #error Invalid value for WEATHER_DISPLAY_TYPE
 
     #endif // WEATHER_DISPLAY_TYPE
 
-    #else
-
-    // Chamber icons
-    if (now->tm_mon == 1 && now->tm_mday == 29) {
-        // Special icon set for leap day
-        for (int i = 0; i < 8; ++i) {
-            drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
-        }
-    } else if (now->tm_mday <= 31) {
-        for (int i = 0; i < 10; ++i) {
-            drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+    } else {
+        // Chamber icons
+        if (now->tm_mon == 1 && now->tm_mday == 29) {
+            // Special icon set for leap day
+            for (int i = 0; i < 8; ++i) {
+                drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
+            }
+        } else if (now->tm_mday <= 31) {
+            for (int i = 0; i < 10; ++i) {
+                drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+            }
         }
     }
 
-    #endif // SHOW_WEATHER
-
     _display->refresh();
 }
-
-#ifdef SHOW_WEATHER
 
 const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool day)
 {
@@ -522,8 +513,6 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     #endif
 }
 
-#else
-
 void Display::testChamberIcons()
 {
     const Image* allIcons[] = {
@@ -558,8 +547,6 @@ void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
         ICON_TOP + y * (ICON_SIZE + ICON_SPACING)
     );
 }
-
-#endif // SHOW_WEATHER
 
 void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 {

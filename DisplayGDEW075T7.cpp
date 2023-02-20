@@ -1,8 +1,8 @@
 /**
  * Display class supporting 4-level greyscale for GDEW075T7 e-paper display, aka the 800x480 7.5" B/W from Waveshare.
- * 
+ *
  * https://www.good-display.com/product/244.html
- * 
+ *
  * Datasheet (for a different display controller) that has the LUT commands documented:
  * https://www.smart-prototyping.com/image/data/9_Modules/EinkDisplay/GDEW0154T8/IL0373.pdf
  */
@@ -48,7 +48,7 @@ const uint8_t CMD_VDCS          = 0x82;
 
 /**
  * Macro to generate an LUT row while preserving some readability.
- * 
+ *
  * l* params are the voltages to apply at each step, and t* are the number of frames to keep that voltage applied.
  * r is the number of times the enitre sequence is to be repeated.
  */
@@ -57,9 +57,9 @@ const uint8_t CMD_VDCS          = 0x82;
 
 /**
  * These LUTs are the original ones provided for this display by Waveshare.
- * 
+ *
  * Currently not used, but kept here for reference.
- * 
+ *
  * https://github.com/waveshare/e-Paper/blob/master/Arduino/epd7in5_V2/epd7in5_V2.cpp
  */
 
@@ -118,13 +118,13 @@ const uint8_t LUT_BB_1BIT[] = {
  * The author of that project says these waveforms are provided by GoodDisplay, however
  * they aren't meant for this particular display and may have varying results between displays,
  * although they look perfect on the one I have.
- * 
+ *
  * The only modification I've made is repeating the 2nd waveform twice to reduce ghosting.
  * I don't forsee this having any negative effects since that waveform is balanced between VDH/VDL.
  * Ghosting seems to increase as temperature decreases, which makes sense because the oil in the display
  * will be more viscous. Increasing R2 will help reduce ghosting more at low temperatures at the cost of
  * increated refresh time.
- * 
+ *
  * https://github.com/ZinggJM/GxEPD2_4G/blob/master/src/epd/GxEPD2_750_T7.cpp
  */
 
@@ -228,7 +228,7 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t rese
     _spi = new SPIClass(_spiBus);
     _spi->begin();
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
-    
+
     _frameBuffer = new uint8_t[FRAMEBUFFER_LENGTH];
 
     setRotation(ROTATION_0);
@@ -240,7 +240,7 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t rese
 void DisplayGDEW075T7::wakeup()
 {
     digitalWrite(_resetPin, HIGH);
-    delay(20); 
+    delay(20);
     digitalWrite(_resetPin, LOW);
     delay(4);
     digitalWrite(_resetPin, HIGH);
@@ -256,16 +256,16 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x3F);         // VDH=15v
     sendData(0x3F);         // VDL=-15v
     sendData(0x11);         // VDHR=5.8v
-  	
+
     sendCommand(CMD_VDCS);  // VCOM DC Setting (min 0x00 = -0.1v, max 0x4F = -4.05v)
     sendData(0x26);         // -2.0v
-  
+
     sendCommand(CMD_BTST);  // Booster Setting
     sendData(0x27);
     sendData(0x27);
     sendData(0x2F);
     sendData(0x17);
-  	
+
     sendCommand(CMD_PLL);
     sendData(0x06);         // 150hz
 
@@ -330,7 +330,7 @@ void DisplayGDEW075T7::waitUntilIdle()
 
 void DisplayGDEW075T7::setLut(uint8_t cmd, const uint8_t* lut)
 {
-    sendCommand(cmd);	
+    sendCommand(cmd);
     for (size_t i = 0; i < 42; ++i) {
         sendData(lut[i]);
     }
