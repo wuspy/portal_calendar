@@ -1,6 +1,7 @@
 #include "Display.h"
 #include "global.h"
 #include "time_misc.h"
+#include "Localization.h"
 
 #include "resource/font/medium.h"
 #include "resource/font/small.h"
@@ -244,39 +245,39 @@ static_assert(
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
 
-const char* MONTHS[] = {
-    "JANUARY",
-    "FEBRUARY",
-    "MARCH",
-    "APRIL",
-    "MAY",
-    "JUNE",
-    "JULY",
-    "AUGUST",
-    "SEPTEMBER",
-    "OCTOBER",
-    "NOVEMBER",
-    "DECEMBER",
+const char *MONTHS[] = {
+    I18N_MONTH_JANUARY,
+    I18N_MONTH_FEBRUARY,
+    I18N_MONTH_MARCH,
+    I18N_MONTH_APRIL,
+    I18N_MONTH_MAY,
+    I18N_MONTH_JUNE,
+    I18N_MONTH_JULY,
+    I18N_MONTH_AUGUST,
+    I18N_MONTH_SEPTEMBER,
+    I18N_MONTH_OCTOBER,
+    I18N_MONTH_NOVEMBER,
+    I18N_MONTH_DECEMBER,
 };
 
-const char* DAYS[] = {
-    "SUNDAY",
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
+const char *DAYS[] = {
+    I18N_DAY_SUNDAY,
+    I18N_DAY_MONDAY,
+    I18N_DAY_TUESDAY,
+    I18N_DAY_WEDNESDAY,
+    I18N_DAY_THURSDAY,
+    I18N_DAY_FRIDAY,
+    I18N_DAY_SATURDAY,
 };
 
-const char* DAYS_ABBREVIATIONS[] = {
-    "SUN",
-    "MON",
-    "TUE",
-    "WED",
-    "THU",
-    "FRI",
-    "SAT",
+const char *DAYS_ABBREVIATIONS[] = {
+    I18N_DAY_SUN,
+    I18N_DAY_MON,
+    I18N_DAY_TUE,
+    I18N_DAY_WED,
+    I18N_DAY_THU,
+    I18N_DAY_FRI,
+    I18N_DAY_SAT,
 };
 
 Display::Display()
