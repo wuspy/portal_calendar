@@ -101,7 +101,7 @@ bool UserConfig::loadFromFilesystem()
           weatherLocationOverrideLatitude = json["weatherOverrideLat"].as<float>();
           weatherLocationOverrideLongitude = json["weatherOverrideLong"].as<float>();
           weatherStartHour = json["weatherStartHour"].as<int>();
-		  DEBUG_PRINT("Succesfully deserialized json.");
+		      DEBUG_PRINT("Succesfully deserialized json.");
           return true;
         }
         else
@@ -114,11 +114,11 @@ bool UserConfig::loadFromFilesystem()
         DEBUG_PRINT("Failed to open config file");
       }
     }
-	else
-	{
-		DEBUG_PRINT("Config File not created yet, using default values.");
-		return false;
-	}
+    else
+    {
+      DEBUG_PRINT("Config File not created yet, using default values.");
+      return false;
+    }
   }
   else
   {
@@ -165,6 +165,11 @@ bool UserConfig::saveToFilesystem()
 			{
 			  DEBUG_PRINT("Failed to write file.");
 			}
+
+      #ifdef DEBUG
+      serializeJsonPretty(json, Serial);
+      DEBUG_PRINT(""); // serializeJsonPretty to serial doesn't insert a newline.
+      #endif // DEBUG
 		}
 		else
 		{
@@ -200,19 +205,33 @@ void UserConfig::addParamsToWiFiManager(WiFiManager& wifiManager)
 	wifiManager.addParameter(weatherStartHourParam);
 }
 
+bool isParamTrue(WiFiManagerParameter* inParam)
+{
+  String value = inParam->getValue();
+  value.toLowerCase();
+  return value == "t";
+}
+
+EWeatherUnits paramToWeatherUnit(WiFiManagerParam* inParam)
+{
+  String value = inParam->getValue();
+  value.toLowerCase();
+  return value == "metric" ? EWeatherUnits::Metric : EWeatherUnits::Imperial;
+}
+
 void UserConfig::saveParamsFromWiFiManager()
 {
-	bShowDay = bShowDayParam->getValue() == "t";
-	bShowMonth = bShowMonthParam->getValue() == "t";
-	bShowYear = bShowYearParam->getValue() == "t";
-	bShowWeather = bShowWeatherParam->getValue() == "t";
+	bShowDay = isParamTrue(bShowDayParam);
+	bShowMonth = isParamTrue(bShowMonthParam);
+	bShowYear = isParamTrue(bShowYearParam);
+	bShowWeather = isParamTrue(bShowWeatherParam);
 	timeZone = timeZoneParam->getValue();
 	openWeatherMapAPIKey = openWeatherAPIParam->getValue();
 	
 	weatherDisplayType = (EWeatherDisplayType)(atoi(weatherDisplayTypeParam->getValue()));
 	weatherSecondaryDisplayType = (EWeatherSecondaryDisplayType)(atoi(secondaryWeatherInfoParam->getValue()));
-	bUse24HourTime = bShowDayParam->getValue() == "t";
-	weatherUnitDisplay = (EWeatherUnits)(atoi(weatherUnitsParam->getValue()));
+	bUse24HourTime = isParamTrue(bShowDayParam);
+	weatherUnitDisplay = paramToWeatherUnit(weatherUnitsParam);
 	weatherLocation = weatherLocationParam->getValue();
 	weatherLocationOverrideLatitude = atof(weatherLocLatParam->getValue());
 	weatherLocationOverrideLongitude = atof(weatherLocLongParam->getValue());
