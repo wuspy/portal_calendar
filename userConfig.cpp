@@ -81,31 +81,32 @@ bool UserConfig::loadFromFilesystem()
       File configFile = SPIFFS.open(JSON_CONFIG_FILE, "r");
       if(configFile)
       {
-        DEBUG_PRINT("Successfully opened Config File");
-        StaticJsonDocument<512> json;
+        DEBUG_PRINT("Successfully opened Config File. Length: %d", configFile.size());
+        StaticJsonDocument<768> json;
         DeserializationError error = deserializeJson(json, configFile);
         if(!error)
         {
           bShowDay = json["bShowDay"].as<bool>();
-		  bShowMonth = json["bShowMonth"].as<bool>();
-		  bShowYear = json["bShowYear"].as<bool>();
-		  bShowWeather = json["bShowWeather"].as<bool>();
-		  timeZone = json["timeZone"].as<String>();
-		  posixTimeZone = json["posixTimeZone"].as<String>();
-		  openWeatherMapAPIKey = json["openweathermapAPI"].as<String>();
-		  weatherDisplayType = (EWeatherDisplayType)json["weatherDisplayType"].as<int>();
-		  weatherSecondaryDisplayType = (EWeatherSecondaryDisplayType)json["weatherSecondaryDisplayType"].as<int>();
-		  bUse24HourTime = json["bUse24HourTime"].as<bool>();
-		  weatherUnitDisplay = (EWeatherUnits)json["weatherUnitDisplay"].as<int>();
-		  weatherLocation = json["weatherLocation"].as<String>();
-		  weatherLocationOverrideLatitude = json["weatherOverrideLat"].as<float>();
-		  weatherLocationOverrideLongitude = json["weatherOverrideLong"].as<float>();
-		  weatherStartHour = json["weatherStartHour"].as<int>();
+          bShowMonth = json["bShowMonth"].as<bool>();
+          bShowYear = json["bShowYear"].as<bool>();
+          bShowWeather = json["bShowWeather"].as<bool>();
+          timeZone = json["timeZone"].as<String>();
+          posixTimeZone = json["posixTimeZone"].as<String>();
+          openWeatherMapAPIKey = json["openweathermapAPI"].as<String>();
+          weatherDisplayType = (EWeatherDisplayType)json["weatherDisplayType"].as<int>();
+          weatherSecondaryDisplayType = (EWeatherSecondaryDisplayType)json["weatherSecondaryDisplayType"].as<int>();
+          bUse24HourTime = json["bUse24HourTime"].as<bool>();
+          weatherUnitDisplay = (EWeatherUnits)json["weatherUnitDisplay"].as<int>();
+          weatherLocation = json["weatherLocation"].as<String>();
+          weatherLocationOverrideLatitude = json["weatherOverrideLat"].as<float>();
+          weatherLocationOverrideLongitude = json["weatherOverrideLong"].as<float>();
+          weatherStartHour = json["weatherStartHour"].as<int>();
+		  DEBUG_PRINT("Succesfully deserialized json.");
           return true;
         }
         else
         {
-          DEBUG_PRINT("Failed to deserialized json.");
+          DEBUG_PRINT("Failed to deserialized json. Error: %s", error.c_str());
         }
       }
       else
@@ -154,9 +155,11 @@ bool UserConfig::saveToFilesystem()
 		bool bSuccess = false;
 		if(configFile)
 		{
-			if(serializeJson(json, configFile) == 0)
+			int serializedJsonSize = serializeJson(json, configFile);
+			if( serializedJsonSize != 0)
 			{
 				bSuccess = true;
+				DEBUG_PRINT("Successfully saved serialized json to file. Length: %d", serializedJsonSize);
 			}
 			else
 			{
