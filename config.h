@@ -6,12 +6,12 @@
 #define WIFI_PASS "your wifi password here"
 
 // Name of the temporary Access Point you connect your phone to to configure the device
-#define WIFI_AP_NAME "Aperture Science Guest WiFi"
+#define WIFI_AP_NAME "Aperture Science Guest"
 
 // Must be at least 8 chars or AP setup will fail.
 #define WIFI_AP_PASSWORD "Aperture"
 
-// Version 4 gives us a maximum of 50 chars (needed to encode both WIFI_AP_NAME + WIFI_AP_PASSWORD + a few formatting chars)
+// Version 5 gives us a maximum of 154 chars with lowest ECC (needed to encode both WIFI_AP_NAME + WIFI_AP_PASSWORD + a few formatting chars)
 // Too large of a value causes a stack overflow when generating QR code (will look like device boot loop/frozen).
  #define MAX_QRCODE_VERSION 5
 

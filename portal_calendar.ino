@@ -7,6 +7,12 @@
 #include "weather.h"
 #endif
 #include "qrcodegen/qrcodegen.h"
+#include "userConfig.h"
+
+// Config Save & Load (to persist between battery replacements)
+UserConfig userConfig;
+
+RTC_DATA_ATTR int bootCount = 0;
 
 /**
  * Stores the current day of the year displayed
@@ -41,6 +47,8 @@ RTC_DATA_ATTR bool needsTimezoneSync = true;
 RTC_DATA_ATTR bool needsWeatherSync = true;
 RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
 #endif // SHOW_WEATHER
+
+RTC_DATA_ATTR bool testBool = true;
 
 Display display;
 WiFiManager wifiManager;
@@ -210,10 +218,12 @@ void doDeviceConfigurationFlow()
     // Draw our QR Code + User Prompt to Display
     display.showQRCodeSetup(qrcode, userText);
 
+    userConfig.addParamsToWiFiManager(wifiManager);
+
     // The startConfigPortal will block until the user confirms information.
     wifiManager.setConfigPortalBlocking(true);
     wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASSWORD);
-    DEBUG_PRINT("User has finished Config Portal configuration. Reboot the device now.");
+    DEBUG_PRINT("User has finished Config Portal configuration.");
 }
 
 void error(std::initializer_list<String> message)
@@ -349,15 +359,24 @@ bool isOnUsbPower()
     return digitalRead(19) == HIGH;
 }
 
+void saveConfigCallback()
+{
+  DEBUG_PRINT("Got callback from WifiManager to save config");
+  userConfig.saveParamsFromWiFiManager();
+}
+
 void setup()
 {
     time_t t;
     tm now;
-    
+
+    bootCount++;
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
+
     #ifdef DEBUG
     Serial.begin(115200);
-    wifiManager.setDebugOutput(true);
-    // wifiManager.resetSettings();
+    // wifiManager.setDebugOutput(true);
+    //wifiManager.resetSettings();
 
     // Convert timestamp and print it over Serial
     time(&t);
@@ -373,11 +392,16 @@ void setup()
         errorBrownout();
     }
 
+    // Attempt to load the config file. This can return false if
+    // the config file hasn't been set up before.
+    userConfig.loadFromFilesystem();
+    userConfig.createWiFiParams();
+
     // Attempt to connect to the WiFi. If connection fails then either credentials are wrong,
     // it's never been set up, or it's out of range. 
     bool bConnectedWiFi = startWifi();
 
-    if(!bConnectedWiFi)
+    if(!bConnectedWiFi || bootCount == 1)
     {
         // We failed to connect to the WiFi. We're going to ask the user to plug into USB power
         // instead of running the AP without them realizing it.
@@ -459,7 +483,6 @@ void setup()
     }
 
     // Go to sleep
-
     time(&t); // Update time measurement
     localtime_r(&t, &now);
     int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
@@ -501,6 +524,7 @@ void setup()
         DEBUG_PRINT("Sleeping for 1st sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
     }
+
 }
 
 void loop()
