@@ -1,10 +1,3 @@
-/**
- * Enter the WiFi network you want to connect to, for getting the current time and other information.
- * If for some reason your WiFi doesn't have a password, you can comment that out.
- */
-#define WIFI_NAME "your wifi name here"
-#define WIFI_PASS "your wifi password here"
-
 // Name of the temporary Access Point you connect your phone to to configure the device
 #define WIFI_AP_NAME "Aperture Science Guest"
 
@@ -14,95 +7,6 @@
 // Version 5 gives us a maximum of 154 chars with lowest ECC (needed to encode both WIFI_AP_NAME + WIFI_AP_PASSWORD + a few formatting chars)
 // Too large of a value causes a stack overflow when generating QR code (will look like device boot loop/frozen).
  #define MAX_QRCODE_VERSION 5
-
-/**
- * Show the day name on the right side (next to the XX/XX day)
- */
-#define SHOW_DAY
-
-/**
- * Show the month name on the top
- */
-#define SHOW_MONTH
-
-/**
- * Show the current year on the top right
- */
-// #define SHOW_YEAR
-
-/**
- * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
- * 
- * You can find a list of timezone names here:
- * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
- */
-#define TIME_ZONE "America/Chicago"
-
-/**
- * The full POSIX specification for your timezone. If TIME_ZONE is set, this will only serve as a backup to that.
- * If not, then no 3rd-party timezone services will be used, however this will need to be changed if your timezone
- * or DST laws change in the future.
- */
-// #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
-
-/**
- * Show weather forecast in place of the chamber icons
- */
-// #define SHOW_WEATHER
-
-/**
- * Your API key for openweathermap.org, which is the service used to get the weather for your location.
- * This is REQUIRED to use the weather feature. Create a free account with them and get your API key here:
- * https://home.openweathermap.org/api_keys
- */
-#define OPENWEATHERMAP_API_KEY "your api key here"
-
-/**
- * 1: Show a 5-day weather forecast
- * 2: Show today's weather forecast in 3-hour intervals
- */
-#define WEATHER_DISPLAY_TYPE 1
-
-/**
- * If you choose to show today's weather in 3-hour intervals, this selects what other information is shown under
- * the temperature (in 5-day forecast mode, the high and low temperature are shown so this isn't an option).
- * 
- * 1: Chance of precipitation
- * 2: Humidity
- */
-#define SECONDARY_WEATHER_INFORMATION 1
-
-/**
- * If you choose to show today's weather in 3-hour intervals, this will display times in 24-hour format instead of 12-hour.
- */
-// #define SHOW_24_HOUR_TIME
-
-/**
- * metric or imperial
- */
-#define WEATHER_UNITS "imperial"
-
-/**
- * The location to get weather information for. Can also be a zip code for US locations.
- */
-#define WEATHER_LOCATION "Oklahoma City, Oklahoma, US"
-
-/**
- * The latitude and longitude for weather information. Optional. Overrides WEATHER_LOCATION if set.
- */
-// #define WEATHER_LOCATION_LATITUDE 0.0
-// #define WEATHER_LOCATION_LONGITUDE 0.0
-
-/**
- * Show what the day's weather will be for the next 12 hours, starting at this hour (in 24-hour time).
- * 9 = 9am, 12 = 12pm, 15 = 3pm, etc
- * 
- * Since openweathermap gives us the weather in 3-hour intervals, and the hours they have data for are based on UTC,
- * the weather shown may not exactly line up with the hour you enter here. For example, in my timezone (America/Chicago),
- * openweathermap returns the weather for 10AM-10PM, even though I really want the weather for 9AM-9PM. So expect this
- * to be up to an hour and a half off depending on where you live.
- */
-#define WEATHER_START_HOUR 9
 
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////

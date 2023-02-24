@@ -1,9 +1,5 @@
 #include "global.h"
 
-#if !defined(TIME_ZONE) && !defined(POSIX_TIME_ZONE)
-#error No timezone configured
-#endif
-
 #ifndef PORTALCALENDAR_TIME_H
 #define PORTALCALENDAR_TIME_H
 
@@ -20,8 +16,6 @@ int getDaysInMonth(int month, int year);
 
 void advanceDay(int& month, int& mday, int& year);
 
-#ifdef TIME_ZONE
-
 /**
  * Looks up a timezone by Olson name using the timezoned.rop.nl service, which is part of the ezTime project (https://github.com/ropg/ezTime),
  * although I decided using the entirety of ezTime wasn't ideal.
@@ -31,8 +25,6 @@ void advanceDay(int& month, int& mday, int& year);
  * @return The POSIX timezone string, or empty string if unsuccessful
  */
 String getPosixTz(String name);
-
-#endif // TIME_ZONE
 
 /**
  * Based on the queryNTP function from ezTime

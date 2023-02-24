@@ -2,6 +2,7 @@
 #include "global.h"
 #include "time.h"
 #include "qrcodegen/qrcodegen.h"
+#include "userConfig.h"
 
 #include "resource/font/medium.h"
 #include "resource/font/small.h"
@@ -11,7 +12,7 @@
 #include "resource/progress_bar.h"
 #include "resource/error.h"
 
-#ifdef SHOW_WEATHER
+// Weather
 #include "resource/font/weather_frame.h"
 #include "resource/weather_info_degree_symbol.h"
 #include "resource/weather_info_percent_symbol.h"
@@ -28,7 +29,8 @@
 #include "resource/weather_partly_cloudy_night.h"
 #include "resource/weather_scattered_showers_day.h"
 #include "resource/weather_scattered_showers_night.h"
-#else
+
+// Chamber Icons
 #include "resource/cube_dispenser_on.h"
 #include "resource/cube_dispenser_off.h"
 #include "resource/cube_hazard_on.h"
@@ -233,8 +235,6 @@ static_assert(
     "There must be 31 sets of chamber icons"
 );
 
-#endif // SHOW_WEATHER
-
 #define ICON_SIZE 64
 #define ICON_SPACING 9
 #define LEFT 82
@@ -280,9 +280,10 @@ const char* DAYS_ABBREVIATIONS[] = {
     "SAT",
 };
 
-Display::Display()
+Display::Display(UserConfig* userConfig)
 {
     _display = nullptr;
+    _userConfig = userConfig;
 }
 
 Display::~Display()
@@ -326,75 +327,74 @@ void Display::update(const tm *now)
     sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
     _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);
 
-    #ifdef SHOW_DAY
-    // Day name
-    _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
-    #endif
+    if(_userConfig->bShowDay)
+    {
+      // Day name
+      _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    }
 
-    #ifdef SHOW_MONTH
-    // Month name
-    _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
-    #endif
+    if(_userConfig->bShowMonth)
+    {
+      // Month name
+      _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+    }
 
-    #ifdef SHOW_YEAR
-    // Year
-    sprintf(buffer, "%d", year);
-    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
-    #endif
+    if(_userConfig->bShowYear)
+    {
+      // Year
+      sprintf(buffer, "%d", year);
+      _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+    }
 
     // Progress bar
     _display->drawImage(IMG_PROGRESS_BAR, LEFT, 438);
     int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
     _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
 
-    #ifdef SHOW_WEATHER
+    if(_userConfig->bShowWeather)
+    {
+      // Weather
+      switch(_userConfig->weatherDisplayType)
+      {
+        case EWeatherDisplayType::FiveDayForecast:
+          {
+            DailyWeather weather[5];
+            get5DayWeather(_userConfig, now->tm_mon, now->tm_mday, year, weather);
 
-    // Weather
+            for (int i = 0; i < 5; ++i) {
+                drawDailyWeather(weather[i], i);
+            }
+          }
+          break;
+        case EWeatherDisplayType::TodaysForecast:
+          {
+            WeatherEntry weather[5];
+            getTodaysWeather(_userConfig, now->tm_mon, now->tm_mday, weather);
 
-    #if WEATHER_DISPLAY_TYPE == 1
-
-    DailyWeather weather[5];
-    get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawDailyWeather(weather[i], i);
+            for (int i = 0; i < 5; ++i) {
+                drawWeatherEntry(weather[i], i);
+            }
+          }
+          break;
+      }
     }
-
-    #elif WEATHER_DISPLAY_TYPE == 2
-
-    WeatherEntry weather[5];
-    getTodaysWeather(now->tm_mon, now->tm_mday, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawWeatherEntry(weather[i], i);
+    else
+    {
+      // Chamber icons
+      if (now->tm_mon == 1 && now->tm_mday == 29) {
+          // Special icon set for leap day
+          for (int i = 0; i < 8; ++i) {
+              drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
+          }
+      } else if (now->tm_mday <= 31) {
+          for (int i = 0; i < 10; ++i) {
+              drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+          }
+      }
     }
-
-    #else
-
-    #error Invalid value for WEATHER_DISPLAY_TYPE
-
-    #endif // WEATHER_DISPLAY_TYPE
-
-    #else
-
-    // Chamber icons
-    if (now->tm_mon == 1 && now->tm_mday == 29) {
-        // Special icon set for leap day
-        for (int i = 0; i < 8; ++i) {
-            drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
-        }
-    } else if (now->tm_mday <= 31) {
-        for (int i = 0; i < 10; ++i) {
-            drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
-        }
-    }
-
-    #endif // SHOW_WEATHER
 
     _display->refresh();
 }
-
-#ifdef SHOW_WEATHER
 
 const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool day)
 {
@@ -493,15 +493,18 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     }
 
     // Draw time
-    #ifdef SHOW_24_HOUR_TIME
-    sprintf(text, "%02d:%02d", weather.hour, weather.minute);
-    #else
-    int8_t hour12 = weather.hour % 12;
-    if (hour12 == 0) {
-        hour12 = 12;
+    if(_userConfig->bUse24HourTime)
+    {
+      sprintf(text, "%02d:%02d", weather.hour, weather.minute);
     }
-    sprintf(text, "%d:%02d %s", hour12, weather.minute, weather.hour > 11 ? "PM" : "AM");
-    #endif
+    else
+    {
+      int8_t hour12 = weather.hour % 12;
+      if (hour12 == 0) {
+          hour12 = 12;
+      }
+      sprintf(text, "%d:%02d %s", hour12, weather.minute, weather.hour > 11 ? "PM" : "AM");
+    }
 
     _display->setAlpha(DisplayGDEW075T7::BLACK);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, DisplayGDEW075T7::TOP_CENTER);
@@ -512,18 +515,22 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
 
     // Draw secondary info
-    #if SECONDARY_WEATHER_INFORMATION == 1 // Precipitation
-    sprintf(text, "%d", weather.pop);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
-    #elif SECONDARY_WEATHER_INFORMATION == 2 // Humidity
-    sprintf(text, "%d", weather.humidity);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
-    #else
-    #error Invalid value for SECONDARY_WEATHER_INFORMATION
-    #endif
+    switch(_userConfig->weatherSecondaryDisplayType)
+    {
+      case EWeatherSecondaryDisplayType::ChanceOfPrecipitation:
+      {
+        sprintf(text, "%d", weather.pop);
+        drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+      }
+    break;
+    case EWeatherSecondaryDisplayType::Humidity:
+      {
+        sprintf(text, "%d", weather.humidity);
+        drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+      } 
+    break;
+    }
 }
-
-#else
 
 void Display::testChamberIcons()
 {
@@ -559,8 +566,6 @@ void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
         ICON_TOP + y * (ICON_SIZE + ICON_SPACING)
     );
 }
-
-#endif // SHOW_WEATHER
 
 void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 {

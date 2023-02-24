@@ -3,29 +3,8 @@
 #ifndef PORTALCALENDAR_WEATHER_H
 #define PORTALCALENDAR_WEATHER_H
 
-#if !defined(WEATHER_LOCATION) && (!defined(WEATHER_LOCATION_LATITUDE) || !defined(WEATHER_LOCATION_LONGITUDE))
-#error No weather location configured
-#endif
-
-#ifndef WEATHER_START_HOUR
-#error WEATHER_START_HOUR must be defined
-#endif
-
-#if (WEATHER_START_HOUR < 0 || WEATHER_START_HOUR > 23)
-#error Weather start hour must be between 0 and 23
-#endif
-
-#ifndef OPENWEATHERMAP_API_KEY
-#error OPENWEATHERMAP_API_KEY must be set in order to get weather information
-#endif
-
-#ifndef WEATHER_LOCATION_LATITUDE
-#define WEATHER_LOCATION_LATITUDE 0.0
-#endif
-
-#ifndef WEATHER_LOCATION_LONGITUDE
-#define WEATHER_LOCATION_LONGITUDE 0.0
-#endif
+// Forward Declare
+class UserConfig;
 
 /**
  * OWM weather conditions, ordered by severity
@@ -86,8 +65,8 @@ struct WeatherEntry {
 };
 
 time_t getLastWeatherSync();
-void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5]);
-void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5]);
-OwmResult refreshWeather();
+void getTodaysWeather(UserConfig* userConfig, int month, int mday, WeatherEntry (&result)[5]);
+void get5DayWeather(UserConfig* userConfig, int month, int mday, int year, DailyWeather (&result)[5]);
+OwmResult refreshWeather(UserConfig* userConfig);
 
 #endif // PORTALCALENDAR_WEATHER_H

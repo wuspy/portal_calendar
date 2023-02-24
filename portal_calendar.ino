@@ -3,15 +3,14 @@
 #include "global.h"
 #include "time.h"
 #include "Display.h"
-#ifdef SHOW_WEATHER
 #include "weather.h"
-#endif
 #include "qrcodegen/qrcodegen.h"
 #include "userConfig.h"
 
-// Config Save & Load (to persist between battery replacements)
-UserConfig userConfig;
-
+/**
+ * On first boot we show the WiFi Configuration screen
+ * (until it times out), but subsequent wakeups we skip.
+ */
 RTC_DATA_ATTR int bootCount = 0;
 
 /**
@@ -24,34 +23,23 @@ RTC_DATA_ATTR int displayedYDay = 0;
  */
 RTC_DATA_ATTR bool needsNtpSync = true;
 
-#ifdef TIME_ZONE
 /**
  * Controls if timezone information will be synced on wakeup
  */
 RTC_DATA_ATTR bool needsTimezoneSync = true;
-#endif // TIME_ZONE
 
-/**
- * Caches the current POSIX timezone string
- */
-#ifdef POSIX_TIME_ZONE
-    RTC_DATA_ATTR char savedTimezone[57] = POSIX_TIME_ZONE;
-#else
-    RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
-#endif // POSIX_TIME_ZONE
-
-#ifdef SHOW_WEATHER
 /**
  * Controls if weather information will be synced on wakeup
  */
 RTC_DATA_ATTR bool needsWeatherSync = true;
-RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
-#endif // SHOW_WEATHER
+RTC_DATA_ATTR time_t lastWeatherSyncTime = 0;
 
-RTC_DATA_ATTR bool testBool = true;
+// Config Save & Load (to persist between battery replacements)
+UserConfig userConfig;
 
-Display display;
+Display display(&userConfig);
 WiFiManager wifiManager;
+
 
 void deepSleep(uint64_t seconds)
 {
@@ -182,7 +170,10 @@ void doDeviceConfigurationFlow()
       "Password: \""WIFI_AP_PASSWORD"\"",
       "",
       "Alternatively, you can scan the QR code above to be",
-      "automatically connected.",
+      "automatically connected. This will automatically time",
+      "out and attempt to connect to the last known Wi-Fi",
+      "after 10 minutes. You can bypass this now by",
+      "connecting via the QR code and hitting save."
     };
 
     // Draw our QR Code + User Prompt to Display
@@ -190,8 +181,11 @@ void doDeviceConfigurationFlow()
 
     userConfig.addParamsToWiFiManager(wifiManager);
 
-    // The startConfigPortal will block until the user confirms information.
-    wifiManager.setConfigPortalBlocking(true);
+    // Put the device in Access Point mode for ten minutes to allow
+    // the user to configure the settings. After ten minutes (or the
+    // user hitting Save in the config) it will boot. This only happens
+    // on first boot.)
+    wifiManager.setConfigPortalTimeout(60 * 10);
     wifiManager.startConfigPortal(WIFI_AP_NAME, WIFI_AP_PASSWORD);
     DEBUG_PRINT("User has finished Config Portal configuration.");
 }
@@ -206,14 +200,15 @@ void error(std::initializer_list<String> message)
 
 void errorNoWifi()
 {
+  // ToDo: This needs to be converted to a dynamic string because it's the access point
+  // from the WiFI manager. But we don't have vector<String> support on Arduino...
     error({
         "NO WIFI CONNECTION",
         "",
         "Your WiFi network is either down, out of range,",
-        "or you entered the wrong password.",
-        "",
-        "WiFi Name:",
-        "\"" WIFI_NAME "\""
+        "or you entered the wrong password. Press \"RESET\"",
+        "on the back of the device and check your Wi-Fi",
+        "credentials through the QR Code."
     });
 }
 
@@ -240,25 +235,20 @@ void errorNtpFailed()
     });
 }
 
-#ifdef TIME_ZONE
-
 void errorTzLookupFailed()
 {
+    // ToDo: Needs dynamic strings...
     error({
         "TIMEZONE LOOKUP FAILED",
         "",
         "Your timezone is either invalid, or the timezone servers",
         "are down. If you configured the timezone servers",
         "yourself, you might have messed something up.",
-        "",
-        "Your timezone:",
-        "\"" TIME_ZONE "\""
+        //"",
+        //"Your timezone:",
+        //"\"" TIME_ZONE "\""
     });
 }
-
-#endif // TIME_ZONE
-
-#ifdef SHOW_WEATHER
 
 void errorInvalidOwmApiKey()
 {
@@ -273,25 +263,20 @@ void errorInvalidOwmApiKey()
     });
 }
 
-#ifdef WEATHER_LOCATION
-
 void errorInvalidOwmLocation()
 {
+  // ToDo: Needs dynamic strings...
     error({
         "INVALID WEATHER LOCATION",
         "",
         "OpenWeatherMap.org couldn't find any results",
         "for the weather location you entered. You",
         "probably have an issue with your configuration.",
-        "",
-        "You Location:",
-        "\"" WEATHER_LOCATION "\""
+        //"",
+        //"You Location:",
+        //"\"" WEATHER_LOCATION "\""
     });
 }
-
-#endif // WEATHER_LOCATION
-
-#endif // SHOW_WEATHER
 
 void errorBrownout()
 {
@@ -316,17 +301,6 @@ int getSecondsToMidnight(tm *now)
     ++tomorrow.tm_mday; // mktime will handle day/month rolling over
     tomorrow.tm_hour = tomorrow.tm_min = tomorrow.tm_sec = 0;
     return (int)difftime(mktime(&tomorrow), mktime(now));
-}
-
-/**
- * On the EzSBC breakout board, pin 19 is connected to Vusb through an LED and a 1k resistor, meaning it is pulled
- * high if the board is on USB power.
- */
-bool isOnUsbPower()
-{
-    return true;
-    pinMode(19, INPUT_PULLDOWN);
-    return digitalRead(19) == HIGH;
 }
 
 void saveConfigCallback()
@@ -376,17 +350,7 @@ void setup()
 
     if(!bConnectedWiFi || bootCount == 1)
     {
-        // We failed to connect to the WiFi. We're going to ask the user to plug into USB power
-        // instead of running the AP without them realizing it.
-        if(!isOnUsbPower())
-        {
-            // If they're not currently on USB power, we will print an error message
-            // asking them to plug in via USB, then restart. This function will never
-            // return (enters deep sleep).
-            errorNotOnUSBPowerToStartAP();
-        }
-
-        // If we are on usb power, we're going to start an Access Point that the user
+        // Start an Access Point that the user
         // can connect to with their phone to configure this display. This will print
         // some info to the screen
         doDeviceConfigurationFlow();
@@ -395,14 +359,40 @@ void setup()
         // real Access Point, and we can move onto time synchronization.
     }
 
-
     // Set timezone
+    if(userConfig.timeZone.length() > 0)
+    {
+      // Attempt to convert a human-readable TZ-database string (America/Chicago) into a POSIX specification (CST6CDT,M3.2.0,M11.1.0)
+      if (needsTimezoneSync || userConfig.posixTimeZone.length() == 0) {
+        if (startWifi()) {
+            String tz = getPosixTz(userConfig.timeZone.c_str());
+            if (!tz.isEmpty()) {
+                userConfig.posixTimeZone = tz;
+                userConfig.saveToFilesystem();
+                needsTimezoneSync = false;
+            } else if (userConfig.posixTimeZone.length() == 0) {
+                errorTzLookupFailed();
+            }
+        } else if (userConfig.posixTimeZone.length() == 0) {
+            // WiFi didn't connect and we have no idea what timezone we're in
+            errorNoWifi();
+        }
+      }
+    }
+    
+    DEBUG_PRINT("Setting system timezone to %s", userConfig.posixTimeZone.c_str());
+    setenv("TZ", userConfig.posixTimeZone.c_str(), 1);
+    tzset();
+
+    // Set time
 
     time_t lastNtpSync = getLastNtpSync();
     if (needsNtpSync || !lastNtpSync) {
         bool syncMandatory = !lastNtpSync || (time_t)difftime(time(nullptr), lastNtpSync) >= ERROR_AFTER_SECONDS_WITHOUT_INTERNET;
         if (startWifi()) {
             if (syncNtp()) {
+                time_t updatedTime = getLastNtpSync();
+                DEBUG_PRINT_NTP("NTP Sync Time:", updatedTime);
                 needsNtpSync = false;
             } else if (syncMandatory) {
                 // Sync unsuccesful and we have no idea what time it is
@@ -417,53 +407,57 @@ void setup()
     time(&t);
     localtime_r(&t, &now);
 
-    #ifdef SHOW_WEATHER
-
     // Sync weather
-
-    if (needsWeatherSync && startWifi()) {
-        OwmResult result = refreshWeather();
-        switch (result) {
-            case OwmResult::SUCCESS:
-                needsWeatherSync = false;
-                break;
-            case OwmResult::INVALID_API_KEY:
-                errorInvalidOwmApiKey();
-            case OwmResult::INVALID_LOCATION:
-                errorInvalidOwmLocation();
-            default:
-                // Ignore other OWM errors because weather isn't critical
-                break;
-        }
-    } // Critical WiFi connection errors will be handled by the NTP/timezone syncs
-
-    #endif
+    if(userConfig.bShowWeather)
+    {
+      if (needsWeatherSync && startWifi()) {
+          OwmResult result = refreshWeather(&userConfig);
+          switch (result) {
+              case OwmResult::SUCCESS:
+                  needsWeatherSync = false;
+                  break;
+              case OwmResult::INVALID_API_KEY:
+                  errorInvalidOwmApiKey();
+              case OwmResult::INVALID_LOCATION:
+                  errorInvalidOwmLocation();
+              default:
+                  // Ignore other OWM errors because weather isn't critical
+                  break;
+          }
+      } // Critical WiFi connection errors will be handled by the NTP/timezone syncs
+    }
 
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
 
     // Update display if needed
     bool needsDisplayUpdate = now.tm_yday != displayedYDay;
-    #ifdef SHOW_WEATHER
-    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
-    #endif
+    if(userConfig.bShowWeather)
+    {
+      needsDisplayUpdate |= lastWeatherSyncTime != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
+    }
+
     if (needsDisplayUpdate) {
         DEBUG_PRINT("Updating display for %d-%d-%d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday);
         display.update(&now);
         displayedYDay = now.tm_yday;
-        #ifdef SHOW_WEATHER
-        displayedWeatherVersion = getLastWeatherSync();
-        #endif
+        if(userConfig.bShowWeather)
+        {
+          lastWeatherSyncTime = getLastWeatherSync();
+        }
     }
-
+    
     // Go to sleep
     time(&t); // Update time measurement
     localtime_r(&t, &now);
     int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
     // syncFailed doesn't care about timezone sync because as long as we've got it once it's probably still correct
     bool syncFailed = needsNtpSync;
-    #ifdef SHOW_WEATHER
-    syncFailed |= needsWeatherSync;
-    #endif
+    
+    if(userConfig.bShowWeather)
+    {
+      syncFailed |= needsWeatherSync;
+    }
+
     if (syncFailed) {
         DEBUG_PRINT("Sync failed, will retry");
         if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
@@ -478,26 +472,29 @@ void setup()
         }
     } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 * 2) {
         // Sleep until midnight
-        DEBUG_PRINT("Sleeping until midnight");
+        DEBUG_PRINT_SECONDS("Sleeping until midnight.", secondsToMidnight);
         deepSleep(secondsToMidnight);
     } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
         // Sleep until second NTP sync
         needsNtpSync = true;
-        DEBUG_PRINT("Sleeping for 2nd NTP sync");
-        deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
+        uint64_t secondsToSleep = secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2;
+        DEBUG_PRINT_SECONDS("Sleeping for 2nd NTP sync.", secondsToSleep);
+        deepSleep(secondsToSleep);
     } else {
         // Sleep until first NTP sync
         needsNtpSync = true;
-        #ifdef TIME_ZONE
-        needsTimezoneSync = true;
-        #endif
-        #ifdef SHOW_WEATHER
-        needsWeatherSync = true;
-        #endif
-        DEBUG_PRINT("Sleeping for 1st sync");
-        deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
+        if(userConfig.timeZone.length())
+        {
+          needsTimezoneSync = true;
+        }
+        if(userConfig.bShowWeather)
+        {
+          needsWeatherSync = true;
+        }
+        uint64_t secondsToSleep = secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1;
+        DEBUG_PRINT_SECONDS("Sleeping for 1st sync.", secondsToSleep);
+        deepSleep(secondsToSleep);
     }
-
 }
 
 void loop()

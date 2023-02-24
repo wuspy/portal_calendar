@@ -3,6 +3,7 @@
 #include "weather.h"
 #include "global.h"
 #include "time.h"
+#include "userConfig.h"
 
 const WeatherEntry EMPTY_WEATHER_ENTRY = {
     .condition = WeatherCondition::UNKNOWN,
@@ -29,10 +30,9 @@ const DailyWeather EMPTY_DAILY_WEATHER = {
 };
 
 RTC_DATA_ATTR time_t lastWeatherSync = 0;
-RTC_DATA_ATTR float latitude = WEATHER_LOCATION_LATITUDE;
-RTC_DATA_ATTR float longitude = WEATHER_LOCATION_LONGITUDE;
 RTC_DATA_ATTR time_t sunriseTime = 0;
 RTC_DATA_ATTR time_t sunsetTime = 0;
+
 #define WEATHER_ENTRY_COUNT 40
 RTC_DATA_ATTR WeatherEntry weatherEntries[WEATHER_ENTRY_COUNT] = {
     EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY,
@@ -175,9 +175,9 @@ int findWeatherEntry(int month, int mday, int hour, int startIndex = 0)
     return -1;
 }
 
-void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
+void getTodaysWeather(UserConfig* userConfig, int month, int mday, WeatherEntry (&result)[5])
 {
-    int i = findWeatherEntry(month, mday, WEATHER_START_HOUR);
+    int i = findWeatherEntry(month, mday, userConfig->weatherStartHour);
     int j = 0;
     if (i != -1) {
         for (; j < 5 && i + j < WEATHER_ENTRY_COUNT; ++j) {
@@ -190,7 +190,7 @@ void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
     }
 }
 
-void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
+void get5DayWeather(UserConfig* userConfig, int month, int mday, int year, DailyWeather (&result)[5])
 {
     DailyWeather *day;
     WeatherEntry *entry;
@@ -218,7 +218,7 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
         daylight = 0.0;
         sampleCount = 0;
 
-        conditionStart = findWeatherEntry(month, mday, WEATHER_START_HOUR, j);
+        conditionStart = findWeatherEntry(month, mday, userConfig->weatherStartHour, j);
         conditionEnd = conditionStart + 4;
 
         for (; j < WEATHER_ENTRY_COUNT; ++j) {
@@ -248,20 +248,20 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
     }
 }
 
-OwmResult refreshWeather()
+OwmResult refreshWeather(UserConfig* userConfig)
 {
     char url[200];
-    if (latitude == 0.0 || longitude == 0.0) {
+    if (userConfig->weatherLocationOverrideLatitude == 0.0 || userConfig->weatherLocationOverrideLongitude == 0.0) {
         // Use OWM's geocoding API to lookup the coordinates for the provided location
-        DEBUG_PRINT("Looking up lat,long for '" WEATHER_LOCATION "' from openweathermap");
+        DEBUG_PRINT("Looking up lat,long for \"%s\" from openweathermap", userConfig->weatherLocation);
         HTTPClient http;
         unsigned long start = millis();
         http.setConnectTimeout(10000);
         sprintf(
             url,
             "http://api.openweathermap.org/geo/1.0/direct?q=%s&limit=1&appid=%s",
-            urlEncode(WEATHER_LOCATION).c_str(),
-            urlEncode(OPENWEATHERMAP_API_KEY).c_str()
+            urlEncode(userConfig->weatherLocation).c_str(),
+            urlEncode(userConfig->openWeatherMapAPIKey).c_str()
         );
         DEBUG_PRINT(url);
         http.begin(url);
@@ -280,9 +280,10 @@ OwmResult refreshWeather()
                 DEBUG_PRINT("No location results from openweathermap");
                 return OwmResult::INVALID_LOCATION;
             }
-            latitude = result["lat"].as<float>();
-            longitude = result["lon"].as<float>();
-            DEBUG_PRINT("Found location %s, %s @ %0.6f,%0.6f", result["name"].as<const char*>(), result["country"].as<const char*>(), latitude, longitude);
+            userConfig->weatherLocationOverrideLatitude = result["lat"].as<float>();
+            userConfig->weatherLocationOverrideLongitude = result["lon"].as<float>();
+            userConfig->saveToFilesystem();
+            DEBUG_PRINT("Found location %s, %s @ %0.6f,%0.6f", result["name"].as<const char*>(), result["country"].as<const char*>(), userConfig->weatherLocationOverrideLatitude, userConfig->weatherLocationOverrideLongitude);
         } else {
             http.end();
             DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
@@ -290,17 +291,17 @@ OwmResult refreshWeather()
         }
     }
 
-    DEBUG_PRINT("Looking up weather for %0.6f,%0.6f from openweathermap", latitude, longitude);
+    DEBUG_PRINT("Looking up weather for %0.6f,%0.6f from openweathermap", userConfig->weatherLocationOverrideLatitude, userConfig->weatherLocationOverrideLongitude);
     HTTPClient http;
     unsigned long start = millis();
     http.setConnectTimeout(10000);
     sprintf(
         url,
         "http://api.openweathermap.org/data/2.5/forecast?lat=%0.6f&lon=%0.6f&units=%s&appid=%s",
-        latitude,
-        longitude,
-        urlEncode(WEATHER_UNITS).c_str(),
-        urlEncode(OPENWEATHERMAP_API_KEY).c_str()
+        userConfig->weatherLocationOverrideLatitude,
+        userConfig->weatherLocationOverrideLongitude,
+        urlEncode(userConfig->weatherUnitToString(userConfig->weatherUnitDisplay)).c_str(),
+        urlEncode(userConfig->openWeatherMapAPIKey).c_str()
     );
     DEBUG_PRINT(url);
     http.begin(url);

@@ -23,4 +23,22 @@
 #define TZ_LOOKUP_TIMEOUT_MS                    TZ_LOOKUP_TIMEOUT_SECONDS * 1000
 #define NTP_TIMEOUT_MS                          NTP_TIMEOUT_SECONDS * 1000
 
+#define DEBUG_PRINT_SECONDS(message, totalSeconds) \
+{ \
+  int32_t hours = totalSeconds / (60*60); \
+  int32_t minutes = (totalSeconds % (60*60)) / 60; \
+  int32_t seconds = (totalSeconds % (60*60)) % 60; \
+  DEBUG_PRINT("%s Total Seconds: %llu (Hours: %d Mins: %d Seconds: %d)", message, totalSeconds, hours, minutes, seconds);\
+}
+
+#define DEBUG_PRINT_NTP(msg, t) \
+{ \
+    time(&t); \
+    tm now; \
+    localtime_r(&t, &now); \
+    char timestr[30]; \
+    strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now); \
+    DEBUG_PRINT("%s %s", msg, timestr); \
+}
+
 #endif // PORTALCALENDAR_GLOBAL_H

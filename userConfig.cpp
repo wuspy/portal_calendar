@@ -27,14 +27,14 @@ UserConfig::~UserConfig()
 	delete weatherStartHourParam;
 }
 
-const char* weatherUnitToString(EWeatherUnits inUnit)
+const char* UserConfig::weatherUnitToString(EWeatherUnits inUnit)
 {
 	switch(inUnit)
 	{
 		case EWeatherUnits::Metric:
-		return "Metric";
+		return "metric";
 		case EWeatherUnits::Imperial:
-		return "Imperial";
+		return "imperial";
 	}
 	
 	return "";
@@ -51,7 +51,7 @@ void UserConfig::createWiFiParams()
 
 	// This should be called after loadFromFilesystem so that the values we put into the UI reflect
 	// the user's previous configuration.
-	bShowDayParam = new WiFiManagerParameter("bShowDay", "Show Day", boolToShortString(bShowDay), 1);
+	bShowDayParam = new WiFiManagerParameter("bShowDay", "Show Day of Week", boolToShortString(bShowDay), 1);
 	bShowMonthParam = new WiFiManagerParameter("bShowMonth", "Show Month", boolToShortString(bShowMonth), 1);
 	bShowYearParam = new WiFiManagerParameter("bShowYear", "Show Year", boolToShortString(bShowYear), 1);
 	bShowWeatherParam = new WiFiManagerParameter("bShowWeather", "Show Weather (Replaces Chamber Icons)", boolToShortString(bShowWeather), 5);
@@ -212,7 +212,7 @@ bool isParamTrue(WiFiManagerParameter* inParam)
   return value == "t";
 }
 
-EWeatherUnits paramToWeatherUnit(WiFiManagerParam* inParam)
+EWeatherUnits paramToWeatherUnit(WiFiManagerParameter* inParam)
 {
   String value = inParam->getValue();
   value.toLowerCase();
@@ -236,6 +236,12 @@ void UserConfig::saveParamsFromWiFiManager()
 	weatherLocationOverrideLatitude = atof(weatherLocLatParam->getValue());
 	weatherLocationOverrideLongitude = atof(weatherLocLongParam->getValue());
 	weatherStartHour = atoi(weatherStartHourParam->getValue());
+
+  // ToDo: Warn the user
+  if(weatherStartHour < 0 || weatherStartHour > 23)
+  {
+    weatherStartHour = 0;
+  }
 	
 	saveToFilesystem();
 }

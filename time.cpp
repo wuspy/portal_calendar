@@ -61,8 +61,6 @@ void advanceDay(int& month, int& mday, int& year)
     }
 }
 
-#ifdef TIME_ZONE
-
 String getPosixTz(String name)
 {
     for (int i = 0; i < sizeof(TIMEZONED_SERVER_LIST) / sizeof(char*); ++i) {
@@ -104,8 +102,6 @@ String getPosixTz(String name)
     }
     return "";
 }
-
-#endif // TIME_ZONE
 
 /**
  * Based on the queryNTP function from ezTime

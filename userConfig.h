@@ -37,7 +37,7 @@ public:
 	void addParamsToWiFiManager(WiFiManager& wifiManager);
 	void saveParamsFromWiFiManager();
 	void createWiFiParams();
-	
+	const char* weatherUnitToString(EWeatherUnits inUnit);
 public:
 	// Should we show the day name on the right side (next to the XX/XX day)
 	bool bShowDay = true;
