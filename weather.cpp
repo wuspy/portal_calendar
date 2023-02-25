@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include "weather.h"
 #include "global.h"
-#include "time_misc.h"
+#include "time_util.h"
 
 const WeatherEntry EMPTY_WEATHER_ENTRY = {
     .condition = WeatherCondition::UNKNOWN,

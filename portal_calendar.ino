@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include "global.h"
-#include "time_misc.h"
+#include "time_util.h"
 #include "Display.h"
 #ifdef SHOW_WEATHER
 #include "weather.h"
