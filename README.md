@@ -94,9 +94,9 @@ This project requires soldering, I'm sorry. Unfortunately I didn't take many pic
 
 Read through [config.h](config.h) and fill out the required values. At a minimum, you need to fill out `WIFI_NAME`, `WIFI_PASS`, and `TIME_ZONE`. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
 
-The firmware can be built and flashed with the Arduino IDE after you've installed the ESP32 boards package 2.0+ and ArduinoJson 6.20+.
+## Building with Arduino IDE
 
-To install the ESP32 boards package, go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+This project depends on ArduinoJson 6.20+, which can be installed through the library manager. You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
@@ -129,6 +129,10 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
 
 Now you can just flash it like any other arduino.
 
+## Building with PlatformIO
+
+Assuming you already have PlatformIO installed, there shouldn't be anything else you need to do before building and flashing. Just select Build or Upload under the EzSBC environment.
+
 # More Info
 
 ## Timekeeping
@@ -146,11 +150,11 @@ Like I mentioned in the [Bill of Materials](#bill-of-materials) section, I'm doi
 
 A consequence of this is that I've had to write my own simple 2-bit drawing library for this project, since [Adafruit GFX](https://github.com/adafruit/Adafruit-GFX-Library) doesn't support that and I don't know of any other libraries that do. The low-level code for drawing to the display is located in [DisplayGDEW075T7.cpp](DisplayGDEW075T7.cpp), which includes low-level drawing commands like `setPx`, `drawVLine`, `drawHLine`, `fillRect`, and `strokeRect`, but also more advanced commands like `drawImage`, `drawText`, and `drawMultilineText`, which I'd like to explain a bit further in case you want to modify the icons or fonts used in this project.
 
-All of the bitmap and font resources are in the [resource](resource) directory, which can be compiled to C header files using [build_image.py](resource/build_image.py) and [build_font.py](resource/build_font.py) respectively. I chose to simply compile resources to C code that can be embedded into the firmware instead of loading them from the ESP32's SPIFFS because it greatly simplifies the flashing process.
+All of the bitmap and font resources are in the [resources](resources) directory, which can be compiled to C header files using [build_image.py](resources/build_image.py) and [build_font.py](resources/build_font.py) respectively. I chose to simply compile resources to C code that can be embedded into the firmware instead of loading them from the ESP32's SPIFFS because it greatly simplifies the flashing process.
 
 The build_image.py script can take in any image format supported by PIL and will output a C header file of the same name that can be included and drawn to the display. All of the images used in this project are inclued in this repo both as the original GIF images and the compiled C header files.
 
-The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file. Look at [build_fonts.sh](resource/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
+The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # License
 
