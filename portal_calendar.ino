@@ -218,7 +218,7 @@ void setup()
     
     #ifdef DEBUG
     Serial.begin(115200);
-    #ifdef DEBUG_DELAY
+    #if(defined PLATFORMIO && defined DEBUG_DELAY)
         delay(DEBUG_DELAY);
     #endif
     time(&t);
