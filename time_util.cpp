@@ -1,6 +1,6 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
-#include "time_misc.h"
+#include "time_util.h"
 
 #define NTP_PACKET_SIZE 48
 
