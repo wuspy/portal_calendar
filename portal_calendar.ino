@@ -217,11 +217,11 @@ void setup()
     tm now;
     
     #ifdef DEBUG
+    time(&t);
     Serial.begin(115200);
     #if(defined PLATFORMIO && defined DEBUG_DELAY)
         delay(DEBUG_DELAY);
     #endif
-    time(&t);
     localtime_r(&t, &now);
     char timestr[30];
     strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now);
