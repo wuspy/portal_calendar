@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "DisplayGDEW075T7.h"
-#include "resource/image.h"
+#include "resources/image.h"
 #include "global.h"
 #ifdef SHOW_WEATHER
 #include "weather.h"

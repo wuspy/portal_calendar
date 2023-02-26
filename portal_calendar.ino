@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include "global.h"
-#include "time_misc.h"
+#include "time_util.h"
 #include "Display.h"
 #ifdef SHOW_WEATHER
 #include "weather.h"
@@ -217,11 +217,8 @@ void setup()
     tm now;
     
     #ifdef DEBUG
-    Serial.begin(115200);
-    #ifdef DEBUG_DELAY
-        delay(DEBUG_DELAY);
-    #endif
     time(&t);
+    Serial.begin(115200);
     localtime_r(&t, &now);
     char timestr[30];
     strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now);
