@@ -5,6 +5,8 @@ An ESP32 based, Portal themed e-ink calendar that can run on AAA batteries for y
 - [Bill of Materials](#bill-of-materials)
 - [Assembly](#assembly)
 - [Firmware](#firmware)
+  - [Building with Arduino IDE](#building-with-arduino-ide)
+  - [Building with PlatformIO](#building-with-platformio)
 - [More Info](#more-info)
   - [Timekeeping](#timekeeping)
   - [Graphics](#graphics)
