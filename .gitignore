@@ -1,6 +1,7 @@
 .vscode
 __pycache__/
 build
-resource/font/*.ttf
-resource/font/*.otf
+resources/font/*.ttf
+resources/font/*.otf
 private
+.pio/

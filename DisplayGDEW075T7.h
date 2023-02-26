@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <utility>
-#include "resource/image.h"
-#include "resource/font/font.h"
+#include "resources/image.h"
+#include "resources/font/font.h"
 
 #ifndef PORTALCALENDAR_DISPLAY_GDEW075T7_H
 #define PORTALCALENDAR_DISPLAY_GDEW075T7_H
