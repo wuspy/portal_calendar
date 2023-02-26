@@ -24,8 +24,8 @@
  * Display language: LOCALE_EN_US or LOCALE_DE_DE
  *
  */
-// #define LOCALE_EN_US
-#define LOCALE_DE_DE
+#define LOCALE_EN_US
+//#define LOCALE_DE_DE
 
 /**
  * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
