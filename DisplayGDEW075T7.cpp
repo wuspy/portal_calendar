@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include "DisplayGDEW075T7.h"
+#include "unicode.h"
 
 // Display commands
 const uint8_t CMD_PSR           = 0x00;
@@ -475,15 +476,19 @@ uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t tra
     }
 
     uint32_t length = 0;
-    for (char c : str) {
-        if (c == ' ' || c < font.rangeStart || c > font.rangeEnd) {
+    uint32_t cpLength = 0;
+    Utf8Iterator it = Utf8Iterator(str);
+    uint16_t cp;
+    while ((cp = it.next())) {
+        ++cpLength;
+        if (isSpaceCodePoint(cp)) {
             length += font.spaceWidth;
         } else {
-            const FontGlyph glyph = font.glyphs[c - font.rangeStart];
+            const FontGlyph glyph = font.getGlyph(cp);
             length += glyph.width + glyph.left;
         }
     }
-    return length + tracking * (str.length() - 1);
+    return length + tracking * (cpLength - 1);
 }
 
 void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, Align align, int32_t tracking)
@@ -496,11 +501,13 @@ void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t
         }
         adjustAlignment(&x, &y, width, font.ascent + font.descent, align);
     }
-    for (char c : str) {
-        if (c == ' ' || c < font.rangeStart || c > font.rangeEnd) {
+    Utf8Iterator it = Utf8Iterator(str);
+    uint16_t cp;
+    while ((cp = it.next())) {
+        if (isSpaceCodePoint(cp)) {
             x += font.spaceWidth + tracking;
-        } else  {
-            const FontGlyph glyph = font.glyphs[c - font.rangeStart];
+        } else {
+            const FontGlyph glyph = font.getGlyph(cp);
             x += glyph.left;
             drawImage({ width: glyph.width, height: glyph.height, data: glyph.data }, x, y + glyph.top);
             x += glyph.width + tracking;

@@ -1,5 +1,7 @@
-#ifndef FONT_H
-#define FONT_H
+#include <unordered_map>
+
+#ifndef PORTALCALENDAR_FONT_H
+#define PORTALCALENDAR_FONT_H
 
 typedef struct {
     const uint16_t width;
@@ -10,14 +12,27 @@ typedef struct {
 } FontGlyph;
 
 typedef struct {
-    const char rangeStart;
-    const char rangeEnd;
+    const std::unordered_map<uint16_t, FontGlyph> glyphs;
     const uint8_t fgColor;
     const uint8_t bgColor;
     const uint16_t ascent;
     const uint16_t descent;
     const uint16_t spaceWidth;
-    const FontGlyph *glyphs;
+
+    FontGlyph getGlyph(uint16_t cp) const
+    {
+        auto iterator = glyphs.find(cp);
+        if (iterator != glyphs.cend()) {
+            return iterator->second;
+        }
+        iterator = glyphs.find(0xFFFD);
+        if (iterator != glyphs.cend()) {
+            return iterator->second;
+        }
+        // No replacement glyph included in the font, but we still have to return something.
+        // This code should never be hit.
+        return glyphs.cbegin()->second;
+    };
 } Font;
 
-#endif // FONT_H
+#endif // PORTALCALENDAR_FONT_H
