@@ -214,7 +214,6 @@ DisplayGDEW075T7::~DisplayGDEW075T7() {
 
 DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
 {
-    _spiBus = spi_bus;
     _resetPin = reset_pin;
     _dcPin = dc_pin;
     _csPin = cs_pin;
@@ -225,7 +224,7 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t cop
     pinMode(_dcPin, OUTPUT);
     pinMode(_busyPin, INPUT);
 
-    _spi = new SPIClass(_spiBus);
+    _spi = new SPIClass(spi_bus);
     _spi->begin(sck_pin, -1, copi_pin, cs_pin);
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
     

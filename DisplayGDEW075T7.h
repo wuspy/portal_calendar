@@ -88,7 +88,6 @@ public:
     );
  
 private:
-    uint8_t _spiBus;
     uint8_t _resetPin;
     uint8_t _dcPin;
     uint8_t _csPin;
