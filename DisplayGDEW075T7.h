@@ -48,7 +48,7 @@ public:
         CENTER          = _ALIGN_HCENTER | _ALIGN_VCENTER,
     };
 
-    DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
+    DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
     ~DisplayGDEW075T7();
     void clear(uint8_t color = WHITE);
     void test();
@@ -88,7 +88,6 @@ public:
     );
  
 private:
-    uint8_t _spiBus;
     uint8_t _resetPin;
     uint8_t _dcPin;
     uint8_t _csPin;
