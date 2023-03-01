@@ -108,6 +108,8 @@ At a minimum you need to fill out the Timezone field (using a name from the TZ D
 
 Press 'Save' to save your settings, at which point the device will finish booting. If you need to make a change to the configuration, press RESET on the back of the device (or remove/re-add a battery). Your previous settings will be saved so in the event of a battery replacement you can simply wait out the 10 minute configuration timer window, and then it will connect to your home Wi-Fi and use previously saved settings.
 
+There are some advanced settings in [config.h](config.h) that you may wish to have a look at, but it is unlikely that you will need to change any. If you wish to deploy an updated version of the firmware you can do this using the Captive Portals's OTA Update Feature. You will need to compile the binary first (in Arduino IDE, go to Sketch > Export Compiled Binary), and then press RESET on the back of the device. Connect to the ESP32 Captive Web Portal using your desktop (connect via your phone first to discover the ESP32's IP address, or access your router to find connected devices) and then choose "Update". Navigate to where the Arduino Sketch is (the .ino file) and in "build\esp32.esp32.esp32\" you should find "portal_calendar.ino.bin". Upload this file to the web-page and it should show that it is rebooting after ~1 minute, and your new firmware should now be running on the device.
+
 ## Building with Arduino IDE
 
 This project depends on ArduinoJson 6.20+, which can be installed through the library manager. You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
