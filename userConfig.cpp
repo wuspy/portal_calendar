@@ -61,7 +61,7 @@ void UserConfig::createWiFiParams()
 	secondaryWeatherInfoParam = new WiFiManagerParameter("secondaryWeatherInfo", "Secondary Weather Info (if using 3-Hour Intervals):\n1: Chance of Precipitation\n2: Humidity", String((int)weatherSecondaryDisplayType).c_str(), 1);
 	bUse24HourTimeParam = new WiFiManagerParameter("bUse24HourTime", "Use 24Hr Time (if using 3-Hour Intervals)", boolToShortString(bUse24HourTime), 5);
 	weatherUnitsParam = new WiFiManagerParameter("weatherUnits", "Metric or Imperial", weatherUnitToString(weatherUnitDisplay), 8);
-	weatherLocationParam = new WiFiManagerParameter("weatherLocation", "Location (City, State, Country) or ZipCode (in US)", weatherLocation.c_str(), 50);
+	weatherLocationParam = new WiFiManagerParameter("weatherLocation", "Location (City, State, Country)", weatherLocation.c_str(), 50);
 	weatherLocLatParam = new WiFiManagerParameter("weatherLocLat", "Location (Latitude) if Location is blank", String(weatherLocationOverrideLatitude).c_str(), 12);
 	weatherLocLongParam = new WiFiManagerParameter("weatherLocLong", "Location (Longitude) if Location 	is blank", String(weatherLocationOverrideLongitude).c_str(), 12);
 	weatherStartHourParam = new WiFiManagerParameter("weatherStartHour", "When to update Weather Forecast for the Day? [0-24]", String(weatherStartHour).c_str(), 2);
