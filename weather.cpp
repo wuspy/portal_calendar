@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include "weather.h"
 #include "global.h"
-#include "time.h"
+#include "time_util.h"
 #include "userConfig.h"
 
 const WeatherEntry EMPTY_WEATHER_ENTRY = {

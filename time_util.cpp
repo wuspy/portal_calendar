@@ -1,6 +1,6 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
-#include "time.h"
+#include "time_util.h"
 
 #define NTP_PACKET_SIZE 48
 
@@ -183,7 +183,7 @@ bool syncNtp()
         DEBUG_PRINT("NTP sync took %lums", duration);
         suseconds_t us = (fraction / 4294967UL + duration / 2) * 1000; // Assume symmetric network latency
         timeval now = {
-            .tv_sec = secsSince1900 - 2208988800UL + us / uS_PER_S, // Subtract 70 years to get seconds since 1970
+            .tv_sec = (time_t)(secsSince1900 - 2208988800UL) + us / uS_PER_S, // Subtract 70 years to get seconds since 1970
             .tv_usec = us % uS_PER_S,
         };
         timeval oldNow;

@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <WiFiManager.h>  
 #include "global.h"
-#include "time.h"
+#include "time_util.h"
 #include "Display.h"
 #include "weather.h"
 #include "qrcodegen/qrcodegen.h"
@@ -321,12 +321,13 @@ void setup()
     wifiManager.setSaveConfigCallback(saveConfigCallback);
 
     #ifdef DEBUG
-    Serial.begin(115200);
+    time(&t);
+
     // wifiManager.setDebugOutput(true);
-    //wifiManager.resetSettings();
+    // wifiManager.resetSettings();
 
     // Convert timestamp and print it over Serial
-    time(&t);
+    Serial.begin(115200);
     localtime_r(&t, &now);
     char timestr[30];
     strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now);

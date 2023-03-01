@@ -212,9 +212,8 @@ DisplayGDEW075T7::~DisplayGDEW075T7() {
     delete[] _frameBuffer;
 };
 
-DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
+DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
 {
-    _spiBus = spi_bus;
     _resetPin = reset_pin;
     _dcPin = dc_pin;
     _csPin = cs_pin;
@@ -225,8 +224,8 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t rese
     pinMode(_dcPin, OUTPUT);
     pinMode(_busyPin, INPUT);
 
-    _spi = new SPIClass(_spiBus);
-    _spi->begin();
+    _spi = new SPIClass(spi_bus);
+    _spi->begin(sck_pin, -1, copi_pin, cs_pin);
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
     
     _frameBuffer = new uint8_t[FRAMEBUFFER_LENGTH];
@@ -340,7 +339,8 @@ void DisplayGDEW075T7::refresh()
 {
     wakeup();
 
-    uint32_t i, j;
+    size_t i;
+    uint8_t j;
     uint16_t chunk; // Holds 8px of frame_buffer
     uint8_t data;   // Holds 8px of display output
 
@@ -348,7 +348,7 @@ void DisplayGDEW075T7::refresh()
     for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
         data = 0;
         chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
-        for (uint8_t j = 0; j < 8; ++j) {
+        for (j = 0; j < 8; ++j) {
             data |= LUT_DTM1[(chunk >> (j * 2)) & 0b11] << j;
         }
         sendData(data);
@@ -357,7 +357,7 @@ void DisplayGDEW075T7::refresh()
     for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
         data = 0;
         chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
-        for (uint8_t j = 0; j < 8; ++j) {
+        for (j = 0; j < 8; ++j) {
             data |= LUT_DTM2[(chunk >> (j * 2)) & 0b11] << j;
         }
         sendData(data);
@@ -378,7 +378,7 @@ void DisplayGDEW075T7::sleep()
     digitalWrite(_csPin, HIGH);
 }
 
-void DisplayGDEW075T7::clear(uint8_t color)
+void DisplayGDEW075T7::clear(Color color)
 {
     memset(_frameBuffer, (color << 6) | (color << 4) | (color << 2) | color, FRAMEBUFFER_LENGTH);
 }
@@ -433,7 +433,7 @@ size_t DisplayGDEW075T7::getPixelIndex(int32_t x, int32_t y)
 
 uint8_t DisplayGDEW075T7::getPx(int32_t x, int32_t y)
 {
-    const uint32_t i = getPixelIndex(x, y);
+    const size_t i = getPixelIndex(x, y);
     if (i != SIZE_MAX) {
         return (_frameBuffer[i / 4] >> ((3 - i % 4) * 2)) & 0b11;
     } else {
@@ -441,9 +441,9 @@ uint8_t DisplayGDEW075T7::getPx(int32_t x, int32_t y)
     }
 }
 
-void DisplayGDEW075T7::setPx(int32_t x, int32_t y, uint8_t color)
+void DisplayGDEW075T7::setPx(int32_t x, int32_t y, Color color)
 {
-    const uint32_t i = getPixelIndex(x, y);
+    const size_t i = getPixelIndex(x, y);
     if (i != SIZE_MAX) {
         uint8_t *fb = &_frameBuffer[i / 4];
         const uint8_t shift = (3 - i % 4) * 2;
@@ -456,11 +456,11 @@ void DisplayGDEW075T7::drawImage(const Image &image, int32_t x, int32_t y, Align
 {
     adjustAlignment(&x, &y, image.width, image.height, align);
 
-    uint32_t i = 0;
-    uint8_t color;
+    size_t i = 0;
+    Color color;
     for (uint32_t y_src = 0; y_src < image.height; ++y_src) {
         for (uint32_t x_src = 0; x_src < image.width; ++x_src, ++i) {
-            color = (image.data[i / 4] >> ((3 - i % 4) * 2)) & 0b11;
+            color = (Color)((image.data[i / 4] >> ((3 - i % 4) * 2)) & 0b11);
             if (color != _alpha) {
                 setPx(x + x_src, y + y_src, color);
             }
@@ -533,7 +533,7 @@ void DisplayGDEW075T7::drawMultilineText(
     }
 }
 
-void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
+void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align)
 {
     if (length < 0) {
         x += length;
@@ -549,7 +549,7 @@ void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t 
     }
 }
 
-void DisplayGDEW075T7::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align)
+void DisplayGDEW075T7::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align)
 {
     if (length < 0) {
         y += length;
@@ -565,7 +565,7 @@ void DisplayGDEW075T7::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t 
     }
 }
 
-void DisplayGDEW075T7::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color, Align align)
+void DisplayGDEW075T7::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, Color color, Align align)
 {
     if (width < 0) {
         x += width;
@@ -584,7 +584,7 @@ void DisplayGDEW075T7::fillRect(int32_t x, int32_t y, int32_t width, int32_t hei
     }
 }
 
-void DisplayGDEW075T7::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, uint8_t color, bool strokeOutside, Align align)
+void DisplayGDEW075T7::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, Color color, bool strokeOutside, Align align)
 {
     if (width < 0) {
         x += width;
