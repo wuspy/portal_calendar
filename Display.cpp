@@ -245,41 +245,6 @@ static_assert(
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
 
-const char *MONTHS[] = {
-    I18N_MONTH_JANUARY,
-    I18N_MONTH_FEBRUARY,
-    I18N_MONTH_MARCH,
-    I18N_MONTH_APRIL,
-    I18N_MONTH_MAY,
-    I18N_MONTH_JUNE,
-    I18N_MONTH_JULY,
-    I18N_MONTH_AUGUST,
-    I18N_MONTH_SEPTEMBER,
-    I18N_MONTH_OCTOBER,
-    I18N_MONTH_NOVEMBER,
-    I18N_MONTH_DECEMBER,
-};
-
-const char *DAYS[] = {
-    I18N_DAY_SUNDAY,
-    I18N_DAY_MONDAY,
-    I18N_DAY_TUESDAY,
-    I18N_DAY_WEDNESDAY,
-    I18N_DAY_THURSDAY,
-    I18N_DAY_FRIDAY,
-    I18N_DAY_SATURDAY,
-};
-
-const char *DAYS_ABBREVIATIONS[] = {
-    I18N_DAY_SUN,
-    I18N_DAY_MON,
-    I18N_DAY_TUE,
-    I18N_DAY_WED,
-    I18N_DAY_THU,
-    I18N_DAY_FRI,
-    I18N_DAY_SAT,
-};
-
 Display::Display()
 {
     _display = nullptr;
@@ -328,12 +293,12 @@ void Display::update(const tm *now)
 
     #ifdef SHOW_DAY
     // Day name
-    _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     #ifdef SHOW_MONTH
     // Month name
-    _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+    _display->drawText(I18N_MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     #endif
 
     #ifdef SHOW_YEAR
@@ -458,7 +423,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);

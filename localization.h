@@ -3,67 +3,83 @@
 #ifndef PORTALCALENDAR_LOCALIZATION_H
 #define PORTALCALENDAR_LOCALIZATION_H
 
-#ifdef LOCALE_DE_DE
+#if defined(LOCALE_EN_US)
 
-#define I18N_MONTH_JANUARY "JANUAR"
-#define I18N_MONTH_FEBRUARY "FEBRUAR"
-#define I18N_MONTH_MARCH "MAERZ"
-#define I18N_MONTH_APRIL "APRIL"
-#define I18N_MONTH_MAY "MAI"
-#define I18N_MONTH_JUNE "JUNI"
-#define I18N_MONTH_JULY "JULI"
-#define I18N_MONTH_AUGUST "AUGUST"
-#define I18N_MONTH_SEPTEMBER "SEPTEMBER"
-#define I18N_MONTH_OCTOBER "OKTOBER"
-#define I18N_MONTH_NOVEMBER "NOVEMBER"
-#define I18N_MONTH_DECEMBER "DEZEMBER"
+const char *I18N_MONTHS[] = {
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+};
 
-#define I18N_DAY_SUNDAY "SONNTAG"
-#define I18N_DAY_MONDAY "MONTAG"
-#define I18N_DAY_TUESDAY "DIENSTAG"
-#define I18N_DAY_WEDNESDAY "MITTWOCH"
-#define I18N_DAY_THURSDAY "DONNERSTAG"
-#define I18N_DAY_FRIDAY "FREITAG"
-#define I18N_DAY_SATURDAY "SAMSTAG"
+const char *I18N_DAYS[] = {
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+};
 
-#define I18N_DAY_SUN "SO"
-#define I18N_DAY_MON "MO"
-#define I18N_DAY_TUE "DI"
-#define I18N_DAY_WED "MI"
-#define I18N_DAY_THU "DO"
-#define I18N_DAY_FRI "FR"
-#define I18N_DAY_SAT "SA"
+const char *I18N_DAYS_ABBREVIATIONS[] = {
+    "SUN",
+    "MON",
+    "TUE",
+    "WED",
+    "THU",
+    "FRI",
+    "SAT",
+};
+
+#elif defined(LOCALE_DE_DE)
+
+const char *I18N_MONTHS[] = {
+    "JANUAR",
+    "FEBRUAR",
+    "MÄRZ",
+    "APRIL",
+    "MAI",
+    "JUNI",
+    "JULI",
+    "AUGUST",
+    "SEPTEMBER",
+    "OKTOBER",
+    "NOVEMBER",
+    "DEZEMBER",
+};
+
+const char *I18N_DAYS[] = {
+    "SONNTAG",
+    "MONTAG",
+    "DIENSTAG",
+    "MITTWOCH",
+    "DONNERSTAG",
+    "FREITAG",
+    "SAMSTAG",
+};
+
+const char *I18N_DAYS_ABBREVIATIONS[] = {
+    "SO",
+    "MO",
+    "DI",
+    "MI",
+    "DO",
+    "FR",
+    "SA",
+};
 
 #else
 
-#define I18N_MONTH_JANUARY "JANUARY"
-#define I18N_MONTH_FEBRUARY "FEBRUARY"
-#define I18N_MONTH_MARCH "MARCH"
-#define I18N_MONTH_APRIL "APRIL"
-#define I18N_MONTH_MAY "MAY"
-#define I18N_MONTH_JUNE "JUNE"
-#define I18N_MONTH_JULY "JULY"
-#define I18N_MONTH_AUGUST "AUGUST"
-#define I18N_MONTH_SEPTEMBER "SEPTEMBER"
-#define I18N_MONTH_OCTOBER "OCTOBER"
-#define I18N_MONTH_NOVEMBER "NOVEMBER"
-#define I18N_MONTH_DECEMBER "DECEMBER"
-
-#define I18N_DAY_SUNDAY "SUNDAY"
-#define I18N_DAY_MONDAY "MONDAY"
-#define I18N_DAY_TUESDAY "TUESDAY"
-#define I18N_DAY_WEDNESDAY "WEDNESDAY"
-#define I18N_DAY_THURSDAY "THURSDAY"
-#define I18N_DAY_FRIDAY "FRIDAY"
-#define I18N_DAY_SATURDAY "SATURDAY"
-
-#define I18N_DAY_SUN "SUN"
-#define I18N_DAY_MON "MON"
-#define I18N_DAY_TUE "TUE"
-#define I18N_DAY_WED "WED"
-#define I18N_DAY_THU "THU"
-#define I18N_DAY_FRI "FRI"
-#define I18N_DAY_SAT "SAT"
+#error No locale specified
 
 #endif
 

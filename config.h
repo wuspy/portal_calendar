@@ -21,11 +21,10 @@
 // #define SHOW_YEAR
 
 /**
- * Display language: LOCALE_EN_US or LOCALE_DE_DE
- *
+ * Language for the months and days. Error messages, and the text you're reading right now, are not currently translated.
  */
 #define LOCALE_EN_US
-//#define LOCALE_DE_DE
+// #define LOCALE_DE_DE
 
 /**
  * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
