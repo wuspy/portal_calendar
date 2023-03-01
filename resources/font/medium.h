@@ -2,7 +2,7 @@
  * This is a generated source file.
  * Original font: font/Univers 65 Bold Regular.ttf
  * Font size: 28px
- * Code point ranges: .-9,A-Z,À-Ö,Ø-ß,�
+ * Code point ranges: .-Z,À-Ö,Ø-ß,�
  */
 
 #include "font.h"
@@ -78,6 +78,41 @@ const uint8_t _FONT_MEDIUM_DATA[] = {
     0xFF,0xFD,0x00,0x7F,0xFF,0xFF,0x40,0x06,0xFE,0x6F,0xD0,0x00,0x00,0x0F,0xF4,0x00,0x00,0x03,0xFC,0x03,
     0xFD,0x01,0xFE,0x00,0xFF,0x81,0xFF,0x40,0x1F,0xFF,0xFF,0x80,0x02,0xFF,0xFF,0x80,0x00,0x1B,0xFE,0x40,
     0x00,0x00,0x00,0x00,0x00,
+    // ':'
+    0x0F,0xE0,0x03,0xF8,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x3F,0x80,0x0F,0xE0,0x03,0xF8,0x00,0x00,0x00,
+    // ';'
+    0x07,0xF4,0x01,0xFD,0x00,0x7F,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x7F,0x80,0x2F,0xD0,0x0F,0xE0,0x07,0xF4,0x01,0xFC,0x00,0xBD,0x00,0x3F,0x00,0x00,0x00,0x00,
+    // '<'
+    0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x6E,0x00,0x00,0x06,0xFF,0x80,0x00,0x1B,0xFF,0xE0,0x01,0xBF,0xFF,
+    0xE4,0x0B,0xFF,0xFE,0x40,0x03,0xFF,0xE4,0x00,0x00,0xFF,0xE4,0x00,0x00,0x3F,0xFF,0xE0,0x00,0x01,0xBF,
+    0xFF,0x90,0x00,0x02,0xFF,0xFF,0x80,0x00,0x06,0xFF,0xE0,0x00,0x00,0x06,0xF8,0x00,0x00,0x00,0x0A,0x00,
+    0x00,0x00,0x00,0x00,
+    // '='
+    0x2F,0xFF,0xFF,0xFC,0x0B,0xFF,0xFF,0xFF,0x02,0xFF,0xFF,0xFF,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x02,0xFF,0xFF,0xFF,0xC0,0xBF,0xFF,0xFF,0xF0,0x2F,0xFF,0xFF,0xFC,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    // '>'
+    0x10,0x00,0x00,0x00,0x0F,0x90,0x00,0x00,0x03,0xFF,0x90,0x00,0x00,0xFF,0xFE,0x40,0x00,0x1B,0xFF,0xFE,
+    0x40,0x00,0x1B,0xFF,0xFD,0x00,0x00,0x1B,0xFF,0x80,0x00,0x01,0xBF,0xE0,0x00,0x1B,0xFF,0xF8,0x00,0x7F,
+    0xFF,0xE4,0x02,0xFF,0xFF,0x80,0x00,0xFF,0xF9,0x00,0x00,0x3F,0x90,0x00,0x00,0x09,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,
+    // '?'
+    0x06,0xFF,0x90,0x00,0xBF,0xFF,0xE0,0x02,0xFF,0xFF,0xF0,0x05,0x01,0xBF,0xD0,0x00,0x00,0xFF,0x80,0x00,
+    0x02,0xFE,0x00,0x00,0x0B,0xF8,0x00,0x00,0x3F,0xC0,0x00,0x02,0xFE,0x00,0x00,0x2F,0xE0,0x00,0x01,0xFE,
+    0x00,0x00,0x1F,0xE0,0x00,0x00,0xFE,0x00,0x00,0x03,0xF4,0x00,0x00,0x0F,0xC0,0x00,0x00,0x3F,0x00,0x00,
+    0x00,0x54,0x00,0x00,0x07,0xF4,0x00,0x00,0x1F,0xD0,0x00,0x00,0x7F,0x40,0x00,0x00,0x00,0x00,0x00,
+    // '@'
+    0x00,0x00,0x06,0xBF,0xE9,0x00,0x00,0x00,0x00,0x7F,0xFF,0xFF,0xD0,0x00,0x00,0x07,0xFF,0xFF,0xFF,0xF8,
+    0x00,0x00,0x1F,0xF9,0x40,0x1B,0xFE,0x00,0x00,0xBF,0x90,0x00,0x00,0xBF,0x80,0x01,0xFE,0x00,0x00,0x00,
+    0x1F,0xD0,0x07,0xF4,0x01,0xBE,0x4F,0x47,0xE0,0x0B,0xE0,0x07,0xFF,0xDF,0x02,0xF0,0x1F,0xC0,0x1F,0xFF,
+    0xFF,0x01,0xF4,0x2F,0x80,0x3F,0x81,0xFE,0x01,0xF4,0x3F,0x40,0xBE,0x00,0xBD,0x01,0xF8,0x3F,0x00,0xFC,
+    0x00,0x7C,0x01,0xF4,0x7F,0x01,0xF8,0x00,0xB8,0x02,0xF4,0x7F,0x02,0xF4,0x00,0xF4,0x03,0xF0,0x3F,0x42,
+    0xF4,0x02,0xF4,0x0B,0xE0,0x3F,0x42,0xFD,0x1B,0xF4,0x2F,0xC0,0x2F,0xC1,0xFF,0xFF,0xFF,0xFF,0x40,0x1F,
+    0xD0,0xBF,0xFD,0xBF,0xFD,0x00,0x0B,0xF4,0x1F,0xE0,0x2F,0xE4,0x00,0x03,0xFE,0x00,0x00,0x00,0x00,0x00,
+    0x00,0xFF,0xE5,0x00,0x59,0x00,0x00,0x00,0x2F,0xFF,0xFF,0xFE,0x00,0x00,0x00,0x07,0xFF,0xFF,0xFF,0x00,
+    0x00,0x00,0x00,0x6B,0xFF,0xA4,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     // 'A'
     0x00,0x02,0xFF,0xC0,0x00,0x00,0x00,0xFF,0xF4,0x00,0x00,0x00,0x7F,0xFE,0x00,0x00,0x00,0x2F,0xFF,0xC0,
     0x00,0x00,0x0F,0xFB,0xF4,0x00,0x00,0x07,0xF9,0xFE,0x00,0x00,0x02,0xFD,0x3F,0xC0,0x00,0x00,0xFF,0x0B,
@@ -525,64 +560,71 @@ const Font FONT_MEDIUM {
         { 0x0037, { .width=17, .height=20, .top=9, .left=0, .data=&_FONT_MEDIUM_DATA[682] } }, // '7'
         { 0x0038, { .width=17, .height=20, .top=9, .left=0, .data=&_FONT_MEDIUM_DATA[767] } }, // '8'
         { 0x0039, { .width=17, .height=20, .top=9, .left=0, .data=&_FONT_MEDIUM_DATA[852] } }, // '9'
-        { 0x0041, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[937] } }, // 'A'
-        { 0x0042, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1048] } }, // 'B'
-        { 0x0043, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1153] } }, // 'C'
-        { 0x0044, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1258] } }, // 'D'
-        { 0x0045, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1369] } }, // 'E'
-        { 0x0046, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1464] } }, // 'F'
-        { 0x0047, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1554] } }, // 'G'
-        { 0x0048, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1675] } }, // 'H'
-        { 0x0049, { .width=9, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1786] } }, // 'I'
-        { 0x004A, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1834] } }, // 'J'
-        { 0x004B, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1924] } }, // 'K'
-        { 0x004C, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2029] } }, // 'L'
-        { 0x004D, { .width=27, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2119] } }, // 'M'
-        { 0x004E, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2261] } }, // 'N'
-        { 0x004F, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2382] } }, // 'O'
-        { 0x0050, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2503] } }, // 'P'
-        { 0x0051, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2598] } }, // 'Q'
-        { 0x0052, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2719] } }, // 'R'
-        { 0x0053, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2824] } }, // 'S'
-        { 0x0054, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2929] } }, // 'T'
-        { 0x0055, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3024] } }, // 'U'
-        { 0x0056, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3145] } }, // 'V'
-        { 0x0057, { .width=29, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3256] } }, // 'W'
-        { 0x0058, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3409] } }, // 'X'
-        { 0x0059, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3520] } }, // 'Y'
-        { 0x005A, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3625] } }, // 'Z'
-        { 0x00C0, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[3720] } }, // 'À'
-        { 0x00C1, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[3862] } }, // 'Á'
-        { 0x00C2, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4004] } }, // 'Â'
-        { 0x00C3, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4146] } }, // 'Ã'
-        { 0x00C4, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4288] } }, // 'Ä'
-        { 0x00C5, { .width=21, .height=29, .top=0, .left=0, .data=&_FONT_MEDIUM_DATA[4430] } }, // 'Å'
-        { 0x00C6, { .width=30, .height=21, .top=8, .left=-1, .data=&_FONT_MEDIUM_DATA[4583] } }, // 'Æ'
-        { 0x00C7, { .width=20, .height=27, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[4741] } }, // 'Ç'
-        { 0x00C8, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4876] } }, // 'È'
-        { 0x00C9, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4998] } }, // 'É'
-        { 0x00CA, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5120] } }, // 'Ê'
-        { 0x00CB, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5242] } }, // 'Ë'
-        { 0x00CC, { .width=10, .height=27, .top=2, .left=-1, .data=&_FONT_MEDIUM_DATA[5364] } }, // 'Ì'
-        { 0x00CD, { .width=10, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5432] } }, // 'Í'
-        { 0x00CE, { .width=11, .height=27, .top=2, .left=-1, .data=&_FONT_MEDIUM_DATA[5500] } }, // 'Î'
-        { 0x00CF, { .width=9, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5575] } }, // 'Ï'
-        { 0x00D0, { .width=22, .height=21, .top=8, .left=-1, .data=&_FONT_MEDIUM_DATA[5636] } }, // 'Ð'
-        { 0x00D1, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5752] } }, // 'Ñ'
-        { 0x00D2, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5908] } }, // 'Ò'
-        { 0x00D3, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6064] } }, // 'Ó'
-        { 0x00D4, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6220] } }, // 'Ô'
-        { 0x00D5, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6376] } }, // 'Õ'
-        { 0x00D6, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6532] } }, // 'Ö'
-        { 0x00D8, { .width=23, .height=23, .top=7, .left=0, .data=&_FONT_MEDIUM_DATA[6688] } }, // 'Ø'
-        { 0x00D9, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6821] } }, // 'Ù'
-        { 0x00DA, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6977] } }, // 'Ú'
-        { 0x00DB, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7133] } }, // 'Û'
-        { 0x00DC, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7289] } }, // 'Ü'
-        { 0x00DD, { .width=20, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7445] } }, // 'Ý'
-        { 0x00DE, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[7580] } }, // 'Þ'
-        { 0x00DF, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[7675] } }, // 'ß'
-        { 0xFFFD, { .width=22, .height=19, .top=10, .left=0, .data=&_FONT_MEDIUM_DATA[7780] } }, // '�'
+        { 0x003A, { .width=9, .height=15, .top=14, .left=0, .data=&_FONT_MEDIUM_DATA[937] } }, // ':'
+        { 0x003B, { .width=9, .height=18, .top=14, .left=0, .data=&_FONT_MEDIUM_DATA[971] } }, // ';'
+        { 0x003C, { .width=17, .height=15, .top=14, .left=0, .data=&_FONT_MEDIUM_DATA[1012] } }, // '<'
+        { 0x003D, { .width=17, .height=12, .top=17, .left=0, .data=&_FONT_MEDIUM_DATA[1076] } }, // '='
+        { 0x003E, { .width=17, .height=15, .top=14, .left=0, .data=&_FONT_MEDIUM_DATA[1127] } }, // '>'
+        { 0x003F, { .width=15, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1191] } }, // '?'
+        { 0x0040, { .width=28, .height=25, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1270] } }, // '@'
+        { 0x0041, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1445] } }, // 'A'
+        { 0x0042, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1556] } }, // 'B'
+        { 0x0043, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1661] } }, // 'C'
+        { 0x0044, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1766] } }, // 'D'
+        { 0x0045, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1877] } }, // 'E'
+        { 0x0046, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[1972] } }, // 'F'
+        { 0x0047, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2062] } }, // 'G'
+        { 0x0048, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2183] } }, // 'H'
+        { 0x0049, { .width=9, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2294] } }, // 'I'
+        { 0x004A, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2342] } }, // 'J'
+        { 0x004B, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2432] } }, // 'K'
+        { 0x004C, { .width=17, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2537] } }, // 'L'
+        { 0x004D, { .width=27, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2627] } }, // 'M'
+        { 0x004E, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2769] } }, // 'N'
+        { 0x004F, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[2890] } }, // 'O'
+        { 0x0050, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3011] } }, // 'P'
+        { 0x0051, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3106] } }, // 'Q'
+        { 0x0052, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3227] } }, // 'R'
+        { 0x0053, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3332] } }, // 'S'
+        { 0x0054, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3437] } }, // 'T'
+        { 0x0055, { .width=23, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3532] } }, // 'U'
+        { 0x0056, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3653] } }, // 'V'
+        { 0x0057, { .width=29, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3764] } }, // 'W'
+        { 0x0058, { .width=21, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[3917] } }, // 'X'
+        { 0x0059, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[4028] } }, // 'Y'
+        { 0x005A, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[4133] } }, // 'Z'
+        { 0x00C0, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4228] } }, // 'À'
+        { 0x00C1, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4370] } }, // 'Á'
+        { 0x00C2, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4512] } }, // 'Â'
+        { 0x00C3, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4654] } }, // 'Ã'
+        { 0x00C4, { .width=21, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[4796] } }, // 'Ä'
+        { 0x00C5, { .width=21, .height=29, .top=0, .left=0, .data=&_FONT_MEDIUM_DATA[4938] } }, // 'Å'
+        { 0x00C6, { .width=30, .height=21, .top=8, .left=-1, .data=&_FONT_MEDIUM_DATA[5091] } }, // 'Æ'
+        { 0x00C7, { .width=20, .height=27, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[5249] } }, // 'Ç'
+        { 0x00C8, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5384] } }, // 'È'
+        { 0x00C9, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5506] } }, // 'É'
+        { 0x00CA, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5628] } }, // 'Ê'
+        { 0x00CB, { .width=18, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5750] } }, // 'Ë'
+        { 0x00CC, { .width=10, .height=27, .top=2, .left=-1, .data=&_FONT_MEDIUM_DATA[5872] } }, // 'Ì'
+        { 0x00CD, { .width=10, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[5940] } }, // 'Í'
+        { 0x00CE, { .width=11, .height=27, .top=2, .left=-1, .data=&_FONT_MEDIUM_DATA[6008] } }, // 'Î'
+        { 0x00CF, { .width=9, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6083] } }, // 'Ï'
+        { 0x00D0, { .width=22, .height=21, .top=8, .left=-1, .data=&_FONT_MEDIUM_DATA[6144] } }, // 'Ð'
+        { 0x00D1, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6260] } }, // 'Ñ'
+        { 0x00D2, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6416] } }, // 'Ò'
+        { 0x00D3, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6572] } }, // 'Ó'
+        { 0x00D4, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6728] } }, // 'Ô'
+        { 0x00D5, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[6884] } }, // 'Õ'
+        { 0x00D6, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7040] } }, // 'Ö'
+        { 0x00D8, { .width=23, .height=23, .top=7, .left=0, .data=&_FONT_MEDIUM_DATA[7196] } }, // 'Ø'
+        { 0x00D9, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7329] } }, // 'Ù'
+        { 0x00DA, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7485] } }, // 'Ú'
+        { 0x00DB, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7641] } }, // 'Û'
+        { 0x00DC, { .width=23, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7797] } }, // 'Ü'
+        { 0x00DD, { .width=20, .height=27, .top=2, .left=0, .data=&_FONT_MEDIUM_DATA[7953] } }, // 'Ý'
+        { 0x00DE, { .width=18, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[8088] } }, // 'Þ'
+        { 0x00DF, { .width=20, .height=21, .top=8, .left=0, .data=&_FONT_MEDIUM_DATA[8183] } }, // 'ß'
+        { 0xFFFD, { .width=22, .height=19, .top=10, .left=0, .data=&_FONT_MEDIUM_DATA[8288] } }, // '�'
     },
     .fgColor=0b11,
     .bgColor=0b00,
