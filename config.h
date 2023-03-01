@@ -4,6 +4,7 @@
  */
 #define WIFI_NAME "your wifi name here"
 #define WIFI_PASS "your wifi password here"
+#define HOSTNAME "portal_calendar"
 
 /**
  * Show the day name on the right side (next to the XX/XX day)
