@@ -62,6 +62,8 @@
 /**
  * 1: Show a 5-day weather forecast
  * 2: Show today's weather forecast in 3-hour intervals
+ * 3: Show today's weather forecast in 3-hour intervals (first row), together with
+ *    5-day forecast (second row), for the cost of the progress-bar
  */
 #define WEATHER_DISPLAY_TYPE 1
 

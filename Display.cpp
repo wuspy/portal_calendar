@@ -241,6 +241,13 @@ static_assert(
 #define RIGHT (LEFT + ICON_SIZE * 5 + ICON_SPACING * 4)
 #define WIDTH (RIGHT - LEFT)
 #define ICON_TOP 550
+#if WEATHER_DISPLAY_TYPE == 3
+    #define ICON_TOP_WEATHER_TODAY_OFFSET (-107)
+    #define ICON_TOP_WEATHER_DAILY_OFFSET 42
+#else
+    #define ICON_TOP_WEATHER_TODAY_OFFSET 0
+    #define ICON_TOP_WEATHER_DAILY_OFFSET 0
+#endif
 // Part of the physical screen is covered by the bezel to change the aspect ratio from 15:9 to 16:9,
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
@@ -278,7 +285,9 @@ void Display::update(const tm *now)
     // Static lines
     _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
     _display->drawHLine(LEFT, 430, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+    #if !defined(SHOW_WEATHER) || (WEATHER_DISPLAY_TYPE != 3)
     _display->drawHLine(LEFT, 538, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+    #endif
 
     // Aperture logo
     _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
@@ -308,33 +317,39 @@ void Display::update(const tm *now)
     #endif
 
     // Progress bar
+    #if !defined(SHOW_WEATHER) || (WEATHER_DISPLAY_TYPE != 3)
     _display->drawImage(IMG_PROGRESS_BAR, LEFT, 438);
     int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
     _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
+    #endif
 
-    #ifdef SHOW_WEATHER
+#ifdef SHOW_WEATHER
 
     // Weather
 
-    #if WEATHER_DISPLAY_TYPE == 1
+    #if (WEATHER_DISPLAY_TYPE & 0x1)
 
-    DailyWeather weather[5];
-    get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawDailyWeather(weather[i], i);
-    }
-
-    #elif WEATHER_DISPLAY_TYPE == 2
-
-    WeatherEntry weather[5];
-    getTodaysWeather(now->tm_mon, now->tm_mday, weather);
+    DailyWeather weather_daily[5];
+    get5DayWeather(now->tm_mon, now->tm_mday, year, weather_daily);
 
     for (int i = 0; i < 5; ++i) {
-        drawWeatherEntry(weather[i], i);
+        drawDailyWeather(weather_daily[i], i);
     }
 
-    #else
+    #endif
+
+    #if (WEATHER_DISPLAY_TYPE & 0x2)
+
+    WeatherEntry weather_today[5];
+    getTodaysWeather(now->tm_mon, now->tm_mday, weather_today);
+
+    for (int i = 0; i < 5; ++i) {
+        drawWeatherEntry(weather_today[i], i);
+    }
+
+    #endif
+
+    #if (WEATHER_DISPLAY_TYPE < 1) || (WEATHER_DISPLAY_TYPE > 3)
 
     #error Invalid value for WEATHER_DISPLAY_TYPE
 
@@ -406,35 +421,35 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
     if (weather.mday == -1) {
-        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
+        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET);
         return;
     }
 
     char text[10];
 
     // Draw frame
-    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
+    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET);
 
     // Draw condition icon
     const Image* icon = getWeatherConditionIcon(weather.condition, weather.daylight);
     if (icon) {
-        _display->drawImage(*icon, x + 2, ICON_TOP + 21);
+        _display->drawImage(*icon, x + 2, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET + 21);
     }
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET);
     sprintf(text, "%d", weather.mday);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
 
     // Draw high temp
     sprintf(text, "%d", weather.highTemp);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET + 83);
 
     // Draw low temp
     sprintf(text, "%d", weather.lowTemp);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 108);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + ICON_TOP_WEATHER_DAILY_OFFSET + 108);
 }
 
 void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
@@ -442,19 +457,19 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
     if (weather.mday == -1) {
-        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
+        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET);
         return;
     }
 
     char text[10];
 
     // Draw frame
-    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
+    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET);
 
     // Draw condition icon
     const Image* icon = getWeatherConditionIcon(weather.condition, weather.daylight);
     if (icon) {
-        _display->drawImage(*icon, x + 2, ICON_TOP + 21);
+        _display->drawImage(*icon, x + 2, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET + 21);
     }
 
     // Draw time
@@ -469,20 +484,20 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     #endif
 
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET, DisplayGDEW075T7::TOP_CENTER);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
 
     // Draw temperature
     sprintf(text, "%d", weather.temp);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET + 83);
 
     // Draw secondary info
     #if SECONDARY_WEATHER_INFORMATION == 1 // Precipitation
     sprintf(text, "%d", weather.pop);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET + 108);
     #elif SECONDARY_WEATHER_INFORMATION == 2 // Humidity
     sprintf(text, "%d", weather.humidity);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + ICON_TOP_WEATHER_TODAY_OFFSET + 108);
     #else
     #error Invalid value for SECONDARY_WEATHER_INFORMATION
     #endif
