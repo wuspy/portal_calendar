@@ -24,8 +24,13 @@
 /**
  * Language for the months and days. Error messages, and the text you're reading right now, are not currently translated.
  */
-#define LOCALE_EN_US
-// #define LOCALE_DE_DE
+#define LOCALE_EN_US // English
+// #define LOCALE_DE_DE // Deutsch
+// #define LOCALE_ES_ES // Español
+// #define LOCALE_FR_FR // Français
+// #define LOCALE_NL_NL // Nederlands
+// #define LOCALE_IT_IT // Italiano
+// #define LOCALE_SV_SE // Svenska
 
 /**
  * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
