@@ -601,7 +601,7 @@ void Display::showQRCodeSetup(uint8_t qrCode[], std::initializer_list<String> me
     {
       int32_t xOffset = (x*pxPerPixel);
       int32_t yOffset = (y*pxPerPixel);
-      uint8_t color = qrcodegen_getModule(qrCode, x, y) ? 255 : 0;
+      auto color = qrcodegen_getModule(qrCode, x, y) ? DisplayGDEW075T7::BLACK : DisplayGDEW075T7::WHITE;
       _display->fillRect(xOffset + xOffsetGlobal, yOffset + yOffsetGlobal, pxPerPixel, pxPerPixel, color); 
     }
   }
