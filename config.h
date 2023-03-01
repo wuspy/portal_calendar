@@ -84,4 +84,4 @@
 /**
  * If debug logs should be printed over serial
  */
-#define DEBUG
+// #define DEBUG
