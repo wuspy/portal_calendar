@@ -22,7 +22,7 @@ outputLines, byteCount = compileImage(image)
 print("Output size: {}".format(byteCount))
 print("Writing to file '{}'".format(outputFileName))
 
-outputFile = open(outputFileName, "w")
+outputFile = open(outputFileName, mode="w", encoding="utf8")
 outputFile.writelines([
     "/**\n",
     " * This is a generated source file.\n",
@@ -35,9 +35,7 @@ outputFile.writelines([
     "#define {}_H\n\n".format(imageCName),
 
     "const uint8_t _{}_DATA[] = {{\n".format(imageCName),
-])
-outputFile.writelines(map(lambda line : "    {}\n".format(line), outputLines))
-outputFile.writelines([
+        *map(lambda line : "    {}\n".format(line), outputLines),
     "};\n\n",
 
     "const Image {} {{\n".format(imageCName),

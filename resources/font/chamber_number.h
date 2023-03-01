@@ -2,6 +2,7 @@
  * This is a generated source file.
  * Original font: font/Univers LT 49 Light Ultra Condensed.ttf
  * Font size: 400px
+ * Code point ranges: 0-9
  */
 
 #include "font.h"
@@ -4087,28 +4088,24 @@ const uint8_t _FONT_CHAMBER_NUMBER_DATA[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 
-const FontGlyph _FONT_CHAMBER_NUMBER_GLYPHS[] = {
-    { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[0] }, // '0'
-    { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[8159] }, // '1'
-    { .width=111, .height=293, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[16235] }, // '2'
-    { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[24366] }, // '3'
-    { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[32525] }, // '4'
-    { .width=111, .height=292, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[40601] }, // '5'
-    { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[48704] }, // '6'
-    { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[56863] }, // '7'
-    { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[64939] }, // '8'
-    { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[73098] }, // '9'
-};
-
 const Font FONT_CHAMBER_NUMBER {
-    .rangeStart=0x30, // 0
-    .rangeEnd=0x39, // 9
+    .glyphs={
+        { 0x0030, { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[0] } }, // '0'
+        { 0x0031, { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[8159] } }, // '1'
+        { 0x0032, { .width=111, .height=293, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[16235] } }, // '2'
+        { 0x0033, { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[24366] } }, // '3'
+        { 0x0034, { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[32525] } }, // '4'
+        { 0x0035, { .width=111, .height=292, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[40601] } }, // '5'
+        { 0x0036, { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[48704] } }, // '6'
+        { 0x0037, { .width=111, .height=291, .top=61, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[56863] } }, // '7'
+        { 0x0038, { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[64939] } }, // '8'
+        { 0x0039, { .width=111, .height=294, .top=59, .left=0, .data=&_FONT_CHAMBER_NUMBER_DATA[73098] } }, // '9'
+    },
     .fgColor=0b11,
     .bgColor=0b00,
     .ascent=350,
     .descent=50,
     .spaceWidth=55,
-    .glyphs=_FONT_CHAMBER_NUMBER_GLYPHS,
 };
 
 #endif // FONT_CHAMBER_NUMBER_H
