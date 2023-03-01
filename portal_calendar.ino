@@ -212,17 +212,6 @@ void errorNoWifi()
     });
 }
 
-void errorNotOnUSBPowerToStartAP()
-{
-  error({
-    "NOT ON USB POWER",
-    "",
-    "To continue setup the ESP32 needs to be running",
-    "on USB power. Please plug in via USB and then",
-    "press \"BOOT\" on the back."
-  });
-}
-
 void errorNtpFailed()
 {
     error({
