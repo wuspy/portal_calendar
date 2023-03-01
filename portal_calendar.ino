@@ -90,7 +90,8 @@ bool startWifi()
     return true;
   }
 
-  DEBUG_PRINT("Starting WiFi");
+  DEBUG_PRINT("Starting WiFi with hostname %s", HOSTNAME);
+  wifiManager.setHostname(HOSTNAME);
   unsigned long start = millis();
   
   // If we're not already connected, attempt to connect. By default WiFiManager will automatically

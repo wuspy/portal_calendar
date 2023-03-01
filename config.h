@@ -4,6 +4,13 @@
 // Must be at least 8 chars or AP setup will fail.
 #define WIFI_AP_PASSWORD "Aperture"
 
+// Name of the ESP32 as it'll show up when connected to your Wi-Fi Network
+#define HOSTNAME "portal_calendar"
+
+// Language for the months and days displayed on the device. Error messages, and the text you're reading right now, are not currently translated.
+#define LOCALE_EN_US
+// #define LOCALE_DE_DE
+
 // Version 5 gives us a maximum of 154 chars with lowest ECC (needed to encode both WIFI_AP_NAME + WIFI_AP_PASSWORD + a few formatting chars)
 // Too large of a value causes a stack overflow when generating QR code (will look like device boot loop/frozen).
  #define MAX_QRCODE_VERSION 5
