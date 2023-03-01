@@ -37,6 +37,8 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 - **EzSBC ESP32 breakout board**
 
     Available [here](https://www.ezsbc.com/product/esp32-breakout-and-development-board/) or [here](https://www.tindie.com/products/ddebeer/esp32-dev-board-wifibluetooth/). This will run on any ESP32, but this particular board is perfect for alkaline battery power due to its efficient voltage regulator and flexible input voltage. If you use a different board, you will need to modify the case and come up with your own power solution.
+	
+	Cheap ESP32 Clones from AliExpress do not focus on low power consumption - to the tune of a AAA battery running out after about 4 days of idling, so not reccomended.
 
 - **4xAAA battery holder**
 
@@ -94,7 +96,17 @@ This project requires soldering, I'm sorry. Unfortunately I didn't take many pic
 
 # Firmware
 
-Read through [config.h](config.h) and fill out the required values. At a minimum, you need to fill out `WIFI_NAME`, `WIFI_PASS`, and `TIME_ZONE`. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
+Configuration is done through a web interface hosted by the ESP32. Each time the device boots it will place the ESP32 in Access Point mode with a name of "Aperture Science Guest", with the password: "Aperture". Use a phone/tablet/wifi connected device to connect to this Access Point. It should take you to a configuration screen after successfully connecting, if not, attempt to use an internet browser from your device and this should take yout to the Captive Portal.
+
+You can also scan the QR Code on the Calendar to have your device offer to connect you to the ESP32 Wi-Fi automatically.
+![](images/config_landing.png)
+
+Press "Configure WiFi" to be taken to the Device Configuration page. If you have previously connected the ESP32 to your Wi-Fi then the name of your Wi-Fi and the IP address it is available at will be shown at the bottom. You can use your desktop web browser to finish configuration after you use your phone/tablet to configure the Wi-Fi name/password once. You have ten minutes until the device will close the configuration page and finish booting.
+![](images/config_page.png)
+
+At a minimum you need to fill out the Timezone field (using a name from the TZ Database Time Zones list). The ESP32 will use this Timezone to figure out your offset from UTC, whether or not you respect Daylight Savings Time, etc. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
+
+Press 'Save' to save your settings, at which point the device will finish booting. If you need to make a change to the configuration, press RESET on the back of the device (or remove/re-add a battery). Your previous settings will be saved so in the event of a battery replacement you can simply wait out the 10 minute configuration timer window, and then it will connect to your home Wi-Fi and use previously saved settings.
 
 ## Building with Arduino IDE
 
