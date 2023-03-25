@@ -1,5 +1,5 @@
-#ifndef IMAGE_H
-#define IMAGE_H
+#ifndef PORTALCALENDAR_IMAGE_H
+#define PORTALCALENDAR_IMAGE_H
 
 typedef struct {
     const uint16_t width;
@@ -7,4 +7,4 @@ typedef struct {
     const uint8_t *data;
 } Image;
 
-#endif // IMAGE_H
+#endif // PORTALCALENDAR_IMAGE_H

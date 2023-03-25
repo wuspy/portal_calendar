@@ -4,6 +4,7 @@
  */
 #define WIFI_NAME "your wifi name here"
 #define WIFI_PASS "your wifi password here"
+#define HOSTNAME "portal_calendar"
 
 /**
  * Show the day name on the right side (next to the XX/XX day)
@@ -19,6 +20,17 @@
  * Show the current year on the top right
  */
 // #define SHOW_YEAR
+
+/**
+ * Language for the months and days. Error messages, and the text you're reading right now, are not currently translated.
+ */
+#define LOCALE_EN_US // English
+// #define LOCALE_DE_DE // Deutsch
+// #define LOCALE_ES_ES // Español
+// #define LOCALE_FR_FR // Français
+// #define LOCALE_NL_NL // Nederlands
+// #define LOCALE_IT_IT // Italiano
+// #define LOCALE_SV_SE // Svenska
 
 /**
  * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
@@ -160,10 +172,12 @@
  * Pin assignments
  */
 #define SPI_BUS         HSPI
-#define RESET_PIN       33
-#define DC_PIN          23
-#define CS_PIN          15
-#define BUSY_PIN        27
+#define DIN_PIN         -1 // COPI
+#define CLK_PIN         -1 // SCK
+#define CS_PIN          15 // CS
+#define DC_PIN          23 // Any OUTPUT pin
+#define RESET_PIN       33 // Any OUTPUT pin
+#define BUSY_PIN        27 // Any INPUT pin
 
 /**
  * If debug logs should be printed over serial

@@ -22,11 +22,6 @@ public:
     static const uint32_t NUM_PIXELS = NATIVE_WIDTH * NATIVE_HEIGHT;
     static const uint32_t FRAMEBUFFER_LENGTH = NUM_PIXELS / 4;
 
-    static const uint8_t WHITE = 0b00;
-    static const uint8_t LGREY = 0b01;
-    static const uint8_t DGREY = 0b10;
-    static const uint8_t BLACK = 0b11;
-
     static const uint8_t NO_ALPHA = 0b100;
 
     enum Rotation: uint8_t {
@@ -48,9 +43,16 @@ public:
         CENTER          = _ALIGN_HCENTER | _ALIGN_VCENTER,
     };
 
-    DisplayGDEW075T7(uint8_t spi_bus, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
+    enum Color: uint8_t {
+        WHITE = 0b00,
+        LGREY = 0b01,
+        DGREY = 0b10,
+        BLACK = 0b11,
+    };
+
+    DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
     ~DisplayGDEW075T7();
-    void clear(uint8_t color = WHITE);
+    void clear(Color color = WHITE);
     void test();
     void refresh();
     uint32_t getWidth();
@@ -60,7 +62,7 @@ public:
     uint8_t getAlpha();
     void setAlpha(uint8_t alpha);
     uint8_t getPx(int32_t x, int32_t y);
-    void setPx(int32_t x, int32_t y, uint8_t color);
+    void setPx(int32_t x, int32_t y, Color color);
     void drawImage(const Image &image, int32_t x, int32_t y, Align align = TOP_LEFT);
     uint32_t measureText(String str, const Font &font, int32_t tracking = 0);
     void drawText(String str, const Font &font, int32_t x, int32_t y, Align align = TOP_LEFT, int32_t tracking = 0);
@@ -73,22 +75,21 @@ public:
         int32_t tracking = 0,
         int32_t leading = 0
     );
-    void drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align = TOP_CENTER);
-    void drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, uint8_t color, Align align = LEFT_CENTER);
-    void fillRect(int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color, Align align = TOP_LEFT);
+    void drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align = TOP_CENTER);
+    void drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align = LEFT_CENTER);
+    void fillRect(int32_t x, int32_t y, int32_t width, int32_t height, Color color, Align align = TOP_LEFT);
     void strokeRect(
         int32_t x,
         int32_t y,
         int32_t width,
         int32_t height,
         uint32_t strokeWidth,
-        uint8_t color,
+        Color color,
         bool strokeOutside = false,
         Align align = TOP_LEFT
     );
 
 private:
-    uint8_t _spiBus;
     uint8_t _resetPin;
     uint8_t _dcPin;
     uint8_t _csPin;

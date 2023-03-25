@@ -1,6 +1,7 @@
 #include "Display.h"
 #include "global.h"
 #include "time_util.h"
+#include "localization.h"
 
 #include "resources/font/medium.h"
 #include "resources/font/small.h"
@@ -241,41 +242,6 @@ static_assert(
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
 
-const char* MONTHS[] = {
-    "JANUARY",
-    "FEBRUARY",
-    "MARCH",
-    "APRIL",
-    "MAY",
-    "JUNE",
-    "JULY",
-    "AUGUST",
-    "SEPTEMBER",
-    "OCTOBER",
-    "NOVEMBER",
-    "DECEMBER",
-};
-
-const char* DAYS[] = {
-    "SUNDAY",
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
-};
-
-const char* DAYS_ABBREVIATIONS[] = {
-    "SUN",
-    "MON",
-    "TUE",
-    "WED",
-    "THU",
-    "FRI",
-    "SAT",
-};
-
 Display::Display()
 {
     _display = nullptr;
@@ -291,7 +257,7 @@ Display::~Display()
 void Display::init()
 {
     if (!_display) {
-        _display = new DisplayGDEW075T7(SPI_BUS, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
+        _display = new DisplayGDEW075T7(SPI_BUS, CLK_PIN, DIN_PIN, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
         _display->setRotation(DisplayGDEW075T7::ROTATION_270);
         _display->setAlpha(DisplayGDEW075T7::WHITE);
     } else {
@@ -324,12 +290,12 @@ void Display::update(const tm *now, bool showWeather)
 
     #ifdef SHOW_DAY
     // Day name
-    _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     #ifdef SHOW_MONTH
     // Month name
-    _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+    _display->drawText(I18N_MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     #endif
 
     #ifdef SHOW_YEAR
@@ -448,7 +414,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
