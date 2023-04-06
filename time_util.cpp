@@ -3,6 +3,7 @@
 #include "time_util.h"
 
 #define NTP_PACKET_SIZE 48
+#define MIN_CORRECTABLE_SLEEP_DURATION 30
 
 const char* NTP_SERVER_LIST[] = {NTP_SERVERS};
 const char* TIMEZONED_SERVER_LIST[] = {TIMEZONED_SERVERS};
@@ -18,20 +19,78 @@ static_assert(
 );
 
 RTC_DATA_ATTR time_t lastNtpSync = 0;
+RTC_DATA_ATTR float rtcCorrectionFactor = 0.0;
+#ifdef POSIX_TIME_ZONE
+RTC_DATA_ATTR char savedTimezone[57] = POSIX_TIME_ZONE;
+#else
+RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
+#endif // POSIX_TIME_ZONE
 
-time_t getLastNtpSync()
+void correctSleepDuration(time_t *timeAsleep)
 {
-    return lastNtpSync;
+    if (*timeAsleep < MIN_CORRECTABLE_SLEEP_DURATION) {
+        return;
+    }
+
+    time_t adjustment = (time_t)round((float)*timeAsleep * rtcCorrectionFactor);
+    DEBUG_PRINT("RTC correction for this sleep duration is %ds (factor %0.6f)", adjustment, rtcCorrectionFactor);
+    *timeAsleep += adjustment;
 }
 
-#ifdef ENABLE_RTC_CORRECTION
-RTC_DATA_ATTR double rtcCorrectionFactor = 0.0;
-
-double getRtcCorrectionFactor()
+void correctSystemClock(time_t timeAsleep)
 {
-    return rtcCorrectionFactor;
+    if (timeAsleep < MIN_CORRECTABLE_SLEEP_DURATION) {
+        return;
+    }
+
+    float adjustment = (float)timeAsleep * rtcCorrectionFactor;
+    DEBUG_PRINT("Was asleep for %ds, adjusting system clock by %0.6fs (factor %0.6f)", timeAsleep, -adjustment, rtcCorrectionFactor);
+    suseconds_t adjtv_usec = (suseconds_t)(std::modf(adjustment, &adjustment) * uS_PER_S);
+    time_t adjtv_sec = (time_t)adjustment;
+    timeval tvnow;
+    gettimeofday(&tvnow, nullptr);
+    tvnow.tv_sec -= adjtv_sec;
+    tvnow.tv_usec -= (suseconds_t)adjtv_usec;
+    if (tvnow.tv_usec >= uS_PER_S) {
+        ++tvnow.tv_sec;
+        tvnow.tv_usec %= uS_PER_S;
+    } else if (tvnow.tv_usec < 0) {
+        --tvnow.tv_sec;
+        tvnow.tv_usec += uS_PER_S;
+    }
+    settimeofday(&tvnow, nullptr);
 }
-#endif // ENABLE_RTC_CORRECTION
+
+int getSecondsToMidnight(tm *now)
+{
+    tm tomorrow = *now;
+    ++tomorrow.tm_mday; // mktime will handle day/month rolling over
+    tomorrow.tm_hour = tomorrow.tm_min = tomorrow.tm_sec = 0;
+    return static_cast<int>(ceil(difftime(mktime(&tomorrow), mktime(now))));
+}
+
+bool setTimezone(const char* tz)
+{
+    if (tz) {
+        strcpy(savedTimezone, tz);
+    }
+    if (savedTimezone[0]) {
+        DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
+        setenv("TZ", savedTimezone, 1);
+        tzset();
+        return true;
+    } else {
+        DEBUG_PRINT("Timezone is not configured");
+        return false;
+    }
+}
+
+bool isSystemTimeValid()
+{
+    return getenv("TZ")
+        && lastNtpSync
+        && static_cast<time_t>(ceil(difftime(time(nullptr), lastNtpSync))) < ERROR_AFTER_SECONDS_WITHOUT_INTERNET;
+}
 
 int getDaysInMonth(int month, int year)
 {
@@ -60,8 +119,6 @@ void advanceDay(int& month, int& mday, int& year)
         }
     }
 }
-
-#ifdef TIME_ZONE
 
 String getPosixTz(String name)
 {
@@ -104,8 +161,6 @@ String getPosixTz(String name)
     }
     return "";
 }
-
-#endif // TIME_ZONE
 
 /**
  * Based on the queryNTP function from ezTime
@@ -193,18 +248,29 @@ bool syncNtp()
         timeval oldNow;
         gettimeofday(&oldNow, nullptr);
         settimeofday(&now, nullptr);
-        if (lastNtpSync && difftime(now.tv_sec, lastNtpSync) > 30) {
-            long driftMs = (now.tv_sec - oldNow.tv_sec) * 1000 + (now.tv_usec - oldNow.tv_usec) / 1000;
-            #ifdef ENABLE_RTC_CORRECTION
-            rtcCorrectionFactor -= (double)driftMs / 1000.0 / difftime(now.tv_sec, lastNtpSync);
-            rtcCorrectionFactor = clamp(rtcCorrectionFactor, MAX_RTC_CORRECTION_FACTOR);
-            DEBUG_PRINT("System clock drift was %ldms, new correction factor is %0.4f", driftMs, rtcCorrectionFactor);
-            #else
+        long driftMs = (now.tv_sec - oldNow.tv_sec) * 1000 + (now.tv_usec - oldNow.tv_usec) / 1000;
+        if (!MAX_RTC_CORRECTION_FACTOR) {
+            rtcCorrectionFactor = 0;
             DEBUG_PRINT("System clock drift was %ldms", driftMs);
-            #endif
+        } else if (lastNtpSync && difftime(now.tv_sec, lastNtpSync) > 30) {
+            rtcCorrectionFactor -= (float)driftMs / 1000.0 / difftime(now.tv_sec, lastNtpSync);
+            rtcCorrectionFactor = clamp(rtcCorrectionFactor, (float)MAX_RTC_CORRECTION_FACTOR);
+            DEBUG_PRINT("System clock drift was %ldms, new correction factor is %0.4f", driftMs, rtcCorrectionFactor);
         }
         lastNtpSync = now.tv_sec;
         return true;
     }
     return false;
 }
+
+#ifdef DEBUG
+char timeStr[30];
+
+const char* printTime(time_t t)
+{
+    tm now;
+    localtime_r(&t, &now);
+    strftime(timeStr, sizeof(timeStr), "%d-%m-%Y %H:%M:%S", &now);
+    return timeStr;
+}
+#endif // DEBUG

@@ -48,7 +48,7 @@
 // #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
 
 /**
- * Show weather forecast in place of the chamber icons
+ * Show weather forecast in place of the chamber icons. The boot button can be used to swap between the two.
  */
 // #define SHOW_WEATHER
 
@@ -159,7 +159,6 @@
  * Since the ESP32's internal clock drifts significantly based on temperature, this can be pretty effective at improving the clock's accuracy
  * assuming the clock is placed in a relatively temperature-stable environment. Like, you know, indoors.
  */
-#define ENABLE_RTC_CORRECTION
 #define MAX_RTC_CORRECTION_FACTOR 0.025
 
 /**

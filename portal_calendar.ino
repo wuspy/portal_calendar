@@ -3,77 +3,55 @@
 #include "time_util.h"
 #include "Display.h"
 #include "driver/rtc_io.h"
-#ifdef SHOW_WEATHER
 #include "weather.h"
-#endif
+
+const uint8_t ACTION_NTP_SYNC = 0b001;
+const uint8_t ACTION_TZ_SYNC = 0b010;
+const uint8_t ACTION_WEATHER_SYNC = 0b100;
+
+/**
+ * A bitmask of the actions above. Controls what is scheduled to be performed on scheduledWakeup.
+ */
+RTC_DATA_ATTR uint8_t scheduledActions = 0;
+/**
+ * The next scheduled wakeup time.
+ */
+RTC_DATA_ATTR time_t scheduledWakeup = 0;
+/**
+ * Time the current deep sleep cycle was started. Needed for RTC drift correction.
+ */
+RTC_DATA_ATTR time_t sleepStartTime = 0;
 
 /**
  * Stores the current day of the year displayed
  */
 RTC_DATA_ATTR int displayedYDay = 0;
 
-/**
- * Controls if an NTP sync will be performed on wakeup
- */
-RTC_DATA_ATTR bool needsNtpSync = true;
-
-#ifdef TIME_ZONE
-/**
- * Controls if timezone information will be synced on wakeup
- */
-RTC_DATA_ATTR bool needsTimezoneSync = true;
-#endif // TIME_ZONE
-
-/**
- * Caches the current POSIX timezone string
- */
-#ifdef POSIX_TIME_ZONE
-    RTC_DATA_ATTR char savedTimezone[57] = POSIX_TIME_ZONE;
-#else
-    RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
-#endif // POSIX_TIME_ZONE
-
 #ifdef SHOW_WEATHER
-/**
- * Controls if weather information will be synced on wakeup
- */
-RTC_DATA_ATTR bool needsWeatherSync = true;
 RTC_DATA_ATTR bool showWeather = true;
-RTC_DATA_ATTR time_t displayedWeatherVersion = 0;
+RTC_DATA_ATTR time_t displayedWeatherTime = 0;
 #else
-bool showWeather = false;
+const bool showWeather = false;
 #endif // SHOW_WEATHER
 
 Display display;
 
-void deepSleep(uint64_t seconds)
+[[noreturn]] void deepSleep(time_t seconds)
 {
-    DEBUG_PRINT("Sleeping for %lus", seconds);
-    unsigned long start = millis(); // Stopping wifi can take time
-    stopWifi();
-    #ifdef ENABLE_RTC_CORRECTION
-    double rtcCorrectionFactor = getRtcCorrectionFactor();
-    if (rtcCorrectionFactor) {
-        // Adjust the duration to sleep by the correction factor, and adjust the system time so
-        // we still wake up at the time we think we will
-        uint64_t adjustment = (uint64_t)round((double)seconds * rtcCorrectionFactor);
-        if (adjustment) {
-            timeval now;
-            gettimeofday(&now, nullptr);
-            now.tv_sec -= (time_t)adjustment;
-            settimeofday(&now, nullptr);
-            seconds += adjustment;
-            DEBUG_PRINT("Sleeping for %lus (corrected)", seconds);
-        }
-    }
-    #endif
-    uint64_t duration = millis() - start;
+    time(&sleepStartTime);
+    scheduledWakeup = sleepStartTime + seconds;
+    correctSleepDuration(&seconds);
+    DEBUG_PRINT("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
 
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    #ifdef SHOW_WEATHER
+    // Enable wakeup on boot button
     rtc_gpio_pullup_en(GPIO_NUM_0);
     rtc_gpio_pulldown_dis(GPIO_NUM_0);
     esp_sleep_enable_ext1_wakeup(0x1 << GPIO_NUM_0, ESP_EXT1_WAKEUP_ALL_LOW);
-    esp_sleep_enable_timer_wakeup(seconds * uS_PER_S - duration * 1000);
+    #endif // SHOW_WEATHER
+
+    // Enable timer wakeup
+    esp_sleep_enable_timer_wakeup((uint64_t)seconds * uS_PER_S);
     esp_deep_sleep_start();
 }
 
@@ -112,7 +90,7 @@ bool startWifi()
     return true;
 }
 
-void error(std::initializer_list<String> message)
+[[noreturn]] void error(std::initializer_list<String> message)
 {
     DEBUG_PRINT("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
@@ -120,7 +98,7 @@ void error(std::initializer_list<String> message)
     deepSleep(SECONDS_PER_HOUR);
 }
 
-void errorNoWifi()
+[[noreturn]] void errorNoWifi()
 {
     error({
         "NO WIFI CONNECTION",
@@ -133,7 +111,7 @@ void errorNoWifi()
     });
 }
 
-void errorNtpFailed()
+[[noreturn]] void errorNtpFailed()
 {
     error({
         "NO INTERNET CONNECTION",
@@ -147,7 +125,7 @@ void errorNtpFailed()
 
 #ifdef TIME_ZONE
 
-void errorTzLookupFailed()
+[[noreturn]] void errorTzLookupFailed()
 {
     error({
         "TIMEZONE LOOKUP FAILED",
@@ -165,7 +143,7 @@ void errorTzLookupFailed()
 
 #ifdef SHOW_WEATHER
 
-void errorInvalidOwmApiKey()
+[[noreturn]] void errorInvalidOwmApiKey()
 {
     error({
         "INVALID OPENWEATHERMAP API KEY",
@@ -180,7 +158,7 @@ void errorInvalidOwmApiKey()
 
 #ifdef WEATHER_LOCATION
 
-void errorInvalidOwmLocation()
+[[noreturn]] void errorInvalidOwmLocation()
 {
     error({
         "INVALID WEATHER LOCATION",
@@ -198,7 +176,7 @@ void errorInvalidOwmLocation()
 
 #endif // SHOW_WEATHER
 
-void errorBrownout()
+[[noreturn]] void errorBrownout()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
@@ -208,145 +186,170 @@ void errorBrownout()
         "",
         "If the device does not restart automatically",
         "after new batteries have been inserted,",
-        "press the BOOT button on the back."
+        "press the RESET button on the back."
     }, false);
     // Sleep forever
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     esp_deep_sleep_start();
 }
 
-int getSecondsToMidnight(tm *now)
+void runScheduledActions()
 {
-    tm tomorrow = *now;
-    ++tomorrow.tm_mday; // mktime will handle day/month rolling over
-    tomorrow.tm_hour = tomorrow.tm_min = tomorrow.tm_sec = 0;
-    return (int)difftime(mktime(&tomorrow), mktime(now));
-}
-
-void setup()
-{
-    time_t t;
-    tm now;
-
-    #ifdef DEBUG
-    time(&t);
-    Serial.begin(115200);
-    localtime_r(&t, &now);
-    char timestr[30];
-    strftime(timestr, sizeof(timestr), "%d-%m-%Y %H:%M:%S", &now);
-    DEBUG_PRINT("Waking up at %s", timestr);
-    #endif
-
-    if (esp_reset_reason() == ESP_RST_BROWNOUT) {
-        errorBrownout();
-    }
-
-    // Set timezone
-
     #ifdef TIME_ZONE
-    if (needsTimezoneSync || savedTimezone[0] == '\0') {
+
+    // Sync timezone
+
+    if ((scheduledActions & ACTION_TZ_SYNC) || !isSystemTimeValid()) {
         if (startWifi()) {
             String tz = getPosixTz(TIME_ZONE);
             if (!tz.isEmpty()) {
-                strcpy(savedTimezone, tz.c_str());
-                needsTimezoneSync = false;
-            } else if (savedTimezone[0] == '\0') {
+                setTimezone(tz.c_str());
+                scheduledActions &= ~ACTION_TZ_SYNC;
+            } else if (!savedTimezone[0]) {
                 errorTzLookupFailed();
             }
-        } else if (savedTimezone[0] == '\0') {
+        } else if (!savedTimezone[0]) {
             // WiFi didn't connect and we have no idea what timezone we're in
             errorNoWifi();
         }
     }
+
+    #else
+    scheduledActions &= ~ACTION_TZ_SYNC;
     #endif // TIME_ZONE
 
-    DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
-    setenv("TZ", savedTimezone, 1);
-    tzset();
+    // Sync time
 
-    // Set time
-
-    time_t lastNtpSync = getLastNtpSync();
-    if (needsNtpSync || !lastNtpSync) {
-        bool syncMandatory = !lastNtpSync || (time_t)difftime(time(nullptr), lastNtpSync) >= ERROR_AFTER_SECONDS_WITHOUT_INTERNET;
+    if ((scheduledActions & ACTION_NTP_SYNC) || !isSystemTimeValid()) {
         if (startWifi()) {
             if (syncNtp()) {
-                needsNtpSync = false;
-            } else if (syncMandatory) {
+                scheduledActions &= ~ACTION_NTP_SYNC;
+            } else if (!isSystemTimeValid()) {
                 // Sync unsuccesful and we have no idea what time it is
                 errorNtpFailed();
             }
-        } else if (syncMandatory) {
+        } else if (!isSystemTimeValid()) {
             // WiFi didn't connect and we have no idea what time it is
             errorNoWifi();
         }
     }
 
-    time(&t);
-    localtime_r(&t, &now);
-
-    // Update display if needed
-    bool needsDisplayUpdate = now.tm_yday != displayedYDay;
     #ifdef SHOW_WEATHER
-    needsDisplayUpdate |= displayedWeatherVersion != getLastWeatherSync() && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2;
-    #endif
-
-    #ifdef SHOW_WEATHER
-    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
-        DEBUG_PRINT("Wake from button press changing showWeather from %u to %u", showWeather, !showWeather);
-        showWeather = !showWeather;
-        needsDisplayUpdate = true;
-        needsWeatherSync = showWeather;
-    }
 
     // Sync weather
-
-    if (needsWeatherSync && startWifi()) {
-        OwmResult result = refreshWeather();
-        switch (result) {
-            case OwmResult::SUCCESS:
-                needsWeatherSync = false;
-                break;
-            case OwmResult::INVALID_API_KEY:
-                errorInvalidOwmApiKey();
-            case OwmResult::INVALID_LOCATION:
-                errorInvalidOwmLocation();
-            default:
-                // Ignore other OWM errors because weather isn't critical
-                break;
+    
+    if ((scheduledActions & ACTION_WEATHER_SYNC) || !lastWeatherSync) {
+        if (startWifi()) {
+            OwmResult result = refreshWeather();
+            switch (result) {
+                case OwmResult::SUCCESS:
+                    scheduledActions &= ~ACTION_WEATHER_SYNC;
+                    break;
+                case OwmResult::INVALID_API_KEY:
+                    errorInvalidOwmApiKey();
+                default:
+                    // Ignore other OWM errors because weather isn't critical
+                    break;
+            }
+        } else if (!lastWeatherSync) {
+            errorNoWifi();
         }
-    } // Critical WiFi connection errors will be handled by the NTP/timezone syncs
+    }
 
+    #else
+    scheduledActions &= ~ACTION_WEATHER_SYNC;
+    #endif // SHOW_WEATHER
+}
+
+void setup()
+{
+    time_t t;
+    time(&t);
+
+    #ifdef DEBUG
+    Serial.begin(115200);
     #endif
 
-    stopWifi(); // Power down wifi before updating display to limit current draw from battery
+    setTimezone();
+    if (sleepStartTime) {
+        correctSystemClock(t - sleepStartTime);
+        time(&t);
+        sleepStartTime = 0;
+    }
+
+    DEBUG_PRINT("Waking up at %s", printTime(t));
+
+    const esp_reset_reason_t resetReason = esp_reset_reason();
+    const esp_sleep_wakeup_cause_t wakeupCause = esp_sleep_get_wakeup_cause();
+
+    DEBUG_PRINT("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
+
+    if (resetReason == ESP_RST_BROWNOUT) {
+        errorBrownout();
+    }
+
+    #ifdef SHOW_WEATHER
+    // Check for wakeup from boot button press
+    if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1) {
+        DEBUG_PRINT("Toggling showWeather");
+        showWeather = !showWeather;
+    }
+    #endif // SHOW_WEATHER
+
+    if (t >= scheduledWakeup) {
+        runScheduledActions();
+        scheduledWakeup = 0;
+    }
+
+    stopWifi();
+
+    time(&t);
+    tm now;
+    localtime_r(&t, &now);
+
+    // Check if display should be updated
+
+    bool needsDisplayUpdate = now.tm_yday != displayedYDay;
+
+    #ifdef SHOW_WEATHER
+    needsDisplayUpdate = needsDisplayUpdate
+        || static_cast<bool>(displayedWeatherTime) != showWeather
+        || (showWeather
+            && lastWeatherSync != displayedWeatherTime
+            && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2);
+    #endif // SHOW_WEATHER
 
     if (needsDisplayUpdate) {
-        DEBUG_PRINT("Updating display for %d-%d-%d", now.tm_year + 1900, now.tm_mon + 1, now.tm_mday);
+        DEBUG_PRINT("Updating display at %s", printTime(t));
         display.update(&now, showWeather);
         displayedYDay = now.tm_yday;
         #ifdef SHOW_WEATHER
-        displayedWeatherVersion = getLastWeatherSync();
+        displayedWeatherTime = showWeather ? lastWeatherSync : 0;
         #endif
     }
 
-    // Go to sleep
+    time(&t);
 
-    time(&t); // Update time measurement
+    if (scheduledWakeup) {
+        DEBUG_PRINT("Wakeup is already scheduled");
+        // max with 0 is needed in case the display was updated since the first scheduledWakeup check,
+        // which could make it in the past now despite being in the future before the display update
+        deepSleep(max((time_t)0, scheduledWakeup - t));
+    }
+
+    // Schedule next wakeup
+
     localtime_r(&t, &now);
     int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
-    // syncFailed doesn't care about timezone sync because as long as we've got it once it's probably still correct
-    bool syncFailed = needsNtpSync;
-    #ifdef SHOW_WEATHER
-    syncFailed |= needsWeatherSync;
-    #endif
-    if (syncFailed) {
+    // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
+    uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
+    if (failedActions) {
         DEBUG_PRINT("Sync failed, will retry");
         if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
             // Try to sync 3 more times before midnight
             deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
         } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1) {
-            // Try to sync 3 more times before the next day's 1st sync is scheduled
+            // Try to sync 3 more times before 2nd scheduled NTP sync
             deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2, (SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) / 3));
         } else {
             // Keep trying to sync every hour
@@ -358,17 +361,17 @@ void setup()
         deepSleep(secondsToMidnight);
     } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
         // Sleep until second NTP sync
-        needsNtpSync = true;
+        scheduledActions = ACTION_NTP_SYNC;
         DEBUG_PRINT("Sleeping for 2nd NTP sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
     } else {
         // Sleep until first NTP sync
-        needsNtpSync = true;
+        scheduledActions = ACTION_NTP_SYNC;
         #ifdef TIME_ZONE
-        needsTimezoneSync = true;
-        #endif
+        scheduledActions |= ACTION_TZ_SYNC;
+        #endif // TIME_ZONE
         #ifdef SHOW_WEATHER
-        needsWeatherSync = true;
+        scheduledActions |= ACTION_WEATHER_SYNC;
         #endif
         DEBUG_PRINT("Sleeping for 1st sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);

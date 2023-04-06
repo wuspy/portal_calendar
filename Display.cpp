@@ -329,12 +329,10 @@ void Display::update(const tm *now, bool showWeather)
         for (int i = 0; i < 5; ++i) {
             drawWeatherEntry(weather[i], i);
         }
-    #else
 
-    #error Invalid value for WEATHER_DISPLAY_TYPE
-
-    #endif // WEATHER_DISPLAY_TYPE
-
+        #else
+        #error Invalid value for WEATHER_DISPLAY_TYPE
+        #endif // WEATHER_DISPLAY_TYPE
     } else {
         // Chamber icons
         if (now->tm_mon == 1 && now->tm_mday == 29) {
@@ -523,7 +521,7 @@ void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 
     if (willRetry) {
         _display->drawMultilineText({
-            "Will try again in 1 hour. Or, press the BOOT button",
+            "Will try again in 1 hour. Or, press the RESET button",
             "on the back of the device to retry now.",
         }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
     }

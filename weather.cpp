@@ -45,11 +45,6 @@ RTC_DATA_ATTR WeatherEntry weatherEntries[WEATHER_ENTRY_COUNT] = {
     EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY, EMPTY_WEATHER_ENTRY,
 };
 
-time_t getLastWeatherSync()
-{
-    return lastWeatherSync;
-}
-
 String urlEncode(String str)
 {
     const char* hex = "0123456789ABCDEF";
