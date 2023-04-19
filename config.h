@@ -179,6 +179,13 @@
 #define BUSY_PIN        27 // Any INPUT pin
 
 /**
+ * Enables the internal pullup on GPIO0 (Mode button) for boards that don't have a external pullup resistor on that pin.
+ * The EzSBC does have one. If you're using a different board and it bootloops with weather enabled then this option is needed.
+ * This may increase power usage in deep sleep.
+ */
+// #define ENABLE_GPIO0_PULLUP
+
+/**
  * If debug logs should be printed over serial
  */
 // #define DEBUG

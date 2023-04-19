@@ -45,8 +45,11 @@ Display display;
 
     #ifdef SHOW_WEATHER
     // Enable wakeup on boot button
+    #ifdef ENABLE_GPIO0_PULLUP
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
     rtc_gpio_pullup_en(GPIO_NUM_0);
     rtc_gpio_pulldown_dis(GPIO_NUM_0);
+    #endif // ENABLE_GPIO0_PULLUP
     esp_sleep_enable_ext1_wakeup(0x1 << GPIO_NUM_0, ESP_EXT1_WAKEUP_ALL_LOW);
     #endif // SHOW_WEATHER
 
