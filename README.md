@@ -10,6 +10,7 @@ An ESP32 based, Portal themed e-ink calendar that can run on AAA batteries for y
 - [More Info](#more-info)
   - [Timekeeping](#timekeeping)
   - [Graphics](#graphics)
+- [Changelog](#changelog)
 - [License](#license)
 
 This project was inspired by Reddit user u/feefifofeddit who made [a prototype of a Raspberry Pi-powered Portal calendar](https://www.reddit.com/r/RASPBERRY_PI_PROJECTS/comments/qujt3i/wip_portal_desktop_calendar/). Unfortunately the display they used has been discontinued, and I wanted a battery powered and wall mountable version, so I designed my own based on the ESP32 platform with the goal of being as low-power and game accurate as possible.
@@ -157,6 +158,13 @@ All of the bitmap and font resources are in the [resources](resources) directory
 The build_image.py script can take in any image format supported by PIL and will output a C header file of the same name that can be included and drawn to the display. All of the images used in this project are inclued in this repo both as the original GIF images and the compiled C header files.
 
 The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
+
+# Changelog
+
+### 4/18/2023
+  
+* Add ability to toggle between the weather and chamber icon display using a button on GPIO0.
+* Frame REV 04: Fix the boot and reset buttons being labeled backwards, and call the boot button 'mode' since it does something now. If you have frame REV 03 and want to fix this, you only need to print cover.stl since the front and back parts are compatible with it.
 
 # License
 
