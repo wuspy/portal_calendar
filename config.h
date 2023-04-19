@@ -48,7 +48,7 @@
 // #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
 
 /**
- * Show weather forecast in place of the chamber icons
+ * Show weather forecast in place of the chamber icons. The boot button can be used to swap between the two.
  */
 // #define SHOW_WEATHER
 
@@ -159,7 +159,6 @@
  * Since the ESP32's internal clock drifts significantly based on temperature, this can be pretty effective at improving the clock's accuracy
  * assuming the clock is placed in a relatively temperature-stable environment. Like, you know, indoors.
  */
-#define ENABLE_RTC_CORRECTION
 #define MAX_RTC_CORRECTION_FACTOR 0.025
 
 /**
@@ -178,6 +177,13 @@
 #define DC_PIN          23 // Any OUTPUT pin
 #define RESET_PIN       33 // Any OUTPUT pin
 #define BUSY_PIN        27 // Any INPUT pin
+
+/**
+ * Enables the internal pullup on GPIO0 (Mode button) for boards that don't have a external pullup resistor on that pin.
+ * The EzSBC does have one. If you're using a different board and it bootloops with weather enabled then this option is needed.
+ * This may increase power usage in deep sleep.
+ */
+// #define ENABLE_GPIO0_PULLUP
 
 /**
  * If debug logs should be printed over serial

@@ -88,7 +88,7 @@ public:
         bool strokeOutside = false,
         Align align = TOP_LEFT
     );
- 
+
 private:
     uint8_t _resetPin;
     uint8_t _dcPin;
