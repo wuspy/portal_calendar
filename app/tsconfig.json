@@ -1,0 +1,12 @@
+{
+	"extends": "@tsconfig/svelte/tsconfig.json",
+	"include": ["src/**/*", "src/node_modules/**/*", "vite.config.ts"],
+	"exclude": ["node_modules/*"],
+	"compilerOptions": {
+        "strict": true,
+        "allowJs": false,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "isolatedModules": true,
+    },
+}

@@ -16,6 +16,7 @@
 
 #define clamp(x, y) min(max(x, -y), y)
 
+// Translate configured times to units the code uses
 #define ERROR_RETRY_INTERVAL_SECONDS            ERROR_RETRY_INTERVAL_MINUTES * 60
 #define ERROR_AFTER_SECONDS_WITHOUT_INTERNET    ERROR_AFTER_HOURS_WITHOUT_INTERNET * 3600
 #define SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1       MINUTES_BEFORE_MIDNIGHT_TO_SYNC_1 * 60

@@ -1,7 +1,8 @@
 #include "Display.h"
 #include "global.h"
+#include "Configuration.h"
 #include "time_util.h"
-#include "localization.h"
+#include "qrcodegen.h"
 
 #include "resources/font/medium.h"
 #include "resources/font/small.h"
@@ -64,6 +65,8 @@
 #include "resources/light_bridge_off.h"
 #include "resources/player_button_on.h"
 #include "resources/player_button_off.h"
+
+using namespace qrcodegen;
 
 const Image* CHAMBER_ICON_SETS[][10] = {{
     // P1 Chamber 1
@@ -242,19 +245,17 @@ static_assert(
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
 
-Display::Display()
-{
-    _display = nullptr;
-}
+DisplayClass Display;
 
-Display::~Display()
+DisplayClass::~DisplayClass()
 {
     if (_display) {
         delete _display;
+        _display = nullptr;
     }
 }
 
-void Display::init()
+void DisplayClass::init()
 {
     if (!_display) {
         _display = new DisplayGDEW075T7(SPI_BUS, CLK_PIN, DIN_PIN, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
@@ -265,7 +266,7 @@ void Display::init()
     }
 }
 
-void Display::update(const tm *now, bool showWeather)
+void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
 {
     init();
     char buffer[10];
@@ -288,51 +289,45 @@ void Display::update(const tm *now, bool showWeather)
     sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
     _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);
 
-    #ifdef SHOW_DAY
-    // Day name
-    _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
-    #endif
+    if (Config.getShowDay()) {
+        // Day name
+        _display->drawText(locale.days[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    }
 
-    #ifdef SHOW_MONTH
-    // Month name
-    _display->drawText(I18N_MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
-    #endif
+    if (Config.getShowMonth()) {
+        // Month name
+        _display->drawText(locale.months[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+    }
 
-    #ifdef SHOW_YEAR
-    // Year
-    sprintf(buffer, "%d", year);
-    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
-    #endif
+    if (Config.getShowYear()) {
+        // Year
+        sprintf(buffer, "%d", year);
+        _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+    }
 
     // Progress bar
     _display->drawImage(IMG_PROGRESS_BAR, LEFT, 438);
     int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
     _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
 
-    if (showWeather) {
+    if (Config.getWeatherEnabled() && showWeather) {
         // Weather
+        WeatherDisplayType displayType = Config.getWeatherDisplayType();
+        if (displayType == WeatherDisplayType::FORECAST_5_DAY) {
+            DailyWeather weather[5];
+            get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
 
-        #if WEATHER_DISPLAY_TYPE == 1
+            for (int i = 0; i < 5; ++i) {
+                drawDailyWeather(weather[i], i, locale);
+            }
+        } else if (displayType == WeatherDisplayType::FORECAST_12_HOUR) {
+            WeatherEntry weather[5];
+            getTodaysWeather(now->tm_mon, now->tm_mday, weather);
 
-        DailyWeather weather[5];
-        get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
-
-        for (int i = 0; i < 5; ++i) {
-            drawDailyWeather(weather[i], i);
+            for (int i = 0; i < 5; ++i) {
+                drawWeatherEntry(weather[i], i);
+            }
         }
-
-        #elif WEATHER_DISPLAY_TYPE == 2
-
-        WeatherEntry weather[5];
-        getTodaysWeather(now->tm_mon, now->tm_mday, weather);
-
-        for (int i = 0; i < 5; ++i) {
-            drawWeatherEntry(weather[i], i);
-        }
-
-        #else
-        #error Invalid value for WEATHER_DISPLAY_TYPE
-        #endif // WEATHER_DISPLAY_TYPE
     } else {
         // Chamber icons
         if (now->tm_mon == 1 && now->tm_mday == 29) {
@@ -350,7 +345,7 @@ void Display::update(const tm *now, bool showWeather)
     _display->refresh();
 }
 
-const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool day)
+const Image* DisplayClass::getWeatherConditionIcon(WeatherCondition condition, bool day)
 {
     switch (condition) {
         case WeatherCondition::CLEAR:
@@ -377,7 +372,7 @@ const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool d
     }
 }
 
-void Display::drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y)
+void DisplayClass::drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y)
 {
     if (symbol) {
         uint32_t textWidth = _display->measureText(text, FONT_SMALL);
@@ -390,7 +385,7 @@ void Display::drawWeatherInfoText(const char* text, const Image* symbol, int32_t
     }
 }
 
-void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
+void DisplayClass::drawDailyWeather(const DailyWeather& weather, int32_t x, const Locale& locale)
 {
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
@@ -412,7 +407,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _display->drawText(locale.dayAbbreviations[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
@@ -426,7 +421,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
     drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 108);
 }
 
-void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
+void DisplayClass::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
 {
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
@@ -447,15 +442,15 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     }
 
     // Draw time
-    #ifdef SHOW_24_HOUR_TIME
-    sprintf(text, "%02d:%02d", weather.hour, weather.minute);
-    #else
-    int8_t hour12 = weather.hour % 12;
-    if (hour12 == 0) {
-        hour12 = 12;
+    if (Config.getShow24HourTime()) {
+        sprintf(text, "%02d:%02d", weather.hour, weather.minute);
+    } else {
+        int8_t hour12 = weather.hour % 12;
+        if (hour12 == 0) {
+            hour12 = 12;
+        }
+        sprintf(text, "%d:%02d %s", hour12, weather.minute, weather.hour > 11 ? "PM" : "AM");
     }
-    sprintf(text, "%d:%02d %s", hour12, weather.minute, weather.hour > 11 ? "PM" : "AM");
-    #endif
 
     _display->setAlpha(DisplayGDEW075T7::BLACK);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, DisplayGDEW075T7::TOP_CENTER);
@@ -466,18 +461,19 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     drawWeatherInfoText(text, &IMG_WEATHER_INFO_DEGREE_SYMBOL, x + 32, ICON_TOP + 83);
 
     // Draw secondary info
-    #if SECONDARY_WEATHER_INFORMATION == 1 // Precipitation
-    sprintf(text, "%d", weather.pop);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
-    #elif SECONDARY_WEATHER_INFORMATION == 2 // Humidity
-    sprintf(text, "%d", weather.humidity);
-    drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
-    #else
-    #error Invalid value for SECONDARY_WEATHER_INFORMATION
-    #endif
+    WeatherSecondaryInfo secondaryInfo = Config.getWeatherSecondaryInfo();
+    if (secondaryInfo == WeatherSecondaryInfo::POP) {
+        sprintf(text, "%d", weather.pop);
+        drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+    } else if (secondaryInfo == WeatherSecondaryInfo::HUMIDITY) {
+        sprintf(text, "%d", weather.humidity);
+        drawWeatherInfoText(text, &IMG_WEATHER_INFO_PERCENT_SYMBOL, x + 32, ICON_TOP + 108);
+    }
 }
 
-void Display::testChamberIcons()
+#ifdef DEBUG
+
+void DisplayClass::testChamberIcons()
 {
     const Image* allIcons[] = {
         &IMG_CUBE_DISPENSER_ON,     &IMG_CUBE_HAZARD_ON,        &IMG_PELLET_HAZARD_ON,      &IMG_PELLET_CATCHER_ON,     &IMG_WATER_HAZARD_ON,
@@ -503,7 +499,9 @@ void Display::testChamberIcons()
     _display->refresh();
 }
 
-void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
+#endif // DEBUG
+
+void DisplayClass::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
 {
     _display->drawImage(
         icon,
@@ -512,7 +510,7 @@ void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
     );
 }
 
-void Display::error(std::initializer_list<String> messageLines, bool willRetry)
+void DisplayClass::error(std::initializer_list<String> messageLines, bool willRetry)
 {
     init();
     const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
@@ -528,3 +526,63 @@ void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 
     _display->refresh();
 }
+
+void DisplayClass::showConfigInstructions()
+{
+    init();
+    _display->drawMultilineText({
+        "Welcome!",
+        "",
+        "Connect to USB power, then press the RESET button",
+        "to begin setup."
+    }, FONT_SMALL, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::CENTER);
+    _display->refresh();
+}
+
+void DisplayClass::showConfigServerScreen(String ssid, String password, String hostname)
+{
+    init();
+    char str[120];
+    sprintf(&str[0], "WIFI:T:WPA;S:%s;P:%s;;", ssid.c_str(), password.c_str());
+    QrCode qrCode = QrCode::encodeText(&str[0], QrCode::Ecc::ECC_HIGH);
+    const int qrSize = qrCode.getSize();
+    const int32_t scale = 5;
+    const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
+    const int32_t xOffset = H_CENTER - (qrSize * scale) / 2;
+    const int32_t yOffset = y - (qrSize * scale) / 2;
+    DisplayGDEW075T7::Color color;
+    for(int y = 0; y < qrSize; ++y) {
+        for(int x = 0; x < qrSize; ++x) {
+            color = qrCode.getModule(x, y) ? DisplayGDEW075T7::BLACK : DisplayGDEW075T7::WHITE;
+            _display->fillRect(xOffset + x * scale, yOffset + y * scale, scale, scale, color); 
+        }
+    }
+
+    _display->drawMultilineText({
+        "Name: " + ssid,
+        "Password: " + password,
+        "",
+        "Connect to this WiFi network, then navigate to:",
+        "http://" + hostname + ".local"
+    }, FONT_SMALL, H_CENTER, yOffset + qrSize * scale + 16, DisplayGDEW075T7::TOP_CENTER);
+    _display->refresh();
+    delete _display;
+    _display = nullptr;
+}
+
+#ifdef DEV_WEBSERVER
+
+void DisplayClass::showDevWebserverScreen(String ssid, IPAddress localIp)
+{
+    init();
+    _display->drawMultilineText({
+        "Dev webserver running.",
+        "SSID: " + ssid,
+        "IP: " + localIp.toString()
+    }, FONT_SMALL, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::TOP_CENTER);
+    _display->refresh();
+    delete _display;
+    _display = nullptr;
+}
+
+#endif // DEV_WEBSERVER

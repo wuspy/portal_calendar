@@ -3,3 +3,4 @@ resources/*.h linguist-generated
 resources/**/*.h linguist-generated
 resources/image.h !linguist-generated
 resources/font/font.h !linguist-generated
+app/package-lock.json linguist-generated

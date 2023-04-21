@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include "weather.h"
 #include "global.h"
+#include "Configuration.h"
 #include "time_util.h"
 
 const WeatherEntry EMPTY_WEATHER_ENTRY = {
@@ -29,8 +30,6 @@ const DailyWeather EMPTY_DAILY_WEATHER = {
 };
 
 RTC_DATA_ATTR time_t lastWeatherSync = 0;
-RTC_DATA_ATTR float latitude = WEATHER_LOCATION_LATITUDE;
-RTC_DATA_ATTR float longitude = WEATHER_LOCATION_LONGITUDE;
 RTC_DATA_ATTR time_t sunriseTime = 0;
 RTC_DATA_ATTR time_t sunsetTime = 0;
 #define WEATHER_ENTRY_COUNT 40
@@ -172,7 +171,7 @@ int findWeatherEntry(int month, int mday, int hour, int startIndex = 0)
 
 void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
 {
-    int i = findWeatherEntry(month, mday, WEATHER_START_HOUR);
+    int i = findWeatherEntry(month, mday, Config.getWeatherStartHour());
     int j = 0;
     if (i != -1) {
         for (; j < 5 && i + j < WEATHER_ENTRY_COUNT; ++j) {
@@ -213,7 +212,7 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
         daylight = 0.0;
         sampleCount = 0;
 
-        conditionStart = findWeatherEntry(month, mday, WEATHER_START_HOUR, j);
+        conditionStart = findWeatherEntry(month, mday, Config.getWeatherStartHour(), j);
         conditionEnd = conditionStart + 4;
 
         for (; j < WEATHER_ENTRY_COUNT; ++j) {
@@ -224,7 +223,7 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
             // Calculate high/low temp for entire 24-hour day
             day->highTemp = max(day->highTemp, entry->temp);
             day->lowTemp = min(day->lowTemp, entry->temp);
-            // Calculate overall condition only for the 12 hour period after WEATHER_START_HOUR
+            // Calculate overall condition only for the 12 hour period after the start hour
             if (j >= conditionStart && j <= conditionEnd) {
                 ++sampleCount;
                 day->condition = max(day->condition, entry->condition);
@@ -243,47 +242,13 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
     }
 }
 
+const char* WEATHER_UNIT_NAMES[] = { "imperial", "metric" };
+
 OwmResult refreshWeather()
 {
+    float latitude = Config.getWeatherLocationLatitude();
+    float longitude = Config.getWeatherLocationLongitude();
     char url[200];
-    if (latitude == 0.0 || longitude == 0.0) {
-        // Use OWM's geocoding API to lookup the coordinates for the provided location
-        DEBUG_PRINT("Looking up lat,long for '" WEATHER_LOCATION "' from openweathermap");
-        HTTPClient http;
-        unsigned long start = millis();
-        http.setConnectTimeout(10000);
-        sprintf(
-            url,
-            "http://api.openweathermap.org/geo/1.0/direct?q=%s&limit=1&appid=%s",
-            urlEncode(WEATHER_LOCATION).c_str(),
-            urlEncode(OPENWEATHERMAP_API_KEY).c_str()
-        );
-        DEBUG_PRINT(url);
-        http.begin(url);
-        int status = http.GET();
-        if (status == 200) {
-            DynamicJsonDocument response(1000);
-            DeserializationError error = deserializeJson(response, http.getString());
-            http.end();
-            DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
-            if (error) {
-                DEBUG_PRINT("Failed to parse response: %s", error.c_str());
-                return OwmResult::MALFORMED_RESPONSE;
-            }
-            JsonVariant result = response[0];
-            if (result.isNull()) {
-                DEBUG_PRINT("No location results from openweathermap");
-                return OwmResult::INVALID_LOCATION;
-            }
-            latitude = result["lat"].as<float>();
-            longitude = result["lon"].as<float>();
-            DEBUG_PRINT("Found location %s, %s @ %0.6f,%0.6f", result["name"].as<const char*>(), result["country"].as<const char*>(), latitude, longitude);
-        } else {
-            http.end();
-            DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
-            return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
-        }
-    }
 
     DEBUG_PRINT("Looking up weather for %0.6f,%0.6f from openweathermap", latitude, longitude);
     HTTPClient http;
@@ -294,8 +259,8 @@ OwmResult refreshWeather()
         "http://api.openweathermap.org/data/2.5/forecast?lat=%0.6f&lon=%0.6f&units=%s&appid=%s",
         latitude,
         longitude,
-        urlEncode(WEATHER_UNITS).c_str(),
-        urlEncode(OPENWEATHERMAP_API_KEY).c_str()
+        urlEncode(WEATHER_UNIT_NAMES[static_cast<size_t>(Config.getWeatherUnits())]),
+        urlEncode(Config.getOwmApiKey()).c_str()
     );
     DEBUG_PRINT(url);
     http.begin(url);
@@ -342,5 +307,102 @@ OwmResult refreshWeather()
         http.end();
         DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
         return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
+    }
+}
+
+OwmResult testApiKey(String apiKey)
+{
+    char url[200];
+    sprintf(url, "http://api.openweathermap.org/data/2.5/weather?lat=51.48&lon=0&appid=%s", urlEncode(apiKey).c_str());
+
+    HTTPClient http;
+    http.begin(url);
+    switch (http.GET()) {
+        case 200:
+            return OwmResult::SUCCESS;
+        case 401:
+            return OwmResult::INVALID_API_KEY;
+        default:
+            return OwmResult::NO_RESPONSE;
+    }
+}
+
+OwmLocation queryLocation(String location, String apiKey)
+{
+    char buffer[200];
+    // Use OWM's geocoding API to lookup the coordinates for the provided location
+    DEBUG_PRINT("Looking up lat,long for '%s' from openweathermap", location.c_str());
+    HTTPClient http;
+    unsigned long start = millis();
+    http.setConnectTimeout(10000);
+    sprintf(
+        buffer,
+        "http://api.openweathermap.org/geo/1.0/direct?q=%s&limit=1&appid=%s",
+        urlEncode(location).c_str(),
+        urlEncode(apiKey).c_str()
+    );
+    DEBUG_PRINT(buffer);
+    http.begin(buffer);
+    int status = http.GET();
+    if (status == 200) {
+        StaticJsonDocument<128> filter;
+        filter[0]["name"] = true;
+        filter[0]["state"] = true;
+        filter[0]["country"] = true;
+        filter[0]["lat"] = true;
+        filter[0]["lon"] = true;
+        DynamicJsonDocument response(1000);
+        DeserializationError error = deserializeJson(response, http.getStream(), DeserializationOption::Filter(filter));
+        http.end();
+        DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
+        if (error) {
+            DEBUG_PRINT("Failed to parse response: %s", error.c_str());
+            return {
+                .result=OwmResult::MALFORMED_RESPONSE,
+                .lat=0,
+                .lon=0,
+                .name="",
+            };
+        }
+        JsonVariant result = response[0];
+        if (result.isNull()) {
+            DEBUG_PRINT("No location results from openweathermap");
+            return {
+                .result=OwmResult::INVALID_LOCATION,
+                .lat=0,
+                .lon=0,
+                .name="",
+            };
+        }
+
+        const char *name = result["name"].as<const char*>();
+        const char *country = result["country"].as<const char*>();
+        float latitude = result["lat"].as<float>();
+        float longitude = result["lon"].as<float>();
+
+        if (result["state"].isNull()) {
+            sprintf(buffer, "%s, %s", name, country);
+        } else {
+            const char *state = result["state"].as<const char*>();
+            sprintf(buffer, "%s, %s, %s", name, state, country);
+        }
+
+        DEBUG_PRINT("Found location %s @ %0.6f,%0.6f", buffer, latitude, longitude);
+
+        return {
+            .result=OwmResult::SUCCESS,
+            .lat=latitude,
+            .lon=longitude,
+            .name=buffer,
+        };
+    } else {
+        http.end();
+        DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
+        return {
+            .result=status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE,
+            .lat=0,
+            .lon=0,
+            .name="",
+        };
     }
 }

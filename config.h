@@ -1,119 +1,25 @@
 /**
- * Enter the WiFi network you want to connect to, for getting the current time and other information.
- * If for some reason your WiFi doesn't have a password, you can comment that out.
+ * Default values for settings
  */
-#define WIFI_NAME "your wifi name here"
-#define WIFI_PASS "your wifi password here"
-#define HOSTNAME "portal_calendar"
+#define DEFAULT_LOCALE "en"
 
-/**
- * Show the day name on the right side (next to the XX/XX day)
- */
-#define SHOW_DAY
+#define DEFAULT_SHOW_DAY true
+#define DEFAULT_SHOW_MONTH true
+#define DEFAULT_SHOW_YEAR false
 
-/**
- * Show the month name on the top
- */
-#define SHOW_MONTH
+#define DEFAULT_HOSTNAME "portalcalendar"
 
-/**
- * Show the current year on the top right
- */
-// #define SHOW_YEAR
+#define DEFAULT_PRIMARY_NTP_SERVER "pool.ntp.org"
+#define DEFAULT_SECONDARY_NTP_SERVER "time.google.com"
 
-/**
- * Language for the months and days. Error messages, and the text you're reading right now, are not currently translated.
- */
-#define LOCALE_EN_US // English
-// #define LOCALE_DE_DE // Deutsch
-// #define LOCALE_ES_ES // Español
-// #define LOCALE_FR_FR // Français
-// #define LOCALE_NL_NL // Nederlands
-// #define LOCALE_IT_IT // Italiano
-// #define LOCALE_SV_SE // Svenska
+#define DEFAULT_PRIMARY_TIMEZONED_SERVER "timezoned.rop.nl"
+#define DEFAULT_SECONDARY_TIMEZONED_SERVER ""
 
-/**
- * The name of your timezone. Requires connection with a 3rd-party service to get all the DST & offset information.
- * 
- * You can find a list of timezone names here:
- * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
- */
-#define TIME_ZONE "America/Chicago"
+#define DEFAULT_WEATHER_START_HOUR 9
+#define DEFAULT_USE_24H_TIME false
 
-/**
- * The full POSIX specification for your timezone. If TIME_ZONE is set, this will only serve as a backup to that.
- * If not, then no 3rd-party timezone services will be used, however this will need to be changed if your timezone
- * or DST laws change in the future.
- */
-// #define POSIX_TIME_ZONE "CST6CDT,M3.2.0,M11.1.0"
-
-/**
- * Show weather forecast in place of the chamber icons. The boot button can be used to swap between the two.
- */
-// #define SHOW_WEATHER
-
-/**
- * Your API key for openweathermap.org, which is the service used to get the weather for your location.
- * This is REQUIRED to use the weather feature. Create a free account with them and get your API key here:
- * https://home.openweathermap.org/api_keys
- */
-#define OPENWEATHERMAP_API_KEY "your api key here"
-
-/**
- * 1: Show a 5-day weather forecast
- * 2: Show today's weather forecast in 3-hour intervals
- */
-#define WEATHER_DISPLAY_TYPE 1
-
-/**
- * If you choose to show today's weather in 3-hour intervals, this selects what other information is shown under
- * the temperature (in 5-day forecast mode, the high and low temperature are shown so this isn't an option).
- * 
- * 1: Chance of precipitation
- * 2: Humidity
- */
-#define SECONDARY_WEATHER_INFORMATION 1
-
-/**
- * If you choose to show today's weather in 3-hour intervals, this will display times in 24-hour format instead of 12-hour.
- */
-// #define SHOW_24_HOUR_TIME
-
-/**
- * metric or imperial
- */
-#define WEATHER_UNITS "imperial"
-
-/**
- * The location to get weather information for. Can also be a zip code for US locations.
- */
-#define WEATHER_LOCATION "Oklahoma City, Oklahoma, US"
-
-/**
- * The latitude and longitude for weather information. Optional. Overrides WEATHER_LOCATION if set.
- */
-// #define WEATHER_LOCATION_LATITUDE 0.0
-// #define WEATHER_LOCATION_LONGITUDE 0.0
-
-/**
- * Show what the day's weather will be for the next 12 hours, starting at this hour (in 24-hour time).
- * 9 = 9am, 12 = 12pm, 15 = 3pm, etc
- * 
- * Since openweathermap gives us the weather in 3-hour intervals, and the hours they have data for are based on UTC,
- * the weather shown may not exactly line up with the hour you enter here. For example, in my timezone (America/Chicago),
- * openweathermap returns the weather for 10AM-10PM, even though I really want the weather for 9AM-9PM. So expect this
- * to be up to an hour and a half off depending on where you live.
- */
-#define WEATHER_START_HOUR 9
-
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-//   You probably don't need to edit anything below here   //
-/////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////
-
-#define NTP_SERVERS "pool.ntp.org", "time.google.com"
-#define TIMEZONED_SERVERS "timezoned.rop.nl"
+#define DEFAULT_2_NTP_SYNCS_PER_DAY true
+#define DEFAULT_MAX_RTC_CORRECTION_FACTOR 0.025
 
 /**
  * How long we'll wait for an NTP sync before giving up.
@@ -154,12 +60,15 @@
 #define ERROR_AFTER_HOURS_WITHOUT_INTERNET 24
 
 /**
- * Measure drift in the system clock and apply a correction factor for more accurate timekeeping.
- * 
- * Since the ESP32's internal clock drifts significantly based on temperature, this can be pretty effective at improving the clock's accuracy
- * assuming the clock is placed in a relatively temperature-stable environment. Like, you know, indoors.
+ * SSID for the configuration access point
  */
-#define MAX_RTC_CORRECTION_FACTOR 0.025
+#define AP_SSID "PortalCalendar"
+
+/**
+ * Password for the configuration access point. By default, a random 8-digit number is used for the password. Enabling this will make
+ * it use the same password every time.
+ */
+// #define AP_PASS "12345678"
 
 /**
  * Port assignments
@@ -189,3 +98,18 @@
  * If debug logs should be printed over serial
  */
 // #define DEBUG
+
+/**
+ * Normally the config server will start if the ESP32 is reset while plugged into USB.
+ * This prevents that behavior so that the logs printed by DEBUG can be inspected.
+ */
+// #define DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
+
+/**
+ * Run the webserver connected to a local WiFi network instead of creating an AP. This allows easily testing
+ * the website, but connecting to WiFi won't be available and will simply return mock responses based on the
+ * WiFi network it's already connected to.
+ */
+// #define DEV_WEBSERVER
+// #define DEV_WEBSERVER_WIFI_SSID "ssid"
+// #define DEV_WEBSERVER_WIFI_PASS "password"

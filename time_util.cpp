@@ -1,30 +1,16 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <math.h>
+#include <time.h>
+#include "Configuration.h"
 #include "time_util.h"
 
 #define NTP_PACKET_SIZE 48
 #define MIN_CORRECTABLE_SLEEP_DURATION 30
 
-const char* NTP_SERVER_LIST[] = {NTP_SERVERS};
-const char* TIMEZONED_SERVER_LIST[] = {TIMEZONED_SERVERS};
-
-static_assert(
-    sizeof(NTP_SERVER_LIST) / sizeof(char*) > 0,
-    "No NTP servers configured"
-);
-
-static_assert(
-    sizeof(TIMEZONED_SERVER_LIST) / sizeof(char*) > 0,
-    "No timezoned servers configured"
-);
-
 RTC_DATA_ATTR time_t lastNtpSync = 0;
 RTC_DATA_ATTR float rtcCorrectionFactor = 0.0;
-#ifdef POSIX_TIME_ZONE
-RTC_DATA_ATTR char savedTimezone[57] = POSIX_TIME_ZONE;
-#else
 RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
-#endif // POSIX_TIME_ZONE
 
 void correctSleepDuration(time_t *timeAsleep)
 {
@@ -120,33 +106,43 @@ void advanceDay(int& month, int& mday, int& year)
     }
 }
 
-String getPosixTz(String name)
+TimezonedResult getPosixTz(std::initializer_list<const String> servers, const String name, String &result)
 {
-    for (int i = 0; i < sizeof(TIMEZONED_SERVER_LIST) / sizeof(char*); ++i) {
-        const char* server = TIMEZONED_SERVER_LIST[i];
-        DEBUG_PRINT("Looking up POSIX timezone for %s from %s", name.c_str(), server);
+    uint16_t i = TIMEZONED_LOCAL_PORT_START;
+    for (String server : servers) {
+        if (server.isEmpty()) {
+            continue;
+        }
+        DEBUG_PRINT("Looking up POSIX timezone for %s from %s", name.c_str(), server.c_str());
         WiFiUDP udp;
         udp.flush();
-        udp.begin(TIMEZONED_LOCAL_PORT_START + i); // Each server must be called on a different port in case a packet comes in late
+        if (!udp.begin(TIMEZONED_LOCAL_PORT_START + i++) // Each server must be called on a different port in case a packet comes in late
+            || !udp.beginPacket(server.c_str(), 2342)
+        ) {
+            udp.stop();
+            continue;
+        }
         unsigned long started = millis();
-        udp.beginPacket(server, 2342);
         udp.write((const uint8_t*)name.c_str(), name.length());
-        udp.endPacket();
+        if (!udp.endPacket()) {
+            udp.stop();
+            continue;
+        }
         
         // Wait for packet until timeout
         bool parsedPacket;
         do {
-            delay(1);
+            yield();
             parsedPacket = udp.parsePacket();
         } while (!parsedPacket && millis() - started < TZ_LOOKUP_TIMEOUT_MS);
 
         if (!parsedPacket) {
-            DEBUG_PRINT("Timeout for server %s", server);
+            DEBUG_PRINT("Timeout for server %s", server.c_str());
             udp.stop();
             continue;
         }
 
-        DEBUG_PRINT("Request to %s request took %lums", server, millis() - started);
+        DEBUG_PRINT("Request to %s request took %lums", server.c_str(), millis() - started);
         // Stick result in String recv 
         String recv;
         recv.reserve(60);
@@ -154,12 +150,15 @@ String getPosixTz(String name)
             recv += (char)udp.read();
         }
         udp.stop();
-        DEBUG_PRINT("Response from %s: %s", server, recv.c_str());
-        if (recv.substring(0, 3) == "OK ") {
-            return recv.substring(recv.indexOf(" ", 4) + 1);
+        DEBUG_PRINT("Response from %s: %s", server.c_str(), result.c_str());
+        if (recv.startsWith("OK ")) {
+            result = recv.substring(recv.indexOf(" ", 4) + 1);
+            return TimezonedResult::Ok;
+        } else if (result.startsWith("ERR ")) {
+            return TimezonedResult::TzNotFound;
         }
     }
-    return "";
+    return TimezonedResult::ServerError;
 }
 
 /**
@@ -168,11 +167,14 @@ String getPosixTz(String name)
  *
  * @return True if the NTP sync was successful
  */
-bool syncNtp()
+bool syncNtp(std::initializer_list<const String> servers, bool test)
 {
-    for (int i = 0; i < sizeof(NTP_SERVER_LIST) / sizeof(char*); ++i) {
-        const char *server = NTP_SERVER_LIST[i];
-        DEBUG_PRINT("Starting NTP request to %s", server);
+    uint16_t i = NTP_LOCAL_PORT_START;
+    for (String server : servers) {
+        if (server.isEmpty()) {
+            continue;
+        }
+        DEBUG_PRINT("Starting NTP request to %s", server.c_str());
 
         // Send NTP packet
         byte buffer[NTP_PACKET_SIZE];
@@ -189,21 +191,28 @@ bool syncNtp()
 
         WiFiUDP udp;
         udp.flush();
-        udp.begin(NTP_LOCAL_PORT_START + i); // Each server must be called on a different port in case a packet comes in late
+        if (!udp.begin(NTP_LOCAL_PORT_START + i++) // Each server must be called on a different port in case a packet comes in late
+            || !udp.beginPacket(server.c_str(), 123)
+        ) {
+            udp.stop();
+            continue;
+        }
         unsigned long started = millis();
-        udp.beginPacket(server, 123); //NTP requests are to port 123
         udp.write(buffer, NTP_PACKET_SIZE);
-        udp.endPacket();
+        if (!udp.endPacket()) {
+            udp.stop();
+            continue;
+        }
 
         // Wait for packet until timeout
-        bool parsedPacket;
+        int parsedPacket;
         do {
-            delay(1);
+            yield();
             parsedPacket = udp.parsePacket();
         } while (!parsedPacket && millis() - started < NTP_TIMEOUT_MS);
     
         if (!parsedPacket) {
-            DEBUG_PRINT("NTP sync timeout for server %s", server);
+            DEBUG_PRINT("NTP sync timeout for server %s", server.c_str());
             udp.stop();
             continue;
         }
@@ -233,13 +242,16 @@ bool syncNtp()
         //also checking that all timestamps are non-zero and receive timestamp seconds are <= transmit timestamp seconds
         if ((buffer[1] < 1) or (buffer[1] > 15) or (reftsSec == 0) or (rcvtsSec == 0) or (rcvtsSec > secsSince1900)) {
             // we got invalid packet
-            DEBUG_PRINT("NTP sync failed for server %s", server);
+            DEBUG_PRINT("NTP sync failed for server %s", server.c_str());
             continue;
         }
 
         // Set the t and measured_at variables that were passed by reference
         unsigned long duration = millis() - started;
         DEBUG_PRINT("NTP sync took %lums", duration);
+        if (test) {
+            return true;
+        }
         suseconds_t us = (fraction / 4294967UL + duration / 2) * 1000; // Assume symmetric network latency
         timeval now = {
             .tv_sec = (time_t)(secsSince1900 - 2208988800UL) + us / uS_PER_S, // Subtract 70 years to get seconds since 1970
@@ -248,13 +260,15 @@ bool syncNtp()
         timeval oldNow;
         gettimeofday(&oldNow, nullptr);
         settimeofday(&now, nullptr);
+        DEBUG_PRINT("Time after NTP sync is %s", printTime(now.tv_sec));
+        float maxRtcCorrectionFactor = Config.getMaxRtcCorrectionFactor();
         long driftMs = (now.tv_sec - oldNow.tv_sec) * 1000 + (now.tv_usec - oldNow.tv_usec) / 1000;
-        if (!MAX_RTC_CORRECTION_FACTOR) {
+        if (!maxRtcCorrectionFactor) {
             rtcCorrectionFactor = 0;
             DEBUG_PRINT("System clock drift was %ldms", driftMs);
         } else if (lastNtpSync && difftime(now.tv_sec, lastNtpSync) > 30) {
             rtcCorrectionFactor -= (float)driftMs / 1000.0 / difftime(now.tv_sec, lastNtpSync);
-            rtcCorrectionFactor = clamp(rtcCorrectionFactor, (float)MAX_RTC_CORRECTION_FACTOR);
+            rtcCorrectionFactor = clamp(rtcCorrectionFactor, maxRtcCorrectionFactor);
             DEBUG_PRINT("System clock drift was %ldms, new correction factor is %0.4f", driftMs, rtcCorrectionFactor);
         }
         lastNtpSync = now.tv_sec;

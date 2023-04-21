@@ -5,3 +5,6 @@ resources/font/*.ttf
 resources/font/*.otf
 private
 .pio/
+app/dist
+app/node_modules
+app/stats.html
