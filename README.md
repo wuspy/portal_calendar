@@ -28,7 +28,7 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 # Bill of Materials
 
 - **Waveshare 7.5" 800x480 E-Ink display**
-  
+
     Available [directly from Waveshare](https://www.waveshare.com/product/displays/e-paper/epaper-1/7.5inch-e-paper-hat.htm) or [from Amazon](https://www.amazon.com/gp/product/B075R4QY3L). The display itself is the Good Display GDEW075T7, Waveshare just resells it and gives you a breakout board.
 
     Make sure you buy the bare display with breakout board. Don't buy the one preinstalled in a case. Don't buy the Black/White/Red version of this display either, just the standard Black/White one.
@@ -62,7 +62,7 @@ This project requires soldering, I'm sorry. Unfortunately I didn't take many pic
     Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the ledges on the top and bottom.
 
 4. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
-   
+
    ![](images/back.jpg)
 
    The back cover should be flush with the edges of the front cover. If it's not, the display may not be seated correctly in the front cover. Don't try to force it, remove the back cover and re-seat the display.
@@ -115,7 +115,7 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
 
 ![](images/arduino3.png)
 
- The defaults *should* already be what you want, but make sure they match these settings.
+ The partition scheme will need to be changed to allow the app to fit. Other than that, the rest of the options *should* already be what you want, but make sure they match these settings.
 
  | Option | Value |
  | ------ | ----- |
@@ -126,7 +126,7 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | Flash Mode | QIO |
  | Flash Size | 4MB (32Mb) |
  | Arduino Runs On | Core 1 |
- | Partition Scheme | Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS) |
+ | **Partition Scheme** | **Huge APP (3MB No OTA/1MB SPIFFS)** |
  | PSRAM | Disabled |
  | Upload Speed | 921600 |
 
@@ -162,7 +162,7 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 # Changelog
 
 ### 4/18/2023
-  
+
 * Add ability to toggle between the weather and chamber icon display using a button on GPIO0.
 * Frame REV 04: Fix the boot and reset buttons being labeled backwards, and call the boot button 'mode' since it does something now. If you have frame REV 03 and want to fix this, you only need to print cover.stl since the front and back parts are compatible with it.
 
