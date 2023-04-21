@@ -230,7 +230,7 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
                 clouds = (clouds * (sampleCount - 1) + (float)entry->clouds) / sampleCount;
                 daylight = (daylight * (sampleCount - 1) + (entry->daylight ? 100.0 : 0.0)) / sampleCount;
             }
-        }        
+        }
 
         DEBUG_PRINT("Found %d weather condition samples for %d/%d/%d", sampleCount, month + 1, mday, year);
         day->daylight = daylight >= 50.0;
@@ -285,7 +285,7 @@ OwmResult refreshWeather()
             DEBUG_PRINT("Failed to parse response: %s", error.c_str());
             return OwmResult::MALFORMED_RESPONSE;
         }
-        
+
         // Get sunrise and sunet hours for this location
         JsonVariant city = response["city"];
         sunriseTime = city["sunrise"].as<time_t>();

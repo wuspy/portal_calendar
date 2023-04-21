@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SvgIcon, getWifiRssiIcon, WizardPageLayout } from "./ui";
+    import { SvgIcon, getWifiRssiIcon, WizardPageLayout } from "./ui";
     import { loadWifiStatus, wifiStatus } from "./store";
     import { onMount } from "svelte";
 

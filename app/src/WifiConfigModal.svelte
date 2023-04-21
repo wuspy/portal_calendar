@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import type { WifiScanResponse } from "./model";
     import { connectToWifi, WifiConnectionError } from "./store";
-	import { Button, Modal, Input, PasswordInput } from "./ui";
+    import { Button, Modal, Input, PasswordInput } from "./ui";
 
     const dispatch = createEventDispatcher<{
         close: void,
@@ -12,7 +12,7 @@
     export let network: WifiScanResponse | undefined;
 
     let ssid = network?.ssid ?? "";
-	let password = "";
+    let password = "";
 
     let connectionError: WifiConnectionError | undefined = undefined;
     let connecting = false;

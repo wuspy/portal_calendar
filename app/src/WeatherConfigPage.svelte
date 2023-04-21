@@ -10,7 +10,7 @@
     import { WeatherDisplayType, WeatherSecondaryInfo, WeatherUnits, type LocationQueryResponse} from "./model";
     import { openSaveFailedModal } from "./SaveFailedModal.svelte";
     import { preferences, savePreferences } from "./store";
-	import { Checkbox, Input, PasswordInput, Select, type SelectOptionType, type InputValidator, WizardPageLayout } from "./ui";
+    import { Checkbox, Input, PasswordInput, Select, type SelectOptionType, type InputValidator, WizardPageLayout } from "./ui";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher<{ back: void, next: void }>();

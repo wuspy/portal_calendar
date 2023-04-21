@@ -11,7 +11,7 @@
 class Utf8Iterator
 {
 public:
-    Utf8Iterator(String str) 
+    Utf8Iterator(String str)
     {
         _str = str;
         _pos = 0;

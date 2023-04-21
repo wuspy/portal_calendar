@@ -128,7 +128,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
             udp.stop();
             continue;
         }
-        
+
         // Wait for packet until timeout
         bool parsedPacket;
         do {
@@ -143,7 +143,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
         }
 
         DEBUG_PRINT("Request to %s request took %lums", server.c_str(), millis() - started);
-        // Stick result in String recv 
+        // Stick result in String recv
         String recv;
         recv.reserve(60);
         while (udp.available()) {
@@ -187,7 +187,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         buffer[12]  = 'X';          // "kiss code", see RFC5905
         buffer[13]  = 'E';          // (codes starting with 'X' are not interpreted)
         buffer[14]  = 'Z';
-        buffer[15]  = 'T';	
+        buffer[15]  = 'T';
 
         WiFiUDP udp;
         udp.flush();
@@ -210,7 +210,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
             yield();
             parsedPacket = udp.parsePacket();
         } while (!parsedPacket && millis() - started < NTP_TIMEOUT_MS);
-    
+
         if (!parsedPacket) {
             DEBUG_PRINT("NTP sync timeout for server %s", server.c_str());
             udp.stop();
@@ -220,7 +220,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         udp.stop();
 
         //prepare timestamps
-        uint32_t highWord, lowWord;	
+        uint32_t highWord, lowWord;
         highWord = ( buffer[16] << 8 | buffer[17] ) & 0x0000FFFF;
         lowWord = ( buffer[18] << 8 | buffer[19] ) & 0x0000FFFF;
         uint32_t reftsSec = highWord << 16 | lowWord;				// reference timestamp seconds

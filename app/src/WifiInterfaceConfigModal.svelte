@@ -1,6 +1,6 @@
 <script lang="ts">
     import { interfaceProperties, saveWifiInterfaceProperties } from "./store";
-	import { Button, Label, Modal, Input} from "./ui";
+    import { Button, Label, Modal, Input} from "./ui";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher<{ close: void }>();
@@ -39,4 +39,3 @@
         <Button disabled={!hostname} loading={saving} on:click={save} class="grow">Save</Button>
     </div>
 </Modal>
-1

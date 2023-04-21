@@ -13,7 +13,7 @@ export type ButtonType = "button" | "submit" | "reset";
 export type ButtonVariant = "text" | "contained" | "outlined";
 export type UiColor = "base" | "green" | "red" | "yellow";
 
-export type SelectOptionType = {
-	name: string | number;
-	value: string | number;
+export interface SelectOptionType {
+    name: string | number;
+    value: string | number;
 };
