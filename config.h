@@ -1,3 +1,24 @@
+#ifndef PORTALCALENDAR_CONFIG_H
+#define PORTALCALENDAR_CONFIG_H
+
+enum class WeatherDisplayType : uint8_t
+{
+    FORECAST_5_DAY = 0,
+    FORECAST_12_HOUR = 1,
+};
+
+enum class WeatherUnits : uint8_t
+{
+    IMPERIAL = 0,
+    METRIC = 1,
+};
+
+enum class WeatherSecondaryInfo : uint8_t
+{
+    POP = 0,
+    HUMIDITY = 1,
+};
+
 /**
  * Default values for settings
  */
@@ -15,6 +36,9 @@
 #define DEFAULT_PRIMARY_TIMEZONED_SERVER "timezoned.rop.nl"
 #define DEFAULT_SECONDARY_TIMEZONED_SERVER ""
 
+#define DEFAULT_WEATHER_DISPLAY_TYPE WeatherDisplayType::FORECAST_5_DAY
+#define DEFAULT_WEATHER_UNITS WeatherUnits::IMPERIAL
+#define DEFAULT_WEATHER_SECONDARY_INFO WeatherSecondaryInfo::POP
 #define DEFAULT_WEATHER_START_HOUR 9
 #define DEFAULT_USE_24H_TIME false
 
@@ -86,6 +110,8 @@
 #define DC_PIN          23 // Any OUTPUT pin
 #define RESET_PIN       33 // Any OUTPUT pin
 #define BUSY_PIN        27 // Any INPUT pin
+#define PD_PIN          19 // Pin that changes when the device is on USB/DC power
+#define PD_PIN_STATE    HIGH
 
 /**
  * Enables the internal pullup on GPIO0 (Mode button) for boards that don't have a external pullup resistor on that pin.
@@ -113,3 +139,5 @@
 // #define DEV_WEBSERVER
 // #define DEV_WEBSERVER_WIFI_SSID "ssid"
 // #define DEV_WEBSERVER_WIFI_PASS "password"
+
+#endif // PORTALCALENDAR_CONFIG_H

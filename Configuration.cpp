@@ -58,6 +58,7 @@ ConfigurationClass::~ConfigurationClass()
 void ConfigurationClass::begin()
 {
     _prefs.begin("portalcalendar");
+    pinMode(PD_PIN, PD_PIN_STATE == HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
 }
 
 void ConfigurationClass::reset()
@@ -378,7 +379,7 @@ void ConfigurationClass::startConfigServer()
                 request->send(HTTP_OK);
             } else {
                 request->send(HTTP_BAD_GATEWAY);
-            } 
+            }
         });
     });
 
@@ -519,9 +520,9 @@ String ConfigurationClass::getOwmApiKey() { return _prefs.getString(KEY_OWM_API_
 String ConfigurationClass::getWeatherLocationName() { return _prefs.getString(KEY_WEATHER_LOCATION_NAME, ""); }
 float ConfigurationClass::getWeatherLocationLatitude() { return _prefs.getFloat(KEY_WEATHER_LOCATION_LATITUDE, 0); }
 float ConfigurationClass::getWeatherLocationLongitude() { return _prefs.getFloat(KEY_WEATHER_LOCATION_LONGITUDE, 0); }
-WeatherDisplayType ConfigurationClass::getWeatherDisplayType() { return prefs_getEnum(KEY_WEATHER_DISPLAY_TYPE, WeatherDisplayType::FORECAST_5_DAY); }
-WeatherUnits ConfigurationClass::getWeatherUnits() { return prefs_getEnum(KEY_WEATHER_UNITS, WeatherUnits::IMPERIAL); }
-WeatherSecondaryInfo ConfigurationClass::getWeatherSecondaryInfo() { return prefs_getEnum(KEY_WEATHER_SECONDARY_INFO, WeatherSecondaryInfo::POP); }
+WeatherDisplayType ConfigurationClass::getWeatherDisplayType() { return prefs_getEnum(KEY_WEATHER_DISPLAY_TYPE, DEFAULT_WEATHER_DISPLAY_TYPE); }
+WeatherUnits ConfigurationClass::getWeatherUnits() { return prefs_getEnum(KEY_WEATHER_UNITS, DEFAULT_WEATHER_UNITS); }
+WeatherSecondaryInfo ConfigurationClass::getWeatherSecondaryInfo() { return prefs_getEnum(KEY_WEATHER_SECONDARY_INFO, DEFAULT_WEATHER_SECONDARY_INFO); }
 uint8_t ConfigurationClass::getWeatherStartHour() { return _prefs.getUChar(KEY_WEATHER_START_HOUR, DEFAULT_WEATHER_START_HOUR); }
 bool ConfigurationClass::getShow24HourTime() { return _prefs.getBool(KEY_SHOW_24_HOUR_TIME, DEFAULT_USE_24H_TIME); }
 float ConfigurationClass::getMaxRtcCorrectionFactor() { return _prefs.getFloat(KEY_MAX_RTC_CORRECTION_FACTOR, DEFAULT_MAX_RTC_CORRECTION_FACTOR); }

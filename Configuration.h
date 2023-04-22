@@ -10,24 +10,6 @@
 #ifndef PORTALCALENDAR_CONFIGURATION_H
 #define PORTALCALENDAR_CONFIGURATION_H
 
-enum class WeatherDisplayType : uint8_t
-{
-    FORECAST_5_DAY = 0,
-    FORECAST_12_HOUR = 1,
-};
-
-enum class WeatherUnits : uint8_t
-{
-    IMPERIAL = 0,
-    METRIC = 1,
-};
-
-enum class WeatherSecondaryInfo : uint8_t
-{
-    POP = 0,
-    HUMIDITY = 1,
-};
-
 class ConfigurationClass
 {
 public:
@@ -67,10 +49,9 @@ public:
         return _wasSaved;
     }
 
-    bool isOnUsbPower()
+    inline bool isOnUsbPower()
     {
-        pinMode(19, INPUT_PULLDOWN);
-        return digitalRead(19) == HIGH;
+        return digitalRead(PD_PIN) == PD_PIN_STATE;
     }
 
 private:
