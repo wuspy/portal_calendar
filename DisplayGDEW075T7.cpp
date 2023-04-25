@@ -120,18 +120,12 @@ const uint8_t LUT_BB_1BIT[] = {
  * they aren't meant for this particular display and may have varying results between displays,
  * although they look perfect on the one I have.
  *
- * The only modification I've made is repeating the 2nd waveform twice to reduce ghosting.
- * I don't forsee this having any negative effects since that waveform is balanced between VDH/VDL.
- * Ghosting seems to increase as temperature decreases, which makes sense because the oil in the display
- * will be more viscous. Increasing R2 will help reduce ghosting more at low temperatures at the cost of
- * increated refresh time.
- *
  * https://github.com/ZinggJM/GxEPD2_4G/blob/master/src/epd/GxEPD2_750_T7.cpp
  */
 
 #define T1 10
 #define T2 20
-#define R2 2
+#define R2 1
 #define T3_1 20
 #define T3_2 10
 
@@ -191,17 +185,17 @@ const uint8_t LUT_BLACK_2BIT[] = {
  */
 
 const uint8_t LUT_DTM1[] = {
-    /* WHITE */ 0,
-    /* LGREY */ 0,
-    /* DGREY */ 1,
-    /* BLACK */ 1,
+    /* WHITE */ 1,
+    /* LGREY */ 1,
+    /* DGREY */ 0,
+    /* BLACK */ 0,
 };
 
 const uint8_t LUT_DTM2[] = {
-    /* WHITE */ 0,
-    /* LGREY */ 1,
-    /* DGREY */ 0,
-    /* BLACK */ 1,
+    /* WHITE */ 1,
+    /* LGREY */ 0,
+    /* DGREY */ 1,
+    /* BLACK */ 0,
 };
 
 #define BUSY_TIMEOUT 5000
@@ -248,26 +242,25 @@ void DisplayGDEW075T7::wakeup()
 
     digitalWrite(_csPin, LOW);
 
-    // Most of this is Waveshare's defaults
+    // Most of this is from https://github.com/ZinggJM/GxEPD2_4G/blob/master/src/epd/GxEPD2_750_T7.cpp
 
     sendCommand(CMD_PWR);   // power setting
-    sendData(0x17);         // BD_EN=1, VSR_EN=1, VS_EN=1, VG_EN=1, waveshare
-    sendData(0x17);         // VPP_EN=0, VCOM_SLEW=1, VGH=20v, VGL=-20v
+    sendData(0x07);         // BD_EN=0, VSR_EN=1, VS_EN=1, VG_EN=1, waveshare
+    sendData(0x07);         // VPP_EN=0, VCOM_SLEW=0, VGH=20v, VGL=-20v
     sendData(0x3F);         // VDH=15v
     sendData(0x3F);         // VDL=-15v
-    sendData(0x11);         // VDHR=5.8v
 
     sendCommand(CMD_VDCS);  // VCOM DC Setting (min 0x00 = -0.1v, max 0x4F = -4.05v)
     sendData(0x26);         // -2.0v
 
-    sendCommand(CMD_BTST);  // Booster Setting
-    sendData(0x27);
-    sendData(0x27);
-    sendData(0x2F);
-    sendData(0x17);
+    // sendCommand(CMD_BTST);  // Booster Setting
+    // sendData(0x27);
+    // sendData(0x27);
+    // sendData(0x2F);
+    // sendData(0x17);
 
-    sendCommand(CMD_PLL);
-    sendData(0x06);         // 150hz
+    // sendCommand(CMD_PLL);
+    // sendData(0x06);         // 150hz
 
     sendCommand(CMD_POWERON);
     delay(100);
@@ -286,18 +279,18 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x00);
 
     sendCommand(CMD_VCOM_CDI);  // VCOM AND DATA INTERVAL SETTING
-    sendData(0x00);             // BDZ=0, BDV=00, N2OCP=0, DDX=00
+    sendData(0x31);             // BDZ=0, BDV=11, N2OCP=0, DDX=01
     // sendData(0x00);             // CDI=17
     sendData(0x07);             // CDI=10
 
     sendCommand(CMD_TCON);      // TCON SETTING
     sendData(0x22);
 
-    sendCommand(CMD_GSST);  // Resolution setting
-    sendData(0x00);
-    sendData(0x00);
-    sendData(0x00);
-    sendData(0x00);
+    // sendCommand(CMD_GSST);  // Resolution setting
+    // sendData(0x00);
+    // sendData(0x00);
+    // sendData(0x00);
+    // sendData(0x00);
 
     setLut(CMD_SET_LUTVCOM, LUT_VCOM_2BIT);
     setLut(CMD_SET_LUTWW, LUT_WHITE_2BIT);
