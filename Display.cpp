@@ -1,69 +1,69 @@
 #include "Display.h"
 #include "global.h"
-#include "time.h"
+#include "time_util.h"
+#include "localization.h"
 
-#include "resource/font/medium.h"
-#include "resource/font/small.h"
-#include "resource/font/chamber_number.h"
+#include "resources/font/medium.h"
+#include "resources/font/small.h"
+#include "resources/font/chamber_number.h"
 
-#include "resource/aperture_logo.h"
-#include "resource/progress_bar.h"
-#include "resource/error.h"
+#include "resources/aperture_logo.h"
+#include "resources/progress_bar.h"
+#include "resources/error.h"
 
-#ifdef SHOW_WEATHER
-#include "resource/font/weather_frame.h"
-#include "resource/weather_info_degree_symbol.h"
-#include "resource/weather_info_percent_symbol.h"
-#include "resource/weather_frame.h"
-#include "resource/weather_frame_empty.h"
-#include "resource/weather_cloudy.h"
-#include "resource/weather_fog.h"
-#include "resource/weather_thunderstorms.h"
-#include "resource/weather_showers.h"
-#include "resource/weather_snow.h"
-#include "resource/weather_day_clear.h"
-#include "resource/weather_night_clear.h"
-#include "resource/weather_partly_cloudy_day.h"
-#include "resource/weather_partly_cloudy_night.h"
-#include "resource/weather_scattered_showers_day.h"
-#include "resource/weather_scattered_showers_night.h"
-#else
-#include "resource/cube_dispenser_on.h"
-#include "resource/cube_dispenser_off.h"
-#include "resource/cube_hazard_on.h"
-#include "resource/cube_hazard_off.h"
-#include "resource/pellet_hazard_on.h"
-#include "resource/pellet_hazard_off.h"
-#include "resource/pellet_catcher_on.h"
-#include "resource/pellet_catcher_off.h"
-#include "resource/water_hazard_on.h"
-#include "resource/water_hazard_off.h"
-#include "resource/fling_enter_on.h"
-#include "resource/fling_enter_off.h"
-#include "resource/fling_exit_on.h"
-#include "resource/fling_exit_off.h"
-#include "resource/turret_hazard_on.h"
-#include "resource/turret_hazard_off.h"
-#include "resource/dirty_water_on.h"
-#include "resource/dirty_water_off.h"
-#include "resource/cake_on.h"
-#include "resource/cake_off.h"
-#include "resource/bridge_shield_on.h"
-#include "resource/bridge_shield_off.h"
-#include "resource/cube_button_on.h"
-#include "resource/cube_button_off.h"
-#include "resource/faith_plate_on.h"
-#include "resource/faith_plate_off.h"
-#include "resource/laser_hazard_on.h"
-#include "resource/laser_hazard_off.h"
-#include "resource/laser_redirection_on.h"
-#include "resource/laser_redirection_off.h"
-#include "resource/laser_sensor_on.h"
-#include "resource/laser_sensor_off.h"
-#include "resource/light_bridge_on.h"
-#include "resource/light_bridge_off.h"
-#include "resource/player_button_on.h"
-#include "resource/player_button_off.h"
+#include "resources/font/weather_frame.h"
+#include "resources/weather_info_degree_symbol.h"
+#include "resources/weather_info_percent_symbol.h"
+#include "resources/weather_frame.h"
+#include "resources/weather_frame_empty.h"
+#include "resources/weather_cloudy.h"
+#include "resources/weather_fog.h"
+#include "resources/weather_thunderstorms.h"
+#include "resources/weather_showers.h"
+#include "resources/weather_snow.h"
+#include "resources/weather_day_clear.h"
+#include "resources/weather_night_clear.h"
+#include "resources/weather_partly_cloudy_day.h"
+#include "resources/weather_partly_cloudy_night.h"
+#include "resources/weather_scattered_showers_day.h"
+#include "resources/weather_scattered_showers_night.h"
+
+#include "resources/cube_dispenser_on.h"
+#include "resources/cube_dispenser_off.h"
+#include "resources/cube_hazard_on.h"
+#include "resources/cube_hazard_off.h"
+#include "resources/pellet_hazard_on.h"
+#include "resources/pellet_hazard_off.h"
+#include "resources/pellet_catcher_on.h"
+#include "resources/pellet_catcher_off.h"
+#include "resources/water_hazard_on.h"
+#include "resources/water_hazard_off.h"
+#include "resources/fling_enter_on.h"
+#include "resources/fling_enter_off.h"
+#include "resources/fling_exit_on.h"
+#include "resources/fling_exit_off.h"
+#include "resources/turret_hazard_on.h"
+#include "resources/turret_hazard_off.h"
+#include "resources/dirty_water_on.h"
+#include "resources/dirty_water_off.h"
+#include "resources/cake_on.h"
+#include "resources/cake_off.h"
+#include "resources/bridge_shield_on.h"
+#include "resources/bridge_shield_off.h"
+#include "resources/cube_button_on.h"
+#include "resources/cube_button_off.h"
+#include "resources/faith_plate_on.h"
+#include "resources/faith_plate_off.h"
+#include "resources/laser_hazard_on.h"
+#include "resources/laser_hazard_off.h"
+#include "resources/laser_redirection_on.h"
+#include "resources/laser_redirection_off.h"
+#include "resources/laser_sensor_on.h"
+#include "resources/laser_sensor_off.h"
+#include "resources/light_bridge_on.h"
+#include "resources/light_bridge_off.h"
+#include "resources/player_button_on.h"
+#include "resources/player_button_off.h"
 
 const Image* CHAMBER_ICON_SETS[][10] = {{
     // P1 Chamber 1
@@ -232,8 +232,6 @@ static_assert(
     "There must be 31 sets of chamber icons"
 );
 
-#endif // SHOW_WEATHER
-
 #define ICON_SIZE 64
 #define ICON_SPACING 9
 #define LEFT 82
@@ -243,41 +241,6 @@ static_assert(
 // Part of the physical screen is covered by the bezel to change the aspect ratio from 15:9 to 16:9,
 // this marks the horizontal centerline of the visible area
 #define H_CENTER 225
-
-const char* MONTHS[] = {
-    "JANUARY",
-    "FEBRUARY",
-    "MARCH",
-    "APRIL",
-    "MAY",
-    "JUNE",
-    "JULY",
-    "AUGUST",
-    "SEPTEMBER",
-    "OCTOBER",
-    "NOVEMBER",
-    "DECEMBER",
-};
-
-const char* DAYS[] = {
-    "SUNDAY",
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
-};
-
-const char* DAYS_ABBREVIATIONS[] = {
-    "SUN",
-    "MON",
-    "TUE",
-    "WED",
-    "THU",
-    "FRI",
-    "SAT",
-};
 
 Display::Display()
 {
@@ -294,7 +257,7 @@ Display::~Display()
 void Display::init()
 {
     if (!_display) {
-        _display = new DisplayGDEW075T7(SPI_BUS, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
+        _display = new DisplayGDEW075T7(SPI_BUS, CLK_PIN, DIN_PIN, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN);
         _display->setRotation(DisplayGDEW075T7::ROTATION_270);
         _display->setAlpha(DisplayGDEW075T7::WHITE);
     } else {
@@ -302,7 +265,7 @@ void Display::init()
     }
 }
 
-void Display::update(const tm *now)
+void Display::update(const tm *now, bool showWeather)
 {
     init();
     char buffer[10];
@@ -327,12 +290,12 @@ void Display::update(const tm *now)
 
     #ifdef SHOW_DAY
     // Day name
-    _display->drawText(DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
     #endif
 
     #ifdef SHOW_MONTH
     // Month name
-    _display->drawText(MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+    _display->drawText(I18N_MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     #endif
 
     #ifdef SHOW_YEAR
@@ -346,54 +309,46 @@ void Display::update(const tm *now)
     int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
     _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
 
-    #ifdef SHOW_WEATHER
+    if (showWeather) {
+        // Weather
 
-    // Weather
+        #if WEATHER_DISPLAY_TYPE == 1
 
-    #if WEATHER_DISPLAY_TYPE == 1
+        DailyWeather weather[5];
+        get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
 
-    DailyWeather weather[5];
-    get5DayWeather(now->tm_mon, now->tm_mday, year, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawDailyWeather(weather[i], i);
-    }
-
-    #elif WEATHER_DISPLAY_TYPE == 2
-
-    WeatherEntry weather[5];
-    getTodaysWeather(now->tm_mon, now->tm_mday, weather);
-
-    for (int i = 0; i < 5; ++i) {
-        drawWeatherEntry(weather[i], i);
-    }
-
-    #else
-
-    #error Invalid value for WEATHER_DISPLAY_TYPE
-
-    #endif // WEATHER_DISPLAY_TYPE
-
-    #else
-
-    // Chamber icons
-    if (now->tm_mon == 1 && now->tm_mday == 29) {
-        // Special icon set for leap day
-        for (int i = 0; i < 8; ++i) {
-            drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
+        for (int i = 0; i < 5; ++i) {
+            drawDailyWeather(weather[i], i);
         }
-    } else if (now->tm_mday <= 31) {
-        for (int i = 0; i < 10; ++i) {
-            drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+
+        #elif WEATHER_DISPLAY_TYPE == 2
+
+        WeatherEntry weather[5];
+        getTodaysWeather(now->tm_mon, now->tm_mday, weather);
+
+        for (int i = 0; i < 5; ++i) {
+            drawWeatherEntry(weather[i], i);
+        }
+
+        #else
+        #error Invalid value for WEATHER_DISPLAY_TYPE
+        #endif // WEATHER_DISPLAY_TYPE
+    } else {
+        // Chamber icons
+        if (now->tm_mon == 1 && now->tm_mday == 29) {
+            // Special icon set for leap day
+            for (int i = 0; i < 8; ++i) {
+                drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
+            }
+        } else if (now->tm_mday <= 31) {
+            for (int i = 0; i < 10; ++i) {
+                drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+            }
         }
     }
-
-    #endif // SHOW_WEATHER
 
     _display->refresh();
 }
-
-#ifdef SHOW_WEATHER
 
 const Image* Display::getWeatherConditionIcon(WeatherCondition condition, bool day)
 {
@@ -457,7 +412,7 @@ void Display::drawDailyWeather(const DailyWeather& weather, int32_t x)
 
     // Draw day
     _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _display->drawText(I18N_DAYS_ABBREVIATIONS[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
     _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
     _display->setAlpha(DisplayGDEW075T7::WHITE);
@@ -522,8 +477,6 @@ void Display::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     #endif
 }
 
-#else
-
 void Display::testChamberIcons()
 {
     const Image* allIcons[] = {
@@ -559,8 +512,6 @@ void Display::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
     );
 }
 
-#endif // SHOW_WEATHER
-
 void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 {
     init();
@@ -570,7 +521,7 @@ void Display::error(std::initializer_list<String> messageLines, bool willRetry)
 
     if (willRetry) {
         _display->drawMultilineText({
-            "Will try again in 1 hour. Or, press the BOOT button",
+            "Will try again in 1 hour. Or, press the RESET button",
             "on the back of the device to retry now.",
         }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
     }

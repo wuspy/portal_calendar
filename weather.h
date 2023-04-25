@@ -85,6 +85,8 @@ struct WeatherEntry {
     int8_t minute;
 };
 
+extern time_t lastWeatherSync;
+
 time_t getLastWeatherSync();
 void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5]);
 void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5]);
