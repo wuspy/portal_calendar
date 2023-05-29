@@ -113,7 +113,7 @@
 /////////////////////////////////////////////////////////////
 
 #define NTP_SERVERS "pool.ntp.org", "time.google.com"
-#define TIMEZONED_SERVERS "timezoned.rop.nl"
+#define TIMEZONED_SERVERS "timezoned.rop.nl", "timezoned.jacobjordan.tech"
 
 /**
  * How long we'll wait for an NTP sync before giving up.
