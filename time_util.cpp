@@ -146,7 +146,7 @@ String getPosixTz(String name)
             continue;
         }
 
-        log_i("Request to %s request took %lums", server, millis() - started);
+        log_i("Request to %s took %lums", server, millis() - started);
         // Stick result in String recv 
         String recv;
         recv.reserve(60);
