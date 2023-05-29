@@ -41,7 +41,7 @@ Display display;
     time(&sleepStartTime);
     scheduledWakeup = sleepStartTime + seconds;
     correctSleepDuration(&seconds);
-    DEBUG_PRINT("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
+    log_i("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
 
     #ifdef SHOW_WEATHER
     // Enable wakeup on boot button
@@ -61,11 +61,11 @@ Display display;
 void stopWifi()
 {
     if (WiFi.getMode() != WIFI_OFF) {
-        DEBUG_PRINT("Stopping WiFi");
+        log_i("Stopping WiFi");
         unsigned long start = millis();
         WiFi.disconnect(true, true);
         WiFi.mode(WIFI_OFF);
-        DEBUG_PRINT("WiFi shutdown took %lums", millis() - start);
+        log_i("WiFi shutdown took %lums", millis() - start);
     }
 }
 
@@ -75,7 +75,7 @@ bool startWifi()
         return true;
     }
     
-    DEBUG_PRINT("Starting WiFi with hostname %s", HOSTNAME);
+    log_i("Starting WiFi with hostname %s", HOSTNAME);
     WiFi.setHostname(HOSTNAME);
 
     unsigned long start = millis();
@@ -85,17 +85,17 @@ bool startWifi()
     WiFi.begin(WIFI_NAME);
     #endif
     if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
-        DEBUG_PRINT("WiFi connection failed after %lums", millis() - start);
+        log_e("WiFi connection failed after %lums", millis() - start);
         stopWifi();
         return false;
     }
-    DEBUG_PRINT("WiFi connection took %lums", millis() - start);
+    log_i("WiFi connection took %lums", millis() - start);
     return true;
 }
 
 [[noreturn]] void error(std::initializer_list<String> message)
 {
-    DEBUG_PRINT("Sleeping with error");
+    log_i("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
     display.error(message, true);
     deepSleep(SECONDS_PER_HOUR);
@@ -183,7 +183,7 @@ bool startWifi()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
-    DEBUG_PRINT("Brownout detected");
+    log_w("Brownout detected");
     display.error({
         "REPLACE BATTERIES",
         "",
@@ -269,7 +269,7 @@ void setup()
     time_t t;
     time(&t);
 
-    #ifdef DEBUG
+    #if CORE_DEBUG_LEVEL > 0
     Serial.begin(115200);
     #endif
 
@@ -280,12 +280,12 @@ void setup()
         sleepStartTime = 0;
     }
 
-    DEBUG_PRINT("Waking up at %s", printTime(t));
+    log_i("Waking up at %s", printTime(t));
 
     const esp_reset_reason_t resetReason = esp_reset_reason();
     const esp_sleep_wakeup_cause_t wakeupCause = esp_sleep_get_wakeup_cause();
 
-    DEBUG_PRINT("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
+    log_i("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
 
     if (resetReason == ESP_RST_BROWNOUT) {
         errorBrownout();
@@ -294,7 +294,7 @@ void setup()
     #ifdef SHOW_WEATHER
     // Check for wakeup from boot button press
     if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1) {
-        DEBUG_PRINT("Toggling showWeather");
+        log_i("Toggling showWeather");
         showWeather = !showWeather;
     }
     #endif // SHOW_WEATHER
@@ -323,7 +323,7 @@ void setup()
     #endif // SHOW_WEATHER
 
     if (needsDisplayUpdate) {
-        DEBUG_PRINT("Updating display at %s", printTime(t));
+        log_i("Updating display at %s", printTime(t));
         display.update(&now, showWeather);
         displayedYDay = now.tm_yday;
         #ifdef SHOW_WEATHER
@@ -334,7 +334,7 @@ void setup()
     time(&t);
 
     if (scheduledWakeup) {
-        DEBUG_PRINT("Wakeup is already scheduled");
+        log_i("Wakeup is already scheduled");
         // max with 0 is needed in case the display was updated since the first scheduledWakeup check,
         // which could make it in the past now despite being in the future before the display update
         deepSleep(max((time_t)0, scheduledWakeup - t));
@@ -347,7 +347,7 @@ void setup()
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
-        DEBUG_PRINT("Sync failed, will retry");
+        log_w("Sync failed, will retry");
         if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
             // Try to sync 3 more times before midnight
             deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
@@ -360,12 +360,12 @@ void setup()
         }
     } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 * 2) {
         // Sleep until midnight
-        DEBUG_PRINT("Sleeping until midnight");
+        log_i("Sleeping until midnight");
         deepSleep(secondsToMidnight);
     } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
         // Sleep until second NTP sync
         scheduledActions = ACTION_NTP_SYNC;
-        DEBUG_PRINT("Sleeping for 2nd NTP sync");
+        log_i("Sleeping for 2nd NTP sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
     } else {
         // Sleep until first NTP sync
@@ -376,7 +376,7 @@ void setup()
         #ifdef SHOW_WEATHER
         scheduledActions |= ACTION_WEATHER_SYNC;
         #endif
-        DEBUG_PRINT("Sleeping for 1st sync");
+        log_i("Sleeping for 1st sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
     }
 }

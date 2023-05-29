@@ -63,7 +63,7 @@ String getPosixTz(String name);
  */
 bool syncNtp();
 
-#ifdef DEBUG
+#if CORE_DEBUG_LEVEL > 0
 const char* printTime(time_t t);
 #endif
 

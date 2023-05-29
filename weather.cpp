@@ -166,7 +166,7 @@ int findWeatherEntry(int month, int mday, int hour, int startIndex = 0)
             return i - 1;
         }
     }
-    DEBUG_PRINT("Failed to find weather entry for %d/%d", month + 1, mday);
+    log_w("Failed to find weather entry for %d/%d", month + 1, mday);
     return -1;
 }
 
@@ -179,7 +179,7 @@ void getTodaysWeather(int month, int mday, WeatherEntry (&result)[5])
             result[j] = weatherEntries[i + j];
         }
     }
-    DEBUG_PRINT("Found %d weather entries for %d/%d", j, month + 1, mday);
+    log_i("Found %d weather entries for %d/%d", j, month + 1, mday);
     for (; j < 5; ++j) {
         result[j] = EMPTY_WEATHER_ENTRY;
     }
@@ -233,7 +233,7 @@ void get5DayWeather(int month, int mday, int year, DailyWeather (&result)[5])
             }
         }        
 
-        DEBUG_PRINT("Found %d weather condition samples for %d/%d/%d", sampleCount, month + 1, mday, year);
+        log_i("Found %d weather condition samples for %d/%d/%d", sampleCount, month + 1, mday, year);
         day->daylight = daylight >= 50.0;
         if (day->condition != WeatherCondition::UNKNOWN && day->condition <= WeatherCondition::OVERCAST_CLOUDS) {
             // Use average daily cloud cover for a more representative weather icon
@@ -248,7 +248,7 @@ OwmResult refreshWeather()
     char url[200];
     if (latitude == 0.0 || longitude == 0.0) {
         // Use OWM's geocoding API to lookup the coordinates for the provided location
-        DEBUG_PRINT("Looking up lat,long for '" WEATHER_LOCATION "' from openweathermap");
+        log_i("Looking up lat,long for '" WEATHER_LOCATION "' from openweathermap");
         HTTPClient http;
         unsigned long start = millis();
         http.setConnectTimeout(10000);
@@ -258,34 +258,33 @@ OwmResult refreshWeather()
             urlEncode(WEATHER_LOCATION).c_str(),
             urlEncode(OPENWEATHERMAP_API_KEY).c_str()
         );
-        DEBUG_PRINT(url);
         http.begin(url);
         int status = http.GET();
         if (status == 200) {
             DynamicJsonDocument response(1000);
             DeserializationError error = deserializeJson(response, http.getString());
             http.end();
-            DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
+            log_i("Request to openweathermap took %lums", millis() - start);
             if (error) {
-                DEBUG_PRINT("Failed to parse response: %s", error.c_str());
+                log_e("Failed to parse response: %s", error.c_str());
                 return OwmResult::MALFORMED_RESPONSE;
             }
             JsonVariant result = response[0];
             if (result.isNull()) {
-                DEBUG_PRINT("No location results from openweathermap");
+                log_w("No location results from openweathermap");
                 return OwmResult::INVALID_LOCATION;
             }
             latitude = result["lat"].as<float>();
             longitude = result["lon"].as<float>();
-            DEBUG_PRINT("Found location %s, %s @ %0.6f,%0.6f", result["name"].as<const char*>(), result["country"].as<const char*>(), latitude, longitude);
+            log_i("Found location %s, %s @ %0.6f,%0.6f", result["name"].as<const char*>(), result["country"].as<const char*>(), latitude, longitude);
         } else {
             http.end();
-            DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
+            log_e("Request to openweathermap failed with %d after %lums", status, millis() - start);
             return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
         }
     }
 
-    DEBUG_PRINT("Looking up weather for %0.6f,%0.6f from openweathermap", latitude, longitude);
+    log_i("Looking up weather for %0.6f,%0.6f from openweathermap", latitude, longitude);
     HTTPClient http;
     unsigned long start = millis();
     http.setConnectTimeout(10000);
@@ -297,7 +296,6 @@ OwmResult refreshWeather()
         urlEncode(WEATHER_UNITS).c_str(),
         urlEncode(OPENWEATHERMAP_API_KEY).c_str()
     );
-    DEBUG_PRINT(url);
     http.begin(url);
     int status = http.GET();
     if (status == 200) {
@@ -315,9 +313,9 @@ OwmResult refreshWeather()
         DynamicJsonDocument response(10000);
         DeserializationError error = deserializeJson(response, http.getStream(), DeserializationOption::Filter(filter));
         http.end();
-        DEBUG_PRINT("Request to openweathermap took %lums", millis() - start);
+        log_i("Request to openweathermap took %lums", millis() - start);
         if (error) {
-            DEBUG_PRINT("Failed to parse response: %s", error.c_str());
+            log_e("Failed to parse response: %s", error.c_str());
             return OwmResult::MALFORMED_RESPONSE;
         }
         
@@ -340,7 +338,7 @@ OwmResult refreshWeather()
         return OwmResult::SUCCESS;
     } else {
         http.end();
-        DEBUG_PRINT("Request to openweathermap failed with %d after %lums", status, millis() - start);
+        log_e("Request to openweathermap failed with %d after %lums", status, millis() - start);
         return status == 401 ? OwmResult::INVALID_API_KEY : OwmResult::NO_RESPONSE;
     }
 }

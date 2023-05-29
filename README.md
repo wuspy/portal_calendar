@@ -120,7 +120,6 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | Option | Value |
  | ------ | ----- |
  | CPU Frequency | 240 Mhz (WiFi/BT) |
- | Core Debug Level | None |
  | Events Run On | Core 1 |
  | Flash Frequency | 80Mhz |
  | Flash Mode | QIO |
@@ -130,11 +129,15 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | PSRAM | Disabled |
  | Upload Speed | 921600 |
 
+To enable debug logs, choose `Info` for Core Debug Level. Otherwise, leave it set to `None`.
+
 Now you can just flash it like any other arduino.
 
 ## Building with PlatformIO
 
 Assuming you already have PlatformIO installed, there shouldn't be anything else you need to do before building and flashing. Just select Build or Upload under the EzSBC environment.
+
+To enable debug logs, add `-DCORE_DEBUG_LEVEL=3` as a build flag in [platformio.ini](platformio.ini) (it should already be there as a line you can uncomment).
 
 # More Info
 

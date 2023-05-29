@@ -184,8 +184,3 @@
  * This may increase power usage in deep sleep.
  */
 // #define ENABLE_GPIO0_PULLUP
-
-/**
- * If debug logs should be printed over serial
- */
-// #define DEBUG
