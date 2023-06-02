@@ -208,10 +208,10 @@
   #define BIRTHDAY_1_YEAR 0
   #define BIRTHDAY_1_Name ""
 
-  #define BIRTHDAY_2_MONTH 6
-  #define BIRTHDAY_2_DAY 1
-  #define BIRTHDAY_2_YEAR 1984
-  #define BIRTHDAY_2_Name "CAKE"
+  #define BIRTHDAY_2_MONTH 0
+  #define BIRTHDAY_2_DAY 0
+  #define BIRTHDAY_2_YEAR 0
+  #define BIRTHDAY_2_Name ""
 
   #define BIRTHDAY_3_MONTH 0
   #define BIRTHDAY_3_DAY 0
