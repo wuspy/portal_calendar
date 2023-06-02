@@ -198,15 +198,18 @@
    * become active.  Max of 4 birthdays are allowed
    * but can be increased by modifying the
    * birthday.h file
+   * 
+   * BIRTDHAY_X_NAME option must be in all capital letteres.
+   * If lower case letters are used, they will not display
+   * correctly.
    */
-  // Example Birthday configuration for Portal 1 release date
-  #define BIRTHDAY_1_MONTH 10
-  #define BIRTHDAY_1_DAY 7
-  #define BIRTHDAY_1_YEAR 2007
-  #define BIRTHDAY_1_Name "PORTAL"
+  #define BIRTHDAY_1_MONTH 0
+  #define BIRTHDAY_1_DAY 0
+  #define BIRTHDAY_1_YEAR 0
+  #define BIRTHDAY_1_Name ""
 
-  #define BIRTHDAY_2_MONTH 5
-  #define BIRTHDAY_2_DAY 31
+  #define BIRTHDAY_2_MONTH 6
+  #define BIRTHDAY_2_DAY 1
   #define BIRTHDAY_2_YEAR 1984
   #define BIRTHDAY_2_Name "CAKE"
 
