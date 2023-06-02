@@ -370,17 +370,22 @@ void Display::update(const tm *now, bool showWeather)
         #error Invalid value for WEATHER_DISPLAY_TYPE
         #endif // WEATHER_DISPLAY_TYPE
     } else {
-        // Chamber icons
-        if (now->tm_mon == 1 && now->tm_mday == 29) {
-            // Special icon set for leap day
-            for (int i = 0; i < 8; ++i) {
+      // Chamber icons
+        if(bdayIcons){
+            // Special icon set for a birthday
+              for (int i = 0; i < 10; ++i) {
+                drawChamberIcon(IMG_CAKE_ON, i % 5, i / 5);
+              }
+        } else if (now->tm_mon == 1 && now->tm_mday == 29) {
+              // Special icon set for leap day
+              for (int i = 0; i < 8; ++i) {
                 drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
-            }
+          }
         } else if (now->tm_mday <= 31) {
-            for (int i = 0; i < 10; ++i) {
-                drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
-            }
-        }
+              for (int i = 0; i < 10; ++i) {
+                  drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+              }
+          }
     }
 
     _display->refresh();
