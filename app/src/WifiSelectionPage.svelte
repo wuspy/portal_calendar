@@ -15,12 +15,8 @@
     const dispatch = createEventDispatcher<{ next: void }>();
 
     function onNetworkClick(network: WifiScanResponse) {
-        if (network.open) {
-            // TODO
-        } else {
-            selectedNetwork = network;
-            connectModalOpen = true;
-        }
+        selectedNetwork = network;
+        connectModalOpen = true;
     }
 
     function onAddNetworkClick() {

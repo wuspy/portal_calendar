@@ -499,15 +499,17 @@ void ConfigurationClass::deferRequest(AsyncWebServerRequest *request, std::funct
 void ConfigurationClass::connectToSavedWifi()
 {
     String ssid = _prefs.getString(KEY_WIFI_SSID);
-    String password = _prefs.getString(KEY_WIFI_PASS);
-    log_i("Connecting to saved wifi '%s'", ssid.c_str());
     if (ssid.length()) {
+        String password = _prefs.getString(KEY_WIFI_PASS);
+        log_i("Connecting to saved wifi '%s'", ssid.c_str());
         WiFi.begin(ssid.c_str(), password.length() ? password.c_str() : nullptr);
         if (WiFi.waitForConnectResult(10000) == WL_CONNECTED) {
             log_i("Connected to '%s' at %s", ssid.c_str(), WiFi.localIP().toString().c_str());
         } else {
             log_e("Failed to connect to '%s'", ssid.c_str());
         }
+    } else {
+        log_i("No saved WiFi network to connect to");
     }
 }
 
