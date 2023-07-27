@@ -126,6 +126,11 @@ enum class WeatherSecondaryInfo : uint8_t
 // #define DEBUG
 
 /**
+ * Disables display output. Useful for testing the code on an isolated board without requiring it to be connected to a display.
+ */
+// #define HEADLESS
+
+/**
  * Normally the config server will start if the ESP32 is reset while plugged into USB.
  * This prevents that behavior so that the logs printed by DEBUG can be inspected.
  */

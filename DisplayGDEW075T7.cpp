@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include "DisplayGDEW075T7.h"
+#include "config.h"
 #include "unicode.h"
 
 // Display commands
@@ -207,9 +208,11 @@ const uint8_t LUT_DTM2[] = {
 #define BUSY_TIMEOUT 5000
 
 DisplayGDEW075T7::~DisplayGDEW075T7() {
+    #ifndef HEADLESS
     _spi->endTransaction();
     _spi->end();
     delete _spi;
+    #endif
     delete[] _frameBuffer;
 };
 
@@ -225,9 +228,11 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t cop
     pinMode(_dcPin, OUTPUT);
     pinMode(_busyPin, INPUT);
 
+    #ifndef HEADLESS
     _spi = new SPIClass(spi_bus);
     _spi->begin(sck_pin, -1, copi_pin, cs_pin);
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
+    #endif
 
     _frameBuffer = new uint8_t[FRAMEBUFFER_LENGTH];
 
@@ -309,22 +314,28 @@ void DisplayGDEW075T7::wakeup()
 
 void DisplayGDEW075T7::sendCommand(uint8_t command)
 {
+    #ifndef HEADLESS
     digitalWrite(_dcPin, LOW);
     _spi->transfer(command);
     digitalWrite(_dcPin, HIGH);
+    #endif
 }
 
 void DisplayGDEW075T7::sendData(uint8_t data)
 {
+    #ifndef HEADLESS
     _spi->transfer(data);
+    #endif
 }
 
 void DisplayGDEW075T7::waitUntilIdle()
 {
+    #ifndef HEADLESS
     unsigned long start = millis();
     do {
         delay(5);
     } while (digitalRead(_busyPin) == LOW && millis() - start < BUSY_TIMEOUT);
+    #endif
     delay(20);
 }
 
