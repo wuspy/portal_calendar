@@ -8,9 +8,9 @@ const Locale getLocale(String code)
         }
     }
     if (code.equals(DEFAULT_LOCALE)) {
-        DEBUG_PRINT("Default locale '" DEFAULT_LOCALE "' not found!");
+        log_e("Default locale '" DEFAULT_LOCALE "' not found!");
         return LOCALES[0];
     }
-    DEBUG_PRINT("Locale '%s' not found, returning default locale '" DEFAULT_LOCALE "'", code.c_str());
+    log_e("Locale '%s' not found, returning default locale '" DEFAULT_LOCALE "'", code.c_str());
     return getLocale(DEFAULT_LOCALE);
 }

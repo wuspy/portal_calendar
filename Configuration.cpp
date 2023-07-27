@@ -70,19 +70,19 @@ void ConfigurationClass::startConfigServer()
 {
     WiFi.setHostname(getHostname().c_str());
     #ifdef DEV_WEBSERVER
-    DEBUG_PRINT("Starting configuration server in dev mode");
+    log_i("Starting configuration server in dev mode");
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(DEV_WEBSERVER_WIFI_SSID, DEV_WEBSERVER_WIFI_PASS);
 
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        DEBUG_PRINT("Failed to connect to WiFi");
+        log_e("Failed to connect to WiFi");
         while (true) {
             yield();
         }
     }
     #else
-    DEBUG_PRINT("Starting configuration server");
+    log_i("Starting configuration server");
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAPsetHostname(getHostname().c_str());
 
@@ -92,6 +92,7 @@ void ConfigurationClass::startConfigServer()
     char apPassword[9];
     sprintf(&apPassword[0], "%08u", esp_random() % 99999999);
     #endif // AP_PASS
+
     WiFi.softAP(AP_SSID, &apPassword[0]);
 
     #endif // DEV_WEBSERVER
@@ -99,15 +100,18 @@ void ConfigurationClass::startConfigServer()
     connectToSavedWifi();
 
     _dnsServer = new DNSServer();
+    _dnsServer->setTTL(0);
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    _dnsServer->start(53, "*", WiFi.softAPIP());
+    if (!_dnsServer->start(53, "*", WiFi.softAPIP())) {
+        log_e("Failed to start DNS server");
+    }
 
     _httpServer = new AsyncWebServer(80);
 
     _deferredRequestQueue = xQueueCreate(20, sizeof(std::function<void(void)>));
 
     on("/wifi/scan", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /wifi/scan");
+        log_i("GET /wifi/scan");
         deferRequest(request, [request] {
             if (WiFi.scanComplete() == WIFI_SCAN_FAILED) {
                 WiFi.scanNetworks();
@@ -136,7 +140,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/wifi/interface", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /wifi/interface");
+        log_i("GET /wifi/interface");
         AsyncJsonResponse *response = new AsyncJsonResponse(false, 512);
         JsonObject root = response->getRoot();
 
@@ -148,7 +152,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/wifi/interface", HTTP_PATCH, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("PATCH /wifi/interface");
+        log_i("PATCH /wifi/interface");
         String hostname = request->getParam("hostname", true)->value();
         if (!hostname || hostname.length() > 63) {
             request->send(HTTP_BAD_REQUEST);
@@ -162,7 +166,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/wifi", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /wifi");
+        log_i("GET /wifi");
         AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
 
@@ -186,11 +190,11 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/wifi", HTTP_POST, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("POST /wifi");
+        log_i("POST /wifi");
         deferRequest(request, [request, this] {
             String ssid = request->getParam("ssid", true)->value();
             String password = request->getParam("password", true)->value();
-            DEBUG_PRINT("Connecting to wifi '%s'", ssid.c_str());
+            log_i("Connecting to wifi '%s'", ssid.c_str());
             if (!ssid.length() || ssid.length() > 32 || (password.length() && (password.length() < 8 || password.length() > 64))) {
                 return request->send(HTTP_BAD_REQUEST);
             }
@@ -200,7 +204,7 @@ void ConfigurationClass::startConfigServer()
             WiFi.begin(ssid.c_str(), password.length() ? password.c_str() : nullptr);
             uint8_t status = WiFi.waitForConnectResult(10000);
             #endif // DEV_WEBSERVER
-            DEBUG_PRINT("Connection result: %u", status);
+            log_i("Connection result: %u", status);
             if (status == WL_CONNECTED) {
                 _prefs.putString(KEY_WIFI_SSID, ssid);
                 _prefs.putString(KEY_WIFI_PASS, password);
@@ -228,7 +232,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/locales", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /locales");
+        log_i("GET /locales");
         AsyncJsonResponse *response = new AsyncJsonResponse(false, 1024);
         JsonObject root = response->getRoot();
 
@@ -241,7 +245,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/preferences", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /preferences");
+        log_i("GET /preferences");
         AsyncJsonResponse *response = new AsyncJsonResponse(false, 4096);
         JsonObject root = response->getRoot();
         root[KEY_SHOW_DAY] = getShowDay();
@@ -270,7 +274,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/preferences", HTTP_PATCH, 4096, [&](AsyncWebServerRequest *request, JsonVariant& body) {
-        DEBUG_PRINT("PATCH /preferences");
+        log_i("PATCH /preferences");
 
         prefs_putJsonBool(body, KEY_SHOW_DAY);
         prefs_putJsonBool(body, KEY_SHOW_MONTH);
@@ -308,7 +312,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/weather/test", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /weather/test");
+        log_i("GET /weather/test");
         deferRequest(request, [request] {
             String key = request->hasParam("appid") ? request->getParam("appid")->value() : "";
             if (key.length() != 32) {
@@ -333,7 +337,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/weather/location", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /weather/location");
+        log_i("GET /weather/location");
         deferRequest(request, [request] {
             String key = request->hasParam("appid") ? request->getParam("appid")->value() : "";
             String location = request->hasParam("q") ? request->getParam("q")->value() : "";
@@ -365,7 +369,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/ntp/test", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /ntp/test");
+        log_i("GET /ntp/test");
         deferRequest(request, [request] {
             String server = request->hasParam("server") ? request->getParam("server")->value() : "";
             if (!server.length()) {
@@ -384,7 +388,7 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/timezoned/lookup", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /timezoned/lookup");
+        log_i("GET /timezoned/lookup");
         deferRequest(request, [request] {
             String server = request->hasParam("server") ? request->getParam("server")->value() : "";
             String timezone = request->hasParam("timezone") ? request->getParam("timezone")->value() : "";
@@ -409,13 +413,13 @@ void ConfigurationClass::startConfigServer()
     });
 
     on("/shutdown", HTTP_POST, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("POST /shutdown");
+        log_i("POST /shutdown");
         request->send(HTTP_OK);
         _shutdown = true;
     });
 
     on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
-        DEBUG_PRINT("GET /");
+        log_i("GET http://%s/", request->host().c_str());
         AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", &INDEX_HTML_DATA[0], sizeof(INDEX_HTML_DATA));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
@@ -424,10 +428,10 @@ void ConfigurationClass::startConfigServer()
     #ifdef DEV_WEBSERVER
     _httpServer->onNotFound([](AsyncWebServerRequest *request) {
         if (request->method() == HTTP_OPTIONS) {
-            DEBUG_PRINT("OPTIONS %s", request->url().c_str());
+            log_i("OPTIONS %s", request->url().c_str());
             request->send(HTTP_OK);
         } else {
-            DEBUG_PRINT("Not found: %s %s", request->methodToString(), request->url().c_str());
+            log_i("Not found: %s %s", request->methodToString(), request->url().c_str());
             request->send(HTTP_NOT_FOUND);
         }
     });
@@ -441,11 +445,11 @@ void ConfigurationClass::startConfigServer()
     _httpServer->begin();
 
     #ifdef DEV_WEBSERVER
-    DEBUG_PRINT("DEV Webserver ready at %s", WiFi.localIP().toString().c_str());
+    log_i("DEV Webserver ready at %s", WiFi.localIP().toString().c_str());
     Display.showDevWebserverScreen(WiFi.SSID(), WiFi.localIP());
     #else
-    DEBUG_PRINT("Webserver ready at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
-    Display.showConfigServerScreen(WiFi.softAPSSID(), apPassword, WiFi.softAPgetHostname());
+    log_i("Webserver ready at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    Display.showConfigServerScreen(WiFi.softAPSSID(), apPassword, getHostname());
     #endif
 
     std::function<void(void)> request;
@@ -460,7 +464,7 @@ void ConfigurationClass::startConfigServer()
         yield();
     }
 
-    DEBUG_PRINT("Shutting down webserver...");
+    log_i("Shutting down webserver...");
 
     delay(100);
 
@@ -474,7 +478,7 @@ void ConfigurationClass::startConfigServer()
 
     vQueueDelete(_deferredRequestQueue);
 
-    DEBUG_PRINT("Webserver has stopped");
+    log_i("Webserver has stopped");
 }
 
 /**
@@ -496,10 +500,14 @@ void ConfigurationClass::connectToSavedWifi()
 {
     String ssid = _prefs.getString(KEY_WIFI_SSID);
     String password = _prefs.getString(KEY_WIFI_PASS);
-
+    log_i("Connecting to saved wifi '%s'", ssid.c_str());
     if (ssid.length()) {
         WiFi.begin(ssid.c_str(), password.length() ? password.c_str() : nullptr);
-        WiFi.waitForConnectResult(10000);
+        if (WiFi.waitForConnectResult(10000) == WL_CONNECTED) {
+            log_i("Connected to '%s' at %s", ssid.c_str(), WiFi.localIP().toString().c_str());
+        } else {
+            log_e("Failed to connect to '%s'", ssid.c_str());
+        }
     }
 }
 
@@ -541,10 +549,10 @@ void ConfigurationClass::prefs_putJsonFloat(const JsonObject& json, const char* 
         if (v >= min && v <= max) {
             _prefs.putFloat(key, v);
         } else {
-            DEBUG_PRINT("Value %f is out of range (%f-%f) for %s", v, min, max, key);
+            log_w("Value %f is out of range (%f-%f) for %s", v, min, max, key);
         }
     } else if (!value.isNull()) {
-        DEBUG_PRINT("Value for %s cannot be converte to float", key);
+        log_w("Value for %s cannot be converte to float", key);
     }
 }
 
@@ -556,10 +564,10 @@ void ConfigurationClass::prefs_putJsonUChar(const JsonObject& json, const char* 
         if (v >= min && v <= max) {
             _prefs.putUChar(key, v);
         } else {
-            DEBUG_PRINT("Value %u is out of range (%u-%u) for %s", v, min, max, key);
+            log_w("Value %u is out of range (%u-%u) for %s", v, min, max, key);
         }
     } else if (!value.isNull()) {
-        DEBUG_PRINT("Value for %s cannot be converted to uchar", key);
+        log_w("Value for %s cannot be converted to uchar", key);
     }
 }
 
@@ -571,10 +579,10 @@ void ConfigurationClass::prefs_putJsonString(const JsonObject& json, const char*
         if (v.length() >= minLength && v.length() <= maxLength) {
             _prefs.putString(key, value.as<const char*>());
         } else {
-            DEBUG_PRINT("String '%s' (%u) does not meet the length constraint (%u-%u) for %s", v.c_str(), v.length(), minLength, maxLength, key);
+            log_w("String '%s' (%u) does not meet the length constraint (%u-%u) for %s", v.c_str(), v.length(), minLength, maxLength, key);
         }
     } else if (!value.isNull()) {
-        DEBUG_PRINT("Value for %s cannot be converted to string", key);
+        log_w("Value for %s cannot be converted to string", key);
     }
 }
 
@@ -584,7 +592,7 @@ void ConfigurationClass::prefs_putJsonBool(const JsonObject& json, const char* k
     if (value.is<bool>()) {
         _prefs.putBool(key, value.as<bool>());
     } else if (!value.isNull()) {
-        DEBUG_PRINT("Value for %s cannot be converted to bool", key);
+        log_w("Value for %s cannot be converted to bool", key);
     }
 }
 
@@ -599,9 +607,9 @@ template<typename T> void ConfigurationClass::prefs_putJsonEnum(const JsonObject
                 return;
             }
         }
-        DEBUG_PRINT("Value %u is not valid for %s", v, key);
+        log_w("Value %u is not valid for %s", v, key);
     } else if (!value.isNull()) {
-        DEBUG_PRINT("Value for %s cannot be converted to uchar", key);
+        log_w("Value for %s cannot be converted to uchar", key);
     }
 }
 
