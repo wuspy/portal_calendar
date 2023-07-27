@@ -38,7 +38,7 @@ RTC_DATA_ATTR time_t displayedWeatherTime = 0;
     time(&sleepStartTime);
     scheduledWakeup = sleepStartTime + seconds;
     correctSleepDuration(&seconds);
-    DEBUG_PRINT("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
+    log_i("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
 
     if (Config.getWeatherEnabled()) {
         // Enable wakeup on boot button
@@ -58,11 +58,11 @@ RTC_DATA_ATTR time_t displayedWeatherTime = 0;
 void stopWifi()
 {
     if (WiFi.getMode() != WIFI_OFF) {
-        DEBUG_PRINT("Stopping WiFi");
+        log_i("Stopping WiFi");
         unsigned long start = millis();
         WiFi.disconnect(true, true);
         WiFi.mode(WIFI_OFF);
-        DEBUG_PRINT("WiFi shutdown took %lums", millis() - start);
+        log_i("WiFi shutdown took %lums", millis() - start);
     }
 }
 
@@ -71,24 +71,25 @@ bool startWifi()
     if (WiFi.status() == WL_CONNECTED) {
         return true;
     }
-    DEBUG_PRINT("Starting WiFi with hostname %s", Config.getHostname().c_str());
+
+    log_i("Starting WiFi with hostname %s", Config.getHostname().c_str());
     WiFi.setHostname(Config.getHostname().c_str());
 
     unsigned long start = millis();
     String pass = Config.getWifiPass();
     WiFi.begin(Config.getWifiSsid().c_str(), pass.length() ? pass.c_str() : nullptr);
     if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
-        DEBUG_PRINT("WiFi connection failed after %lums", millis() - start);
+        log_e("WiFi connection failed after %lums", millis() - start);
         stopWifi();
         return false;
     }
-    DEBUG_PRINT("WiFi connection took %lums", millis() - start);
+    log_i("WiFi connection took %lums", millis() - start);
     return true;
 }
 
 [[noreturn]] void error(std::initializer_list<String> message)
 {
-    DEBUG_PRINT("Sleeping with error");
+    log_i("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
     Display.error(message, true);
     deepSleep(SECONDS_PER_HOUR);
@@ -158,7 +159,7 @@ bool startWifi()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
-    DEBUG_PRINT("Brownout detected");
+    log_w("Brownout detected");
     Display.error({
         "REPLACE BATTERIES",
         "",
@@ -256,7 +257,7 @@ void setup()
     time_t t;
     time(&t);
 
-    #ifdef DEBUG
+    #if CORE_DEBUG_LEVEL > 0
     Serial.begin(115200);
     #endif
 
@@ -267,12 +268,12 @@ void setup()
         sleepStartTime = 0;
     }
 
-    DEBUG_PRINT("Waking up at %s", printTime(t));
+    log_i("Waking up at %s", printTime(t));
 
     const esp_reset_reason_t resetReason = esp_reset_reason();
     const esp_sleep_wakeup_cause_t wakeupCause = esp_sleep_get_wakeup_cause();
 
-    DEBUG_PRINT("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
+    log_i("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
 
     if (resetReason == ESP_RST_BROWNOUT) {
         errorBrownout();
@@ -282,12 +283,12 @@ void setup()
 
     // Check if configuration is required
     if (!Config.isConfigured()) {
-        DEBUG_PRINT("Not configured");
+        log_i("Not configured");
         if (Config.isOnUsbPower()) {
-            DEBUG_PRINT("On USB power");
+            log_i("On USB power");
             runConfigServer();
         } else {
-            DEBUG_PRINT("Not on USB power");
+            log_i("Not on USB power");
             Display.showConfigInstructions();
             // Sleep forever
             esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
@@ -296,13 +297,13 @@ void setup()
     }
     // Check for wakeup from boot button press
     else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
-        DEBUG_PRINT("Toggling showWeather");
+        log_i("Toggling showWeather");
         showWeather = !showWeather;
     }
     // Check if config server is manually started by pressing reset while plugged in
     else if (wakeupCause == ESP_SLEEP_WAKEUP_UNDEFINED && Config.isOnUsbPower()) {    
         #ifndef DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
-        DEBUG_PRINT("Config server was manually started");
+        log_i("Config server was manually started");
         runConfigServer();
         if (!Config.isConfigured()) {
             Display.showConfigInstructions();
@@ -311,7 +312,7 @@ void setup()
             esp_deep_sleep_start();
         }
         #else
-        DEBUG_PRINT("Config server would have been manually started, but is disabled");
+        log_i("Config server would have been manually started, but is disabled");
         #endif
     }
 
@@ -341,7 +342,7 @@ void setup()
     }
 
     if (needsDisplayUpdate) {
-        DEBUG_PRINT("Updating display at %s", printTime(t));
+        log_i("Updating display at %s", printTime(t));
         Display.update(&now, getLocale(Config.getLocale()), showWeather);
         displayedYDay = now.tm_yday;
         displayedWeatherTime = Config.getWeatherEnabled() && showWeather ? lastWeatherSync : 0;
@@ -350,7 +351,7 @@ void setup()
     time(&t);
 
     if (scheduledWakeup) {
-        DEBUG_PRINT("Wakeup is already scheduled");
+        log_i("Wakeup is already scheduled");
         // max with 0 is needed in case the display was updated since the first scheduledWakeup check,
         // which could make it in the past now despite being in the future before the display update
         deepSleep(max((time_t)0, scheduledWakeup - t));
@@ -363,7 +364,7 @@ void setup()
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
-        DEBUG_PRINT("Sync failed, scheduling retry");
+        log_w("Sync failed, scheduling retry");
         if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1) {
             if (Config.getTwoNtpSyncsPerDay()) {
                 if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
@@ -386,12 +387,12 @@ void setup()
     if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
         if (!Config.getTwoNtpSyncsPerDay() || secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 * 2) {
             // Sleep until midnight
-            DEBUG_PRINT("Sleeping until midnight");
+            log_i("Sleeping until midnight");
             deepSleep(secondsToMidnight);
         }
         // Sleep until second NTP sync
         scheduledActions = ACTION_NTP_SYNC;
-        DEBUG_PRINT("Sleeping for 2nd NTP sync");
+        log_i("Sleeping for 2nd NTP sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
     }
 
@@ -400,7 +401,7 @@ void setup()
         ACTION_NTP_SYNC
         | ACTION_TZ_SYNC
         | (Config.getWeatherEnabled() ? ACTION_WEATHER_SYNC : 0);
-    DEBUG_PRINT("Sleeping for 1st sync");
+    log_i("Sleeping for 1st sync");
     deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
 }
 

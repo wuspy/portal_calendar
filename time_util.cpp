@@ -19,7 +19,7 @@ void correctSleepDuration(time_t *timeAsleep)
     }
 
     time_t adjustment = (time_t)round((float)*timeAsleep * rtcCorrectionFactor);
-    DEBUG_PRINT("RTC correction for this sleep duration is %ds (factor %0.6f)", adjustment, rtcCorrectionFactor);
+    log_i("RTC correction for this sleep duration is %ds (factor %0.6f)", adjustment, rtcCorrectionFactor);
     *timeAsleep += adjustment;
 }
 
@@ -30,7 +30,7 @@ void correctSystemClock(time_t timeAsleep)
     }
 
     float adjustment = (float)timeAsleep * rtcCorrectionFactor;
-    DEBUG_PRINT("Was asleep for %ds, adjusting system clock by %0.6fs (factor %0.6f)", timeAsleep, -adjustment, rtcCorrectionFactor);
+    log_i("Was asleep for %ds, adjusting system clock by %0.6fs (factor %0.6f)", timeAsleep, -adjustment, rtcCorrectionFactor);
     suseconds_t adjtv_usec = (suseconds_t)(std::modf(adjustment, &adjustment) * uS_PER_S);
     time_t adjtv_sec = (time_t)adjustment;
     timeval tvnow;
@@ -61,12 +61,12 @@ bool setTimezone(const char* tz)
         strcpy(savedTimezone, tz);
     }
     if (savedTimezone[0]) {
-        DEBUG_PRINT("Setting system timezone to %s", savedTimezone);
+        log_i("Setting system timezone to %s", savedTimezone);
         setenv("TZ", savedTimezone, 1);
         tzset();
         return true;
     } else {
-        DEBUG_PRINT("Timezone is not configured");
+        log_i("Timezone is not configured");
         return false;
     }
 }
@@ -113,7 +113,8 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
         if (server.isEmpty()) {
             continue;
         }
-        DEBUG_PRINT("Looking up POSIX timezone for %s from %s", name.c_str(), server.c_str());
+        log_i("Looking up POSIX timezone for %s from %s", name.c_str(), server.c_str());
+
         WiFiUDP udp;
         udp.flush();
         if (!udp.begin(TIMEZONED_LOCAL_PORT_START + i++) // Each server must be called on a different port in case a packet comes in late
@@ -137,12 +138,12 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
         } while (!parsedPacket && millis() - started < TZ_LOOKUP_TIMEOUT_MS);
 
         if (!parsedPacket) {
-            DEBUG_PRINT("Timeout for server %s", server.c_str());
+            log_e("Timeout for server %s", server.c_str());
             udp.stop();
             continue;
         }
 
-        DEBUG_PRINT("Request to %s request took %lums", server.c_str(), millis() - started);
+        log_i("Request to %s request took %lums", server.c_str(), millis() - started);
         // Stick result in String recv
         String recv;
         recv.reserve(60);
@@ -150,7 +151,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
             recv += (char)udp.read();
         }
         udp.stop();
-        DEBUG_PRINT("Response from %s: %s", server.c_str(), result.c_str());
+        log_i("Response from %s: %s", server.c_str(), result.c_str());
         if (recv.startsWith("OK ")) {
             result = recv.substring(recv.indexOf(" ", 4) + 1);
             return TimezonedResult::Ok;
@@ -174,7 +175,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         if (server.isEmpty()) {
             continue;
         }
-        DEBUG_PRINT("Starting NTP request to %s", server.c_str());
+        log_i("Starting NTP request to %s", server.c_str());
 
         // Send NTP packet
         byte buffer[NTP_PACKET_SIZE];
@@ -212,7 +213,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         } while (!parsedPacket && millis() - started < NTP_TIMEOUT_MS);
 
         if (!parsedPacket) {
-            DEBUG_PRINT("NTP sync timeout for server %s", server.c_str());
+            log_e("NTP sync timeout for server %s", server.c_str());
             udp.stop();
             continue;
         }
@@ -242,13 +243,13 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         //also checking that all timestamps are non-zero and receive timestamp seconds are <= transmit timestamp seconds
         if ((buffer[1] < 1) or (buffer[1] > 15) or (reftsSec == 0) or (rcvtsSec == 0) or (rcvtsSec > secsSince1900)) {
             // we got invalid packet
-            DEBUG_PRINT("NTP sync failed for server %s", server.c_str());
+            log_e("NTP sync failed for server %s", server.c_str());
             continue;
         }
 
         // Set the t and measured_at variables that were passed by reference
         unsigned long duration = millis() - started;
-        DEBUG_PRINT("NTP sync took %lums", duration);
+        log_i("NTP sync took %lums", duration);
         if (test) {
             return true;
         }
@@ -260,16 +261,16 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
         timeval oldNow;
         gettimeofday(&oldNow, nullptr);
         settimeofday(&now, nullptr);
-        DEBUG_PRINT("Time after NTP sync is %s", printTime(now.tv_sec));
+        log_i("Time after NTP sync is %s", printTime(now.tv_sec));
         float maxRtcCorrectionFactor = Config.getMaxRtcCorrectionFactor();
         long driftMs = (now.tv_sec - oldNow.tv_sec) * 1000 + (now.tv_usec - oldNow.tv_usec) / 1000;
         if (!maxRtcCorrectionFactor) {
             rtcCorrectionFactor = 0;
-            DEBUG_PRINT("System clock drift was %ldms", driftMs);
+            log_i("System clock drift was %ldms", driftMs);
         } else if (lastNtpSync && difftime(now.tv_sec, lastNtpSync) > 30) {
             rtcCorrectionFactor -= (float)driftMs / 1000.0 / difftime(now.tv_sec, lastNtpSync);
             rtcCorrectionFactor = clamp(rtcCorrectionFactor, maxRtcCorrectionFactor);
-            DEBUG_PRINT("System clock drift was %ldms, new correction factor is %0.4f", driftMs, rtcCorrectionFactor);
+            log_i("System clock drift was %ldms, new correction factor is %0.4f", driftMs, rtcCorrectionFactor);
         }
         lastNtpSync = now.tv_sec;
         return true;
@@ -277,7 +278,7 @@ bool syncNtp(std::initializer_list<const String> servers, bool test)
     return false;
 }
 
-#ifdef DEBUG
+#if CORE_DEBUG_LEVEL > 0
 char timeStr[30];
 
 const char* printTime(time_t t)
@@ -287,4 +288,4 @@ const char* printTime(time_t t)
     strftime(timeStr, sizeof(timeStr), "%d-%m-%Y %H:%M:%S", &now);
     return timeStr;
 }
-#endif // DEBUG
+#endif // CORE_DEBUG_LEVEL

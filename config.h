@@ -34,7 +34,7 @@ enum class WeatherSecondaryInfo : uint8_t
 #define DEFAULT_SECONDARY_NTP_SERVER "time.google.com"
 
 #define DEFAULT_PRIMARY_TIMEZONED_SERVER "timezoned.rop.nl"
-#define DEFAULT_SECONDARY_TIMEZONED_SERVER ""
+#define DEFAULT_SECONDARY_TIMEZONED_SERVER "timezoned.jacobjordan.tech"
 
 #define DEFAULT_WEATHER_DISPLAY_TYPE WeatherDisplayType::FORECAST_5_DAY
 #define DEFAULT_WEATHER_UNITS WeatherUnits::IMPERIAL
@@ -119,11 +119,6 @@ enum class WeatherSecondaryInfo : uint8_t
  * This may increase power usage in deep sleep.
  */
 // #define ENABLE_GPIO0_PULLUP
-
-/**
- * If debug logs should be printed over serial
- */
-// #define DEBUG
 
 /**
  * Disables display output. Useful for testing the code on an isolated board without requiring it to be connected to a display.

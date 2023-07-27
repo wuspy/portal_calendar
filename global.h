@@ -4,12 +4,6 @@
 #ifndef PORTALCALENDAR_GLOBAL_H
 #define PORTALCALENDAR_GLOBAL_H
 
-#ifdef DEBUG
-#define DEBUG_PRINT(...) Serial.printf(__VA_ARGS__); Serial.print('\n')
-#else
-#define DEBUG_PRINT(...)
-#endif
-
 #define uS_PER_S 1000000
 #define SECONDS_PER_HOUR 3600
 #define SECONDS_PER_DAY (SECONDS_PER_HOUR * 24)

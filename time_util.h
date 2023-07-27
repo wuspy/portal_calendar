@@ -63,7 +63,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
  */
 bool syncNtp(std::initializer_list<const String> servers, bool test = false);
 
-#ifdef DEBUG
+#if CORE_DEBUG_LEVEL > 0
 const char* printTime(time_t t);
 #endif
 
