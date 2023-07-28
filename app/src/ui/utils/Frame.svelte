@@ -21,10 +21,6 @@
     this={tag}
     {...$$restProps}
     class={divClass}
-    on:mouseenter
-    on:mouseleave
-    on:focusin
-    on:focusout
 >
     <slot />
 </svelte:element>
