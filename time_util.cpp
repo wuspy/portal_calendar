@@ -143,7 +143,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
             continue;
         }
 
-        log_i("Request to %s request took %lums", server.c_str(), millis() - started);
+        log_i("Request to %s took %lums", server.c_str(), millis() - started);
         // Stick result in String recv
         String recv;
         recv.reserve(60);
