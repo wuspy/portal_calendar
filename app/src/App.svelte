@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import { Button, Spinner, TransitionLayout } from "./ui";
+    import { Button, InfoPageLayout, Spinner, TransitionLayout } from "./ui";
     import SaveFailedModal from "./SaveFailedModal.svelte";
     import { loadLocales, loadPreferences, loadWifiInterfaceProperties, loadWifiStatus, wifiStatus } from "./store";
     import WeatherConfigPage from "./WeatherConfigPage.svelte";
@@ -10,7 +10,6 @@
     import FinishPage from "./FinishPage.svelte";
     import { onMount, setContext } from "svelte";
     import WifiStatusPage from "./WifiStatusPage.svelte";
-    import InfoPageLayout from "./ui/InfoPageLayout.svelte";
 
     let page: number = 0;
 

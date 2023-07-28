@@ -1,7 +1,7 @@
 /**
  * This is a generated source file.
  * Original file: dist/index.html.gz
- * Build date: Fri Jul 28 2023 03:03:00 GMT-0500 (Central Daylight Time)
+ * Build date: Fri Jul 28 2023 03:07:24 GMT-0500 (Central Daylight Time)
  */
 
 #ifndef INDEX_HTML_H

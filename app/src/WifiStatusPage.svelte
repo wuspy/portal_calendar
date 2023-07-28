@@ -1,9 +1,7 @@
 <script lang="ts">
-    import { SvgIcon, getWifiRssiIcon, WizardPageLayout } from "./ui";
+    import { Button, getWifiRssiIcon, Modal, SvgIcon, WizardPageLayout } from "./ui";
     import { loadWifiStatus, wifiStatus } from "./store";
     import { createEventDispatcher, onMount } from "svelte";
-    import Modal from "./ui/Modal.svelte";
-    import Button from "./ui/Button.svelte";
 
     let signalStrength: string;
     $: if ($wifiStatus.connected) {
