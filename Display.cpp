@@ -2,6 +2,10 @@
 #include "global.h"
 #include "time_util.h"
 #include "localization.h"
+#ifdef BIRTHDAYS
+#include "birthday.h"
+Birthday* activeBirthday = nullptr;
+#endif
 
 #include "resources/font/medium.h"
 #include "resources/font/small.h"
@@ -272,6 +276,14 @@ void Display::update(const tm *now, bool showWeather)
     const int year = now->tm_year + 1900;
     const int daysInMonth = getDaysInMonth(now->tm_mon, year);
 
+    bool bdayIcons = false;
+    #ifdef BIRTHDAYS
+        activeBirthday = getBirthday(now->tm_mon+1,now->tm_mday);
+        if(activeBirthday != nullptr){
+          bdayIcons = true;
+        }
+    #endif
+
     // Static lines
     _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
     _display->drawHLine(LEFT, 430, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
@@ -288,9 +300,20 @@ void Display::update(const tm *now, bool showWeather)
     sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
     _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);
 
-    #ifdef SHOW_DAY
-    // Day name
-    _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+    #if defined(SHOW_DAY) || defined(BIRTHDAYS)
+      bool showDay = true;
+      #if defined(BIRTHDAYS) && defined(SHOW_NAME)
+        if (activeBirthday != nullptr && !showWeather){
+          showDay = false;
+          _display->drawText(activeBirthday->name, FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+        }
+      #endif  
+      #ifdef SHOW_DAY
+        if(showDay){
+          // Year
+          _display->drawText(I18N_DAYS[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+        }
+      #endif
     #endif
 
     #ifdef SHOW_MONTH
@@ -298,10 +321,23 @@ void Display::update(const tm *now, bool showWeather)
     _display->drawText(I18N_MONTHS[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     #endif
 
-    #ifdef SHOW_YEAR
-    // Year
-    sprintf(buffer, "%d", year);
-    _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+    #if defined(SHOW_YEAR) || defined(BIRTHDAYS)
+      bool showYear = true;
+      #if defined(BIRTHDAYS) && defined(SHOW_AGE)
+        if (activeBirthday != nullptr && !showWeather){
+          showYear = false;
+          byte age = activeBirthday->getAge(year);
+          sprintf(buffer, "%d", age);
+          _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+        }
+      #endif  
+      #ifdef SHOW_YEAR
+        if(showYear){
+          // Year
+          sprintf(buffer, "%d", year);
+          _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+        }
+      #endif
     #endif
 
     // Progress bar
@@ -334,17 +370,22 @@ void Display::update(const tm *now, bool showWeather)
         #error Invalid value for WEATHER_DISPLAY_TYPE
         #endif // WEATHER_DISPLAY_TYPE
     } else {
-        // Chamber icons
-        if (now->tm_mon == 1 && now->tm_mday == 29) {
-            // Special icon set for leap day
-            for (int i = 0; i < 8; ++i) {
+      // Chamber icons
+        if(bdayIcons){
+            // Special icon set for a birthday
+              for (int i = 0; i < 10; ++i) {
+                drawChamberIcon(IMG_CAKE_ON, i % 5, i / 5);
+              }
+        } else if (now->tm_mon == 1 && now->tm_mday == 29) {
+              // Special icon set for leap day
+              for (int i = 0; i < 8; ++i) {
                 drawChamberIcon(IMG_TURRET_HAZARD_ON, i % 5, i / 5);
-            }
+          }
         } else if (now->tm_mday <= 31) {
-            for (int i = 0; i < 10; ++i) {
-                drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
-            }
-        }
+              for (int i = 0; i < 10; ++i) {
+                  drawChamberIcon(*CHAMBER_ICON_SETS[now->tm_mday - 1][i], i % 5, i / 5);
+              }
+          }
     }
 
     _display->refresh();

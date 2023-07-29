@@ -167,6 +167,64 @@
 #define NTP_LOCAL_PORT_START 4242
 #define TIMEZONED_LOCAL_PORT_START 2342
 
+/** 
+ *  Enables if the display will check and display the
+ *  birthday display options.  All icons will show
+ *  as active cakes if there is an active birthday.  
+ *  If weather is enabled, this will override the icon 
+ *  display and birthdays will have no effect unless
+ *  switched to the icon via the boot button.
+ */
+#define BIRTHDAYS
+
+#ifdef BIRTHDAYS
+
+  /**
+   * Shows the current age of the active birthday on the top right.
+   * This will override the SHOW_YEAR option if enabled
+   */
+  #define SHOW_AGE
+
+  /**
+  * Shows the current name of the active birthday on the right
+  * side (next to the XX/XX day)
+  * This will override the SHOW_DAY option if enabled
+  */
+  #define SHOW_NAME
+
+  /**
+   * Define the dates for the birthdays.
+   * Defaults are all zeros which will never
+   * become active.  Max of 4 birthdays are allowed
+   * but can be increased by modifying the
+   * birthday.h file
+   * 
+   * BIRTDHAY_X_NAME option must be in all capital letteres.
+   * If lower case letters are used, they will not display
+   * correctly.
+   */
+  #define BIRTHDAY_1_MONTH 0
+  #define BIRTHDAY_1_DAY 0
+  #define BIRTHDAY_1_YEAR 0
+  #define BIRTHDAY_1_Name ""
+
+  #define BIRTHDAY_2_MONTH 0
+  #define BIRTHDAY_2_DAY 0
+  #define BIRTHDAY_2_YEAR 0
+  #define BIRTHDAY_2_Name ""
+
+  #define BIRTHDAY_3_MONTH 0
+  #define BIRTHDAY_3_DAY 0
+  #define BIRTHDAY_3_YEAR 0
+  #define BIRTHDAY_3_Name ""
+
+  #define BIRTHDAY_4_MONTH 0
+  #define BIRTHDAY_4_DAY 0
+  #define BIRTHDAY_4_YEAR 0
+  #define BIRTHDAY_4_Name ""
+
+#endif
+
 /**
  * Pin assignments
  */
