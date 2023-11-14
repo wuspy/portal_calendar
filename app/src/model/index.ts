@@ -61,6 +61,7 @@ export type WifiStatus = {
     mask: string;
     dns0: string;
     dns1: string;
+    inUse: boolean;
 };
 
 export interface WifiInterfaceProperties {

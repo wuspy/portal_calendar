@@ -62,5 +62,19 @@ export async function connectToWifi(ssid: string, password?: string) {
     }
 }
 
+export async function forgetWifi() {
+    try {
+        const result = await Api.forgetWifi();
+        if (result.status === 200) {
+            _wifiStatus.set({
+                connected: false,
+                ssid: "",
+            });
+            return true;
+        }
+    } catch { }
+    return false;
+}
+
 export const interfaceProperties: Readable<WifiInterfaceProperties> = readonly(_interfaceProperties);
 export const wifiStatus: Readable<WifiStatus> = readonly(_wifiStatus);

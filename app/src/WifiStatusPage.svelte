@@ -26,7 +26,7 @@
     const dispatch = createEventDispatcher<{ back: void, next: void }>();
 
     function onBack() {
-        if ($wifiStatus.connected && window.location.hostname === $wifiStatus.ip) {
+        if ($wifiStatus.connected && $wifiStatus.inUse) {
             changeNetworkDisabledModalOpen = true;
         } else {
             dispatch("back");

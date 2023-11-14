@@ -1,3 +1,4 @@
+#include <mdns.h>
 #include "Configuration.h"
 #include "weather.h"
 #include "time_util.h"
@@ -68,9 +69,12 @@ void ConfigurationClass::reset()
 
 void ConfigurationClass::startConfigServer()
 {
-    WiFi.setHostname(getHostname().c_str());
+    const String hostname = getHostname();
+    log_i("Starting configuration server with hostname %s", hostname.c_str());
+    WiFi.setHostname(hostname.c_str());
+
     #ifdef DEV_WEBSERVER
-    log_i("Starting configuration server in dev mode");
+    log_i("Configuration server is in dev mode");
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(DEV_WEBSERVER_WIFI_SSID, DEV_WEBSERVER_WIFI_PASS);
@@ -82,9 +86,13 @@ void ConfigurationClass::startConfigServer()
         }
     }
     #else
-    log_i("Starting configuration server");
+    WiFi.softAPsetHostname(hostname.c_str());
+    WiFi.softAPConfig(
+        IPAddress(192, 168, 255, 1), // AP IP
+        IPAddress(192, 168, 255, 1), // Gateway
+        IPAddress(255, 255, 255, 0)  // Netmask
+    );
     WiFi.mode(WIFI_AP_STA);
-    WiFi.softAPsetHostname(getHostname().c_str());
 
     #ifdef AP_PASS
     char apPassword[] = AP_PASS;
@@ -95,15 +103,24 @@ void ConfigurationClass::startConfigServer()
 
     WiFi.softAP(AP_SSID, &apPassword[0]);
 
+    connectToSavedWifi();
     #endif // DEV_WEBSERVER
 
-    connectToSavedWifi();
-
+    log_i("Starting DNS server");
     _dnsServer = new DNSServer();
     _dnsServer->setTTL(0);
     _dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-    if (!_dnsServer->start(53, "*", WiFi.softAPIP())) {
+    if (!_dnsServer->start(53, hostname + ".local", WiFi.softAPIP())) {
         log_e("Failed to start DNS server");
+    }
+
+    log_i("Starting mDNS server");
+    if (mdns_init()) {
+        log_e("Failed to start mDNS server");
+    } else {
+        mdns_hostname_set(hostname.c_str());
+        mdns_instance_name_set(hostname.c_str());
+        mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
     }
 
     _httpServer = new AsyncWebServer(80);
@@ -155,11 +172,15 @@ void ConfigurationClass::startConfigServer()
         log_i("PATCH /wifi/interface");
         String hostname = request->getParam("hostname", true)->value();
         if (!hostname || hostname.length() > 63) {
-            request->send(HTTP_BAD_REQUEST);
+            return request->send(HTTP_BAD_REQUEST);
+        }
+        
+        for (char c : hostname) {
+            if (!isalnum(c) && c != '-' && c != '_') {
+                return request->send(HTTP_BAD_REQUEST);
+            }
         }
 
-        WiFi.setHostname(hostname.c_str());
-        WiFi.softAPsetHostname(hostname.c_str());
         _prefs.putString(KEY_HOSTNAME, hostname);
 
         request->send(HTTP_OK);
@@ -181,6 +202,7 @@ void ConfigurationClass::startConfigServer()
             root["mask"] = WiFi.subnetMask();
             root["dns0"] = WiFi.dnsIP(0);
             root["dns1"] = WiFi.dnsIP(1);
+            root["inUse"] = !isApRequest(request);
         } else {
             root["ssid"] = getWifiSsid();
         }
@@ -211,6 +233,7 @@ void ConfigurationClass::startConfigServer()
 
                 AsyncJsonResponse *response = new AsyncJsonResponse();
                 JsonObject root = response->getRoot();
+
                 root["connected"] = true;
                 root["ssid"] = WiFi.SSID();
                 root["ip"] = WiFi.localIP();
@@ -219,6 +242,7 @@ void ConfigurationClass::startConfigServer()
                 root["mask"] = WiFi.subnetMask();
                 root["dns0"] = WiFi.dnsIP(0);
                 root["dns1"] = WiFi.dnsIP(1);
+                root["inUse"] = !isApRequest(request);
                 response->setLength();
                 request->send(response);
             } else if (status == WL_NO_SSID_AVAIL) {
@@ -229,6 +253,18 @@ void ConfigurationClass::startConfigServer()
                 request->send(HTTP_UNAUTHORIZED);
             }
         });
+    });
+
+    on("/wifi", HTTP_DELETE, [&](AsyncWebServerRequest *request) {
+        log_i("DELETE /wifi");
+        
+        _prefs.remove(KEY_WIFI_SSID);
+        _prefs.remove(KEY_WIFI_PASS);
+        if (WiFi.status() == WL_CONNECTED) {
+            WiFi.disconnect(false, true);
+        }
+
+        request->send(HTTP_OK);
     });
 
     on("/locales", HTTP_GET, [&](AsyncWebServerRequest *request) {
@@ -441,6 +477,7 @@ void ConfigurationClass::startConfigServer()
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "*");
     #endif // DEV_WEBSERVER
 
+    log_i("Starting webserver");
     _shutdown = false;
     _httpServer->begin();
 
@@ -449,7 +486,7 @@ void ConfigurationClass::startConfigServer()
     Display.showDevWebserverScreen(WiFi.SSID(), WiFi.localIP());
     #else
     log_i("Webserver ready at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
-    Display.showConfigServerScreen(WiFi.softAPSSID(), apPassword, getHostname());
+    Display.showConfigServerScreen(WiFi.softAPSSID(), apPassword, hostname);
     #endif
 
     std::function<void(void)> request;
@@ -477,6 +514,7 @@ void ConfigurationClass::startConfigServer()
     _httpServer = nullptr;
 
     vQueueDelete(_deferredRequestQueue);
+    mdns_free();
 
     log_i("Webserver has stopped");
 }
@@ -513,21 +551,21 @@ void ConfigurationClass::connectToSavedWifi()
     }
 }
 
-String ConfigurationClass::getWifiSsid() { return _prefs.getString(KEY_WIFI_SSID, ""); }
-String ConfigurationClass::getWifiPass() { return _prefs.getString(KEY_WIFI_PASS, ""); }
+String ConfigurationClass::getWifiSsid() { return _prefs.getString(KEY_WIFI_SSID); }
+String ConfigurationClass::getWifiPass() { return _prefs.getString(KEY_WIFI_PASS); }
 String ConfigurationClass::getHostname() { return _prefs.getString(KEY_HOSTNAME, DEFAULT_HOSTNAME); }
 bool ConfigurationClass::getShowDay() { return _prefs.getBool(KEY_SHOW_DAY, DEFAULT_SHOW_DAY); }
 bool ConfigurationClass::getShowMonth() { return _prefs.getBool(KEY_SHOW_MONTH, DEFAULT_SHOW_MONTH); }
 bool ConfigurationClass::getShowYear() { return _prefs.getBool(KEY_SHOW_YEAR, DEFAULT_SHOW_YEAR); }
-String ConfigurationClass::getTimezoneName() { return _prefs.getString(KEY_TIMEZONE_NAME, ""); }
+String ConfigurationClass::getTimezoneName() { return _prefs.getString(KEY_TIMEZONE_NAME); }
 String ConfigurationClass::getLocale() { return _prefs.getString(KEY_LOCALE, DEFAULT_LOCALE); }
 String ConfigurationClass::getPrimaryNtpServer() { return _prefs.getString(KEY_PRIMARY_NTP_SERVER, DEFAULT_PRIMARY_NTP_SERVER); }
 String ConfigurationClass::getSecondaryNtpServer() { return _prefs.getString(KEY_SECONDARY_NTP_SERVER, DEFAULT_SECONDARY_NTP_SERVER); }
 String ConfigurationClass::getPrimaryTimezonedServer() { return _prefs.getString(KEY_PRIMARY_TIMEZONED_SERVER, DEFAULT_PRIMARY_TIMEZONED_SERVER); }
 String ConfigurationClass::getSecondaryTimezonedServer() { return _prefs.getString(KEY_SECONDARY_TIMEZONED_SERVER, DEFAULT_SECONDARY_TIMEZONED_SERVER); }
 bool ConfigurationClass::getWeatherEnabled() { return _prefs.getBool(KEY_WEATHER_ENABLED, false); }
-String ConfigurationClass::getOwmApiKey() { return _prefs.getString(KEY_OWM_API_KEY, ""); }
-String ConfigurationClass::getWeatherLocationName() { return _prefs.getString(KEY_WEATHER_LOCATION_NAME, ""); }
+String ConfigurationClass::getOwmApiKey() { return _prefs.getString(KEY_OWM_API_KEY); }
+String ConfigurationClass::getWeatherLocationName() { return _prefs.getString(KEY_WEATHER_LOCATION_NAME); }
 float ConfigurationClass::getWeatherLocationLatitude() { return _prefs.getFloat(KEY_WEATHER_LOCATION_LATITUDE, 0); }
 float ConfigurationClass::getWeatherLocationLongitude() { return _prefs.getFloat(KEY_WEATHER_LOCATION_LONGITUDE, 0); }
 WeatherDisplayType ConfigurationClass::getWeatherDisplayType() { return prefs_getEnum(KEY_WEATHER_DISPLAY_TYPE, DEFAULT_WEATHER_DISPLAY_TYPE); }
@@ -621,6 +659,12 @@ bool ConfigurationClass::isConfigured()
         getPrimaryNtpServer().length() &&
         getPrimaryTimezonedServer().length() &&
         (!getWeatherEnabled() || (getOwmApiKey().length() && getWeatherLocationLatitude() && getWeatherLocationLongitude()));
+}
+
+bool ConfigurationClass::isApRequest(AsyncWebServerRequest *request)
+{
+    // TODO is there a better way to determine this?
+    return request->client()->localIP() == WiFi.softAPIP();
 }
 
 AsyncCallbackWebHandler& ConfigurationClass::on(const char* uri, WebRequestMethodComposite method, ArRequestHandlerFunction onRequest)

@@ -7,9 +7,11 @@
     import WifiInterfaceConfigModal from "./WifiInterfaceConfigModal.svelte";
     import { wifiStatus } from "./store";
     import { createEventDispatcher } from "svelte";
+    import ConfirmForgetNetworkModal from "./ConfirmForgetNetworkModal.svelte";
 
     let propertiesModalOpen = false;
     let connectModalOpen = false;
+    let confirmForgetNetworkModalOpen = false;
     let selectedNetwork: WifiScanResponse | undefined;
 
     const dispatch = createEventDispatcher<{ next: void }>();
@@ -91,6 +93,12 @@
             Keep using '{$wifiStatus.ssid}'
         </Button>
     {/if}
+    {#if $wifiStatus.ssid}
+        <Button variant="text" on:click={() => confirmForgetNetworkModalOpen = true}>
+            <SvgIcon icon="Close" size="md" class="mr-4" />
+            Forget network '{$wifiStatus.ssid}'
+        </Button>
+    {/if}
     <Button variant="text" on:click={onAddNetworkClick}>
         <SvgIcon icon="Add" size="md" class="mr-4" />
         <span>Add network manually</span>
@@ -111,4 +119,8 @@
 
 {#if propertiesModalOpen}
     <WifiInterfaceConfigModal on:close={() => propertiesModalOpen = false}/>
+{/if}
+
+{#if confirmForgetNetworkModalOpen}
+    <ConfirmForgetNetworkModal on:close={() => confirmForgetNetworkModalOpen = false}/>
 {/if}

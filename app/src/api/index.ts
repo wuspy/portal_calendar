@@ -26,6 +26,12 @@ namespace Api {
         timeout: 5000,
     });
 
+    export const forgetWifi = () => fetch<void>({
+        url: `${ROOT_URL}/wifi`,
+        method: "DELETE",
+        timeout: 5000,
+    });
+
     export const fetchWifiInterfaceProperties = () => fetch<WifiInterfaceProperties>({
         url: `${ROOT_URL}/wifi/interface`,
         method: "GET",

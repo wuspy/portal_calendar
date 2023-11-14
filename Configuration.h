@@ -65,6 +65,7 @@ private:
 
     void deferRequest(AsyncWebServerRequest *request, std::function<void(void)> handler);
     void connectToSavedWifi();
+    bool isApRequest(AsyncWebServerRequest *request);
 
     template<typename T> T prefs_getEnum(const char* key, T defaultValue);
     void prefs_putJsonBool(const JsonObject& json, const char* key);
