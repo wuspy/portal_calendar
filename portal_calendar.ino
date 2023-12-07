@@ -284,15 +284,17 @@ void setup()
     // Check if configuration is required
     if (!Config.isConfigured()) {
         log_i("Not configured");
-        if (Config.isOnUsbPower()) {
-            log_i("On USB power");
-            runConfigServer();
-        } else {
-            log_i("Not on USB power");
-            Display.showConfigInstructions();
-            // Sleep forever
-            esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-            esp_deep_sleep_start();
+        while (!Config.isConfigured()) {
+            if (Config.isOnUsbPower()) {
+                log_i("On USB power");
+                runConfigServer();
+            } else {
+                log_i("Not on USB power");
+                Display.showConfigInstructions();
+                // Sleep forever
+                esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+                esp_deep_sleep_start();
+            }
         }
     }
     // Check for wakeup from boot button press
