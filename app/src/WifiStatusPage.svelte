@@ -39,7 +39,7 @@
     });
 </script>
 
-<WizardPageLayout title="Wifi Network" backButtonLabel="Change" on:next on:back={onBack} nextDisabled={!$wifiStatus.connected}>
+<WizardPageLayout title="Wi-Fi Network" backButtonLabel="Change" on:next on:back={onBack} nextDisabled={!$wifiStatus.connected}>
     <div class="w-full flex flex-col items-center">
         <SvgIcon icon={getWifiRssiIcon($wifiStatus.connected && $wifiStatus.rssi)} size="xl" />
         <h1 class="mt-2 mb-1 text-2xl font-medium break-all">{$wifiStatus.ssid}</h1>
@@ -69,7 +69,7 @@
             You are currently accessing this page through the '{$wifiStatus.ssid}' network, so it cannot be changed.
         </p>
         <p class="text-md">
-            If you want to use a different WiFi network, connect to the calendar setup WiFi instead by following the instructions
+            If you want to use a different Wi-Fi network, connect to the calendar setup Wi-Fi instead by following the instructions
             on the calendar's screen.
         </p>
         <div class="flex flex-row">

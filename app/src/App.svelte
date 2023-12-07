@@ -81,8 +81,17 @@
                     Something went wrong
                 </svelte:fragment>
                 <svelte:fragment slot="body">
-                    Failed to connect to calendar. Make sure that it's plugged in and
-                    that you're connected to its WiFi network, then try again.
+                    {#if $wifiStatus.ssid}
+                        Failed to connect to calendar. Make sure the calendar is plugged in, and that
+                        you're connected either to its Wi-Fi network or the network '{$wifiStatus.ssid}',
+                        then try again.
+                    {:else}
+                        Failed to connect to calendar. Make sure the calendar is plugged in and that
+                        you're connected to its Wi-Fi network, then try again.
+                    {/if}
+                    <br/>
+                    If this problem persists, open an issue at
+                    <a href="https://github.com/wuspy/portal_calendar">https://github.com/wuspy/portal_calendar</a>.
                 </svelte:fragment>
                 <Button class="w-1/2 min-w-fit" on:click={() => location.reload()}>Retry</Button>
             </InfoPageLayout>

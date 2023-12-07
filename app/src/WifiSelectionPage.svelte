@@ -53,7 +53,7 @@
 </script>
 
 <div class="flex items-center">
-    <PageTitle class="grow">Select WiFi Network</PageTitle>
+    <PageTitle class="grow">Select Wi-Fi Network</PageTitle>
     {#await networks then}
         <IconButton icon="Refresh" name="Refresh" size="lg" on:click={() => networks = refreshNetworks()} />
     {/await}
@@ -81,7 +81,7 @@
             </ListGroup>
         {:else}
             <Card class="w-full my-2 p-4 text-base font-semibold text-slate-900">
-                No WiFi networks found.
+                No Wi-Fi networks found.
             </Card>
         {/if}
     </div>

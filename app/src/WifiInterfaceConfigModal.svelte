@@ -26,7 +26,7 @@
     <Input
         label="Hostname"
         bind:value={hostname}
-        help="Changes to hostname will be applied after the calendar has been reset"
+        help="Changes to hostname will be applied after the calendar has been reset."
         disabled={saving}
         status={{ error: !!hostnameError, message: hostnameError }}
         validator={async (value) => {

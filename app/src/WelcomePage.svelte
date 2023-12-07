@@ -10,7 +10,7 @@
         Welcome!
     </svelte:fragment>
     <svelte:fragment slot="body">
-        This is the setup page for your Portal calendar. To get started, you'll need choose a WiFi network
+        This is the setup page for your Portal calendar. To get started, you'll need choose a Wi-Fi network
         that it can connect to.
     </svelte:fragment>
     <Button class="w-1/2 min-w-fit" on:click={() => dispatch("next")}>

@@ -46,7 +46,7 @@
                     : "Check password and try again",
                 [WifiConnectionError.RequestError]:
                     "Failed to connect to calendar. Make sure that it's plugged in"
-                    + " and that you're connected to its WiFi network, then try again.",
+                    + " and that you're connected to its Wi-Fi network, then try again.",
             })[connectionError];
         } else {
             ssidError = (<any>{
@@ -54,7 +54,7 @@
                 [WifiConnectionError.NotFound]: "Network not found",
                 [WifiConnectionError.RequestError]:
                     "Failed to connect to calendar. Make sure that it's plugged in"
-                    + " and that you're connected to its WiFi network, then try again.",
+                    + " and that you're connected to its Wi-Fi network, then try again.",
             })[connectionError];
 
             passwordError = (<any>{
@@ -69,7 +69,7 @@
 <Modal title={network ? ssid : "Add Network"} permanent={connecting} size="xs" on:close>
     {#if network?.open}
         <p class="text-md">
-            This WiFi network is insecure. Connect to it anyway?
+            This Wi-Fi network is insecure. Connect to it anyway?
         </p>
         {#if passwordError}
             <p class="text-md text-red-900">
