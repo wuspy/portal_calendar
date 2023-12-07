@@ -30,6 +30,9 @@ private:
     void drawDailyWeather(const DailyWeather& weather, int32_t x, const Locale& locale);
     void drawWeatherEntry(const WeatherEntry& weather, int32_t x);
     void drawChamberIcon(const Image& icon, int32_t x, int32_t y);
+    void drawStandardSeparators();
+    void drawChamberNumber(int number, int total);
+    void drawApertureLogo();
     DisplayGDEW075T7 *_display = nullptr;
 };
 

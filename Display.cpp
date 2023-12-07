@@ -269,25 +269,13 @@ void DisplayClass::init()
 void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
 {
     init();
-    char buffer[10];
+
     const int year = now->tm_year + 1900;
     const int daysInMonth = getDaysInMonth(now->tm_mon, year);
 
-    // Static lines
-    _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
-    _display->drawHLine(LEFT, 430, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
-    _display->drawHLine(LEFT, 538, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
-
-    // Aperture logo
-    _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
-
-    // BIG date
-    sprintf(buffer, "%02d", now->tm_mday);
-    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, DisplayGDEW075T7::TOP_LEFT, 10);
-
-    // Small "XX/XX" date
-    sprintf(buffer, "%02d/%02d", now->tm_mday, daysInMonth);
-    _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);
+    drawStandardSeparators();
+    drawApertureLogo();
+    drawChamberNumber(now->tm_mday, daysInMonth);
 
     if (Config.getShowDay()) {
         // Day name
@@ -301,6 +289,7 @@ void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
 
     if (Config.getShowYear()) {
         // Year
+        char buffer[5];
         sprintf(buffer, "%d", year);
         _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
     }
@@ -510,6 +499,31 @@ void DisplayClass::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
     );
 }
 
+void DisplayClass::drawStandardSeparators()
+{
+    _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+    _display->drawHLine(LEFT, 430, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+    _display->drawHLine(LEFT, 538, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+}
+
+void DisplayClass::drawChamberNumber(int number, int total)
+{
+    char buffer[10];
+    
+    // BIG date
+    sprintf(buffer, "%02d", number);
+    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, DisplayGDEW075T7::TOP_LEFT, 10);
+
+    // Small "XX/XX" date
+    sprintf(buffer, "%02d/%02d", number, total);
+    _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);    
+}
+
+void DisplayClass::drawApertureLogo()
+{
+    _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
+}
+
 void DisplayClass::error(std::initializer_list<String> messageLines, bool willRetry)
 {
     init();
@@ -530,12 +544,16 @@ void DisplayClass::error(std::initializer_list<String> messageLines, bool willRe
 void DisplayClass::showConfigInstructions()
 {
     init();
+    drawStandardSeparators();
+    drawApertureLogo();
+    drawChamberNumber(0, 0);
+
+    _display->drawText("WELCOME!", FONT_MEDIUM, LEFT, 502);
     _display->drawMultilineText({
-        "Welcome!",
-        "",
-        "Connect to USB power, then press the RESET button",
-        "to begin setup."
-    }, FONT_SMALL, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::CENTER);
+        "Connect to USB power, then press the RESET",
+        "button on the back to begin setup.",
+    }, FONT_SMALL, LEFT, 544);
+
     _display->refresh();
 }
 
