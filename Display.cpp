@@ -552,7 +552,7 @@ void DisplayClass::error(String message, bool willRetry)
     _display->refresh();
 }
 
-void DisplayClass::showConfigInstructions()
+void DisplayClass::showWelcomeScreen()
 {
     init();
     drawStandardSeparators();

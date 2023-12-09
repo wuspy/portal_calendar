@@ -164,7 +164,7 @@ bool startWifi()
     esp_deep_sleep_start();
 }
 
-void runConfigServer()
+void startConfigServer()
 {
     Config.startConfigServer();
     if (Config.wasSaved()) {
@@ -177,6 +177,14 @@ void runConfigServer()
         displayedWeatherTime = 0;
         lastWeatherSync = 0;
     }
+}
+
+void showWelcomeScreen()
+{
+    Display.showWelcomeScreen();
+    // Sleep forever
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_deep_sleep_start();
 }
 
 void runScheduledActions()
@@ -279,13 +287,10 @@ void setup()
         while (!Config.isConfigured()) {
             if (Config.isOnUsbPower()) {
                 log_i("On USB power");
-                runConfigServer();
+                startConfigServer();
             } else {
                 log_i("Not on USB power");
-                Display.showConfigInstructions();
-                // Sleep forever
-                esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-                esp_deep_sleep_start();
+                showWelcomeScreen();
             }
         }
     }
@@ -298,12 +303,10 @@ void setup()
     else if (wakeupCause == ESP_SLEEP_WAKEUP_UNDEFINED && Config.isOnUsbPower()) {    
         #ifndef DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
         log_i("Config server was manually started");
-        runConfigServer();
+        startConfigServer();
         if (!Config.isConfigured()) {
-            Display.showConfigInstructions();
-            // Sleep forever
-            esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-            esp_deep_sleep_start();
+            // Just in case they cleared some required settings
+            showWelcomeScreen();
         }
         #else
         log_i("Config server would have been manually started, but is disabled");
