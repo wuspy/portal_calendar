@@ -661,10 +661,17 @@ template<typename T> void ConfigurationClass::prefs_putJsonEnum(const JsonObject
 
 bool ConfigurationClass::isConfigured()
 {
-    return getTimezoneName().length() &&
-        getPrimaryNtpServer().length() &&
-        getPrimaryTimezonedServer().length() &&
-        (!getWeatherEnabled() || (getOwmApiKey().length() && getWeatherLocationLatitude() && getWeatherLocationLongitude()));
+    return !(
+        getWifiSsid().isEmpty() ||
+        getTimezoneName().isEmpty() ||
+        getPrimaryNtpServer().isEmpty() ||
+        getPrimaryTimezonedServer().isEmpty() ||
+        (getWeatherEnabled() && (
+            getOwmApiKey().isEmpty() ||
+            getWeatherLocationLatitude() == 0.0 ||
+            getWeatherLocationLongitude() == 0.0
+        ))
+    );
 }
 
 bool ConfigurationClass::isApRequest(AsyncWebServerRequest *request)
