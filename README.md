@@ -99,7 +99,12 @@ Read through [config.h](config.h) and fill out the required values. At a minimum
 
 ## Building with Arduino IDE
 
-This project depends on ArduinoJson 6.20+, which can be installed through the library manager. You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+This project requires the following dependencies to be installed through the library manager
+
+ - ArduinoJson 6.21.4
+ - ESPAsyncWebSrv 1.2.7
+
+ You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
@@ -115,7 +120,7 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
 
 ![](images/arduino3.png)
 
- The partition scheme will need to be changed to allow the app to fit. Other than that, the rest of the options *should* already be what you want, but make sure they match these settings.
+ **The partition scheme will need to be changed to allow the app to fit.** Other than that, the rest of the options *should* already be what you want, but make sure they match these settings.
 
  | Option | Value |
  | ------ | ----- |

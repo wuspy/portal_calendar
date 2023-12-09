@@ -2,7 +2,13 @@
 #include <AsyncJson.h>
 #include <AsyncTCP.h>
 #include <DNSServer.h>
+#ifdef PLATFORMIO
 #include <ESPAsyncWebServer.h>
+#else
+// This project appears abandoned and is not published as an Arduino library.
+// It is however published as a fork under a different name, which is what this is importing.
+#include <ESPAsyncWebSrv.h>
+#endif // PLATFORMIO
 #include <Preferences.h>
 #include <WiFi.h>
 #include "global.h"
