@@ -192,7 +192,7 @@ void ConfigurationClass::startConfigServer()
         AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
 
-        bool connected = WiFi.status() == WL_CONNECTED;
+        bool connected = WiFi.isConnected();
         root["connected"] = connected;
 
         if (connected) {
@@ -261,7 +261,7 @@ void ConfigurationClass::startConfigServer()
         
         _prefs.remove(KEY_WIFI_SSID);
         _prefs.remove(KEY_WIFI_PASS);
-        if (WiFi.status() == WL_CONNECTED) {
+        if (WiFi.isConnected()) {
             WiFi.disconnect(false, true);
         }
 
@@ -355,7 +355,7 @@ void ConfigurationClass::startConfigServer()
             if (key.length() != 32) {
                 return request->send(HTTP_BAD_REQUEST);
             }
-            if (WiFi.status() != WL_CONNECTED) {
+            if (!WiFi.isConnected()) {
                 return request->send(HTTP_NETWORK_AUTHENTICATION_REQUIRED);
             }
 
@@ -381,7 +381,7 @@ void ConfigurationClass::startConfigServer()
             if (key.length() != 32  || !location.length() || location.length() > 100) {
                 return request->send(HTTP_BAD_REQUEST);
             }
-            if (WiFi.status() != WL_CONNECTED) {
+            if (!WiFi.isConnected()) {
                 return request->send(HTTP_NETWORK_AUTHENTICATION_REQUIRED);
             }
 
@@ -412,7 +412,7 @@ void ConfigurationClass::startConfigServer()
             if (!server.length()) {
                 return request->send(HTTP_BAD_REQUEST);
             }
-            if (WiFi.status() != WL_CONNECTED) {
+            if (!WiFi.isConnected()) {
                 return request->send(HTTP_NETWORK_AUTHENTICATION_REQUIRED);
             }
 
@@ -432,7 +432,7 @@ void ConfigurationClass::startConfigServer()
             if (!server.length() || !timezone.length()) {
                 return request->send(HTTP_BAD_REQUEST);
             }
-            if (WiFi.status() != WL_CONNECTED) {
+            if (!WiFi.isConnected()) {
                 return request->send(HTTP_NETWORK_AUTHENTICATION_REQUIRED);
             }
 
