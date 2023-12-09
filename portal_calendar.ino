@@ -87,7 +87,7 @@ bool startWifi()
     return true;
 }
 
-[[noreturn]] void error(std::initializer_list<String> message)
+[[noreturn]] void error(String message)
 {
     log_i("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
@@ -97,62 +97,54 @@ bool startWifi()
 
 [[noreturn]] void errorNoWifi()
 {
-    error({
-        "NO WIFI CONNECTION",
-        "",
-        "Your WiFi network is either down, out of range,",
-        "or you entered the wrong password.",
-        "",
-        "WiFi Name:",
-        Config.getWifiSsid()
-    });
+    error(
+        "NO WI-FI CONNECTION\n\n"
+        "Your Wi-Fi network is either down, out of range, "
+        "or you entered the wrong password.\n\n"
+        "Wi-Fi Name:\n"
+        + Config.getWifiSsid()
+    );
 }
 
 [[noreturn]] void errorNtpFailed()
 {
-    error({
-        "NO INTERNET CONNECTION",
-        "",
-        "Your WiFi network works, but the NTP servers didn't",
-        "respond. This probably means your WiFi has no internet",
-        "connection. Or, you configured the NTP servers yourself,",
-        "in which case you might have messed something up.",
-        "",
-        "NTP server(s):",
-        Config.getPrimaryNtpServer(),
-        Config.getSecondaryNtpServer(),
-    });
+    error(
+        "NO INTERNET CONNECTION\n\n"
+        "Your Wi-Fi network works, but the NTP servers didn't "
+        "respond. This probably means your Wi-Fi has no internet "
+        "connection. Or, you configured the NTP servers yourself, "
+        "in which case you might have messed something up.\n\n"
+        "NTP servers:\n"
+        + Config.getPrimaryNtpServer() + "\n"
+        + Config.getSecondaryNtpServer()
+    );
 }
 
 [[noreturn]] void errorTzLookupFailed()
 {
-    error({
-        "TIMEZONE LOOKUP FAILED",
-        "",
-        "Your timezone is either invalid, or the timezone servers",
-        "are down. If you configured the timezone servers",
-        "yourself, you might have messed something up.",
-        "",
-        "Your timezone:",
-        Config.getTimezoneName(),
-        "",
-        "Timezone server(s):",
-        Config.getPrimaryTimezonedServer(),
-        Config.getSecondaryTimezonedServer(),
-    });
+    error(
+        "TIMEZONE LOOKUP FAILED\n\n"
+        "Your timezone is either invalid, or the timezone servers "
+        "are down. If you configured the timezone servers "
+        "yourself, you might have messed something up.\n\n"
+        "Your timezone:\n"
+        + Config.getTimezoneName() + "\n\n"
+        "Timezone servers:\n"
+        + Config.getPrimaryTimezonedServer() + "\n"
+        + Config.getSecondaryTimezonedServer()
+    );
 }
 
 [[noreturn]] void errorInvalidOwmApiKey()
 {
-    error({
-        "INVALID OPENWEATHERMAP API KEY",
-        "",
-        "OpenWeatherMap.org says your API key is invalid.",
-        "You probably have an issue with your configuration.",
-        "Go to your account -> My API Keys and make sure",
-        "the one there matches the one you entered. Or, just",
+    error(
+        "INVALID OPENWEATHERMAP API KEY\n\n"
+        "OpenWeatherMap.org says your API key is invalid. "
+        "You probably have an issue with your configuration. "
+        "Go to your account -> My API Keys and make sure "
+        "the one there matches the one you entered. Or, just "
         "disable the weather feature entirely."
-    });
+    );
 }
 
 [[noreturn]] void errorBrownout()
@@ -160,13 +152,13 @@ bool startWifi()
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
     log_w("Brownout detected");
-    Display.error({
-        "REPLACE BATTERIES",
-        "",
-        "If the device does not restart automatically",
-        "after new batteries have been inserted,",
-        "press the RESET button on the back."
-    }, false);
+    Display.error(
+        "REPLACE BATTERIES\n\n"
+        "If the device does not restart automatically "
+        "after new batteries have been inserted, "
+        "press the RESET button on the back.",
+        false
+    );
     // Sleep forever
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     esp_deep_sleep_start();

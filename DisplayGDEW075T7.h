@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <utility>
+#include <vector>
 #include "resources/image.h"
 #include "resources/font/font.h"
 
@@ -65,12 +66,21 @@ public:
     void setPx(int32_t x, int32_t y, Color color);
     void drawImage(const Image &image, int32_t x, int32_t y, Align align = TOP_LEFT);
     uint32_t measureText(String str, const Font &font, int32_t tracking = 0);
-    void drawText(String str, const Font &font, int32_t x, int32_t y, Align align = TOP_LEFT, int32_t tracking = 0);
-    void drawMultilineText(
-        std::initializer_list<String> lines,
+    std::vector<String> wordWrap(String str, const Font &font, uint32_t maxLineLength, int32_t tracking = 0);
+    void drawText(
+        String str,
         const Font &font,
         int32_t x,
         int32_t y,
+        Align align = TOP_LEFT,
+        int32_t tracking = 0
+    );
+    void drawMultilineText(
+        String str,
+        const Font &font,
+        int32_t x,
+        int32_t y,
+        uint32_t maxLineLength,
         Align align = TOP_LEFT,
         int32_t tracking = 0,
         int32_t leading = 0

@@ -487,19 +487,70 @@ uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t tra
     }
 
     uint32_t length = 0;
-    uint32_t cpLength = 0;
     Utf8Iterator it = Utf8Iterator(str);
     uint16_t cp;
     while ((cp = it.next())) {
-        ++cpLength;
         if (isSpaceCodePoint(cp)) {
-            length += font.spaceWidth;
+            length += font.spaceWidth + tracking;
         } else {
             const FontGlyph glyph = font.getGlyph(cp);
-            length += glyph.width + glyph.left;
+            length += glyph.width + glyph.left + tracking;
         }
     }
-    return length + tracking * (cpLength - 1);
+    return length - tracking;
+}
+
+std::vector<String> DisplayGDEW075T7::wordWrap(String str, const Font &font, uint32_t maxLineLength, int32_t tracking)
+{
+    std::vector<String> lines;
+
+    if (str.length() == 0) {
+        return lines;
+    }
+
+    unsigned int lineStart = 0, safeLineEnd = 0;
+    uint32_t length = 0, safeLength = 0;
+    Utf8Iterator it = Utf8Iterator(str);
+    uint16_t cp;
+
+    while ((cp = it.next())) {
+        if (isNewlineCodePoint(cp)) {
+            if (maxLineLength > 0 && length > maxLineLength + tracking) {
+                // Wrap at the last word too
+                lines.push_back(str.substring(lineStart, safeLineEnd - 1));
+                lineStart = safeLineEnd;
+            }
+            // Wrap here
+            lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
+            lineStart = safeLineEnd = it.getCurrentPosition();
+            length = safeLength = 0;
+        } else if (isSpaceCodePoint(cp)) {
+            if (maxLineLength > 0 && length > maxLineLength + tracking) {
+                if (safeLineEnd == lineStart) {
+                    // Line cannot be word wrapped, so wrap at current position
+                    lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
+                    lineStart = it.getCurrentPosition();
+                    length = 0;
+                } else {
+                    // Wrap at last word
+                    lines.push_back(str.substring(lineStart, safeLineEnd - 1));
+                    lineStart = safeLineEnd;
+                    length -= safeLength;
+                }
+            } else {
+                length += font.spaceWidth + tracking;
+            }
+            safeLineEnd = it.getCurrentPosition();
+            safeLength = length;
+        } else {
+            const FontGlyph glyph = font.getGlyph(cp);
+            length += glyph.width + glyph.left + tracking;
+        }
+    }
+    if (lineStart < str.length()) {
+        lines.push_back(str.substring(lineStart));
+    }
+    return lines;
 }
 
 void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, Align align, int32_t tracking)
@@ -527,10 +578,11 @@ void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t
 }
 
 void DisplayGDEW075T7::drawMultilineText(
-    std::initializer_list<String> lines,
+    String str,
     const Font &font,
     int32_t x,
     int32_t y,
+    uint32_t maxLineLength,
     Align align,
     int32_t tracking,
     int32_t leading
@@ -538,6 +590,7 @@ void DisplayGDEW075T7::drawMultilineText(
     // This implementation is simple because it assumes justification equals the horizontal alignment,
     // and that's all I needed it to do.
     leading += font.ascent + font.descent;
+    std::vector<String> lines = wordWrap(str, font, maxLineLength, tracking);
 
     if (!(align & _ALIGN_TOP)) {
         adjustAlignment(&x, &y, 0, leading * lines.size(), align);

@@ -524,18 +524,29 @@ void DisplayClass::drawApertureLogo()
     _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
 }
 
-void DisplayClass::error(std::initializer_list<String> messageLines, bool willRetry)
+void DisplayClass::error(String message, bool willRetry)
 {
     init();
     const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
     _display->drawImage(IMG_ERROR, H_CENTER, y, DisplayGDEW075T7::BOTTOM_CENTER);
-    _display->drawMultilineText(messageLines, FONT_SMALL, H_CENTER, y + FONT_SMALL.ascent + FONT_SMALL.descent, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawMultilineText(
+        message,
+        FONT_SMALL,
+        H_CENTER,
+        y + FONT_SMALL.ascent + FONT_SMALL.descent,
+        408,
+        DisplayGDEW075T7::TOP_CENTER
+    );
 
     if (willRetry) {
-        _display->drawMultilineText({
-            "Will try again in 1 hour. Or, press the RESET button",
-            "on the back of the device to retry now.",
-        }, FONT_SMALL, H_CENTER, _display->getHeight() - 12, DisplayGDEW075T7::BOTTOM_CENTER);
+        _display->drawMultilineText(
+            "Will try again in 1 hour. Or, press the RESET button on the back of the device to retry now.",
+            FONT_SMALL,
+            H_CENTER,
+            _display->getHeight() - 12,
+            400,
+            DisplayGDEW075T7::BOTTOM_CENTER
+        );
     }
 
     _display->refresh();
@@ -549,10 +560,13 @@ void DisplayClass::showConfigInstructions()
     drawChamberNumber(0, 0);
 
     _display->drawText("WELCOME!", FONT_MEDIUM, LEFT, 502);
-    _display->drawMultilineText({
-        "Connect to USB power, then press the RESET",
-        "button on the back to begin setup.",
-    }, FONT_SMALL, LEFT, 544);
+    _display->drawMultilineText(
+        "Connect to USB power, then press the RESET button on the back to begin setup.",
+        FONT_SMALL,
+        LEFT,
+        544,
+        360
+    );
 
     _display->refresh();
 }
@@ -576,13 +590,17 @@ void DisplayClass::showConfigServerScreen(String ssid, String password, String h
         }
     }
 
-    _display->drawMultilineText({
-        "Name: " + ssid,
-        "Password: " + password,
-        "",
-        "Connect to this WiFi network, then navigate to:",
-        "http://" + hostname + ".local"
-    }, FONT_SMALL, H_CENTER, yOffset + qrSize * scale + 16, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawMultilineText(
+        "Name: " + ssid + "\n"
+        "Password: " + password + "\n\n"
+        "Connect to this WiFi network, then navigate to:\n"
+        "http://" + hostname + ".local",
+        FONT_SMALL,
+        H_CENTER,
+        yOffset + qrSize * scale + 16,
+        400,
+        DisplayGDEW075T7::TOP_CENTER
+    );
     _display->refresh();
     delete _display;
     _display = nullptr;

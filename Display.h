@@ -12,7 +12,7 @@ class DisplayClass
 {
 public:
     ~DisplayClass();
-    void error(std::initializer_list<String> messageLines, bool willRetry);
+    void error(String message, bool willRetry);
     void update(const tm *now, const Locale& locale, bool showWeather);
     void showConfigInstructions();
     void showConfigServerScreen(String ssid, String password, String hostname);
