@@ -421,7 +421,7 @@ void DisplayGDEW075T7::test()
 
 size_t DisplayGDEW075T7::getPixelIndex(int32_t x, int32_t y)
 {
-    if (x < 0 || x > _width || y < 0 || y > _height) {
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
         return SIZE_MAX;
     }
     switch (_rotation) {
