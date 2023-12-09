@@ -487,7 +487,12 @@ void ConfigurationClass::startConfigServer()
     Display.showDevWebserverScreen(WiFi.SSID(), WiFi.localIP());
     #else
     log_i("Webserver ready at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
-    Display.showConfigServerScreen(WiFi.softAPSSID(), apPassword, hostname);
+    Display.showConfigServerScreen(
+        WiFi.softAPSSID(),
+        apPassword,
+        hostname,
+        WiFi.isConnected() ? WiFi.SSID() : String()
+    );
     #endif
 
     std::function<void(void)> request;

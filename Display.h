@@ -15,7 +15,7 @@ public:
     void error(String message, bool willRetry);
     void update(const tm *now, const Locale& locale, bool showWeather);
     void showWelcomeScreen();
-    void showConfigServerScreen(String ssid, String password, String hostname);
+    void showConfigServerScreen(String ssid, String password, String hostname, String connectedWifiName);
     #ifdef DEV_WEBSERVER
     void showDevWebserverScreen(String ssid, IPAddress localIp);
     #endif

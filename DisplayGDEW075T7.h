@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <utility>
 #include <vector>
+#include "qrcodegen.h"
 #include "resources/image.h"
 #include "resources/font/font.h"
 
@@ -85,6 +86,7 @@ public:
         int32_t tracking = 0,
         int32_t leading = 0
     );
+    void drawQrCode(qrcodegen::QrCode qrcode, int32_t x, int32_t y, int32_t scale = 1, Align align = TOP_LEFT);
     void drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align = TOP_CENTER);
     void drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align = LEFT_CENTER);
     void fillRect(int32_t x, int32_t y, int32_t width, int32_t height, Color color, Align align = TOP_LEFT);

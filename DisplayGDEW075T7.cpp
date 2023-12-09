@@ -604,6 +604,21 @@ void DisplayGDEW075T7::drawMultilineText(
     }
 }
 
+void DisplayGDEW075T7::drawQrCode(qrcodegen::QrCode qrcode, int32_t x, int32_t y, int32_t scale, Align align)
+{
+    const int32_t size = qrcode.getSize() * scale;
+    adjustAlignment(&x, &y, size, size, align);
+
+    DisplayGDEW075T7::Color color;
+    int32_t y2;
+    for(int y1 = 0; y1 < size; ++y1) {
+        y2 = y1 / scale;
+        for (int x1 = 0; x1 < size; ++x1) {
+            setPx(x + x1, y + y1, qrcode.getModule(x1 / scale, y2) ? BLACK : WHITE);
+        }
+    }
+}
+
 void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align)
 {
     if (length < 0) {

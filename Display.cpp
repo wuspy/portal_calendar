@@ -10,6 +10,7 @@
 
 #include "resources/aperture_logo.h"
 #include "resources/progress_bar.h"
+#include "resources/wifi_64px.h"
 #include "resources/error.h"
 
 #include "resources/font/weather_frame.h"
@@ -571,36 +572,46 @@ void DisplayClass::showWelcomeScreen()
     _display->refresh();
 }
 
-void DisplayClass::showConfigServerScreen(String ssid, String password, String hostname)
+void DisplayClass::showConfigServerScreen(String ssid, String password, String hostname, String connectedWifiName)
 {
-    init();
+    const int32_t QR_SCALE = 7;
     char str[120];
     sprintf(&str[0], "WIFI:T:WPA;S:%s;P:%s;;", ssid.c_str(), password.c_str());
     QrCode qrCode = QrCode::encodeText(&str[0], QrCode::Ecc::ECC_HIGH);
-    const int qrSize = qrCode.getSize();
-    const int32_t scale = 5;
-    const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
-    const int32_t xOffset = H_CENTER - (qrSize * scale) / 2;
-    const int32_t yOffset = y - (qrSize * scale) / 2;
-    DisplayGDEW075T7::Color color;
-    for(int y = 0; y < qrSize; ++y) {
-        for(int x = 0; x < qrSize; ++x) {
-            color = qrCode.getModule(x, y) ? DisplayGDEW075T7::BLACK : DisplayGDEW075T7::WHITE;
-            _display->fillRect(xOffset + x * scale, yOffset + y * scale, scale, scale, color); 
-        }
-    }
 
+    init();
+    drawStandardSeparators();
+    drawApertureLogo();
+
+    _display->drawQrCode(qrCode, LEFT, 75, QR_SCALE);
+    const uint32_t qrX = LEFT + qrCode.getSize() * QR_SCALE / 2;
+    const uint32_t qrY = 75 + qrCode.getSize() * QR_SCALE / 2;
+    _display->fillRect(qrX, qrY, 77, 77, DisplayGDEW075T7::WHITE, DisplayGDEW075T7::CENTER);
+    _display->drawImage(IMG_WIFI_64PX, qrX, qrY, DisplayGDEW075T7::CENTER);
     _display->drawMultilineText(
-        "Name: " + ssid + "\n"
-        "Password: " + password + "\n\n"
-        "Connect to this WiFi network, then navigate to:\n"
-        "http://" + hostname + ".local",
+        "Wi-Fi Name: " + ssid + "\n"
+        "Password: " + password,
         FONT_SMALL,
-        H_CENTER,
-        yOffset + qrSize * scale + 16,
-        400,
+        qrX,
+        75 + qrCode.getSize() * QR_SCALE + 12,
+        0,
         DisplayGDEW075T7::TOP_CENTER
     );
+
+    _display->drawText("SETUP", FONT_MEDIUM, LEFT, 502);
+    _display->drawMultilineText(
+        connectedWifiName.isEmpty()
+            ? "Connect to this Wi-Fi network, then open a web browser and go to:\n\n"
+              "http://" + hostname + ".local"
+            : "Connect either to this Wi-Fi network, or the network '" + connectedWifiName + "', "
+              "then open a web browser and go to:\n\n"
+              "http://" + hostname + ".local",
+        FONT_SMALL,
+        LEFT,
+        544,
+        360
+    );
+
     _display->refresh();
     delete _display;
     _display = nullptr;
