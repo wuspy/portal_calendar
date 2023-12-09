@@ -92,6 +92,7 @@ void ConfigurationClass::startConfigServer()
         IPAddress(192, 168, 255, 1), // Gateway
         IPAddress(255, 255, 255, 0)  // Netmask
     );
+    WiFi.setAutoReconnect(false);
     WiFi.mode(WIFI_AP_STA);
 
     #ifdef AP_PASS
