@@ -148,12 +148,9 @@ To enable debug logs, add `-DCORE_DEBUG_LEVEL=3` as a build flag in [platformio.
 
 ## Timekeeping
 
-The internal clock in the ESP32 is very inaccurate with a specified inaccuracy of 5%, which corresponds to 72 minutes per day. This is obviously useless for long-term timekeeping so an external clock is required. One solution would be to use an RTC module like a DS3231, but that still requires an external time source for initialization. Given that, I decided to just ditch that extra cost and require a WiFi connection for daily NTP time syncing, which would be required for OpenWeatherMap anyway if you decide to use it. The default NTP servers are `pool.ntp.org` and `time.google.com`, and can be changed in config.h if you want.
+The internal clock in the ESP32 is very inaccurate with a specified inaccuracy of 5%, which corresponds to 72 minutes per day. This is obviously useless for long-term timekeeping so an external clock is required. One solution would be to use an RTC module like a DS3231, but that still requires an external time source for initialization. Given that, I decided to just ditch that extra cost and require a Wi-Fi connection for daily NTP time syncing, which would be required for OpenWeatherMap anyway if you decide to use it. The default NTP servers are `pool.ntp.org` and `time.google.com`, but they can be changed if you want.
 
-The WiFi connection is also used to lookup information for the timezone you provide, using the `timezoned.rop.nl` service from the [ezTime project](https://github.com/ropg/ezTime). Timezoned is a relatively small service maintained by one person, so it does introduce a failure point if it ever goes down. If that's something you're worried about you have a couple options
-
-* Host your own timezoned service. The source code is available in the ezTime repository.
-* Provide a POSIX timezone instead of a timezone name, as explained in config.h.
+The Wi-Fi connection is also used to lookup information for the timezone you provide, using the timezoned service from the [ezTime project](https://github.com/ropg/ezTime). The default timezoned servers are the original one at `timezoned.rop.nl` and mine at `timezoned.jacobjordan.tech`. This does introduce a failure point if these services both go down, and if that's something you're worried about you can host your own timezoned service. The original PHP code is available in ropg's repository, and my Rust rewirite is availble [here](https://github.com/wuspy/timezoned_rs).
 
 ## Graphics
 
@@ -168,6 +165,10 @@ The build_image.py script can take in any image format supported by PIL and will
 The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # Changelog
+
+### 12/XX/2023
+
+* Add the ability to setup the calendar through a web app instead of changing the firmware and re-flashing.
 
 ### 4/18/2023
 
