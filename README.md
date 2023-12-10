@@ -47,7 +47,7 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 
 # Assembly
 
-Before you begin, note that this project does require soldering and cutting the included display wiring harness. Since it's the most expensive part of the project, I recommend testing your display first before cutting anything so you can easily return it if it's defective. The breakout board comes with pin headers you can solder and directly connect to the stock wiring harness, so I highly recommend skipping down to step 6 and connecting everything up to make sure the dispaly works first. Once you've done that, desolder the pin headers from the breakout board and follow these instructions from the beginning.
+Before you begin, note that this project does require soldering and cutting the included display wiring harness. Since it's the most expensive part of the project, I recommend testing your display first before cutting anything so you can easily return it if it's defective. The breakout board comes with pin headers you can solder and directly connect to the stock wiring harness, so I highly recommend skipping down to step 5 and connecting everything up to make sure the dispaly works first. Once you've done that, desolder the pin headers from the breakout board and follow these instructions from the beginning.
 
 1. Print [front.stl](frame/front.stl) and [back.stl](frame/back.stl). Once those are done you can start putting things together, and get [cover.stl](frame/cover.stl) printing while you work. Print with a **0.2mm layer height**, other than that print settings really don't matter that much.
 2. Remove the protective film on the front of the e-ink display if it has one (there should be a colored tab in one corner you can pull).
