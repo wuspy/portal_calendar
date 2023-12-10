@@ -95,8 +95,6 @@ Before you begin, note that this project does require soldering and cutting the 
 
 # Firmware
 
-Read through [config.h](config.h) and fill out the required values. At a minimum, you need to fill out `WIFI_NAME`, `WIFI_PASS`, and `TIME_ZONE`. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
-
 ## Building with Arduino IDE
 
 This project requires the following dependencies to be installed through the library manager
