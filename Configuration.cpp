@@ -77,7 +77,7 @@ void ConfigurationClass::startConfigServer()
     log_i("Configuration server is in dev mode");
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(DEV_WEBSERVER_WIFI_SSID, DEV_WEBSERVER_WIFI_PASS);
+    connectToWifi(DEV_WEBSERVER_WIFI_SSID, DEV_WEBSERVER_WIFI_PASS);
 
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
         log_e("Failed to connect to WiFi");
@@ -125,8 +125,8 @@ void ConfigurationClass::startConfigServer()
     }
 
     _httpServer = new AsyncWebServer(80);
-
     _deferredRequestQueue = xQueueCreate(20, sizeof(std::function<void(void)>));
+    bool shutdown = false;
 
     on("/wifi/scan", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /wifi/scan");
@@ -222,10 +222,9 @@ void ConfigurationClass::startConfigServer()
                 return request->send(HTTP_BAD_REQUEST);
             }
             #ifdef DEV_WEBSERVER
-            uint8_t status = ssid.equals(WiFi.SSID()) ? WL_CONNECTED : WL_CONNECT_FAILED;
+            wl_status_t status = ssid.equals(WiFi.SSID()) ? WL_CONNECTED : WL_CONNECT_FAILED;
             #else
-            WiFi.begin(ssid.c_str(), password.length() ? password.c_str() : nullptr);
-            uint8_t status = WiFi.waitForConnectResult(10000);
+            wl_status_t status = connectToWifi(ssid, password);
             #endif // DEV_WEBSERVER
             log_i("Connection result: %u", status);
             if (status == WL_CONNECTED) {
@@ -452,7 +451,7 @@ void ConfigurationClass::startConfigServer()
     on("/shutdown", HTTP_POST, [&](AsyncWebServerRequest *request) {
         log_i("POST /shutdown");
         request->send(HTTP_OK);
-        _shutdown = true;
+        shutdown = true;
     });
 
     on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
@@ -479,7 +478,6 @@ void ConfigurationClass::startConfigServer()
     #endif // DEV_WEBSERVER
 
     log_i("Starting webserver");
-    _shutdown = false;
     _httpServer->begin();
 
     #ifdef DEV_WEBSERVER
@@ -497,7 +495,7 @@ void ConfigurationClass::startConfigServer()
 
     std::function<void(void)> request;
 
-    while (isOnUsbPower() && !_shutdown) {
+    while (isOnUsbPower() && !shutdown) {
         // Process DNS requests
         _dnsServer->processNextRequest();
         // Process deferred request handlers
@@ -540,21 +538,38 @@ void ConfigurationClass::deferRequest(AsyncWebServerRequest *request, std::funct
     }
 }
 
-void ConfigurationClass::connectToSavedWifi()
+wl_status_t ConfigurationClass::connectToWifi(String ssid, String password)
 {
-    String ssid = _prefs.getString(KEY_WIFI_SSID);
-    if (ssid.length()) {
-        String password = _prefs.getString(KEY_WIFI_PASS);
-        log_i("Connecting to saved wifi '%s'", ssid.c_str());
-        WiFi.begin(ssid.c_str(), password.length() ? password.c_str() : nullptr);
-        if (WiFi.waitForConnectResult(10000) == WL_CONNECTED) {
-            log_i("Connected to '%s' at %s", ssid.c_str(), WiFi.localIP().toString().c_str());
-        } else {
-            log_e("Failed to connect to '%s'", ssid.c_str());
-        }
-    } else {
-        log_i("No saved WiFi network to connect to");
+    if (WiFi.isConnected() && ssid.equals(WiFi.SSID())) {
+        return WL_CONNECTED;
     }
+
+    wl_status_t status = WL_DISCONNECTED;
+    unsigned int start = millis();
+    for (unsigned int attempts = 1, elapsed = 0;
+        attempts <= 5 && elapsed < WIFI_CONNECTION_TIMEOUT_MS && status != WL_CONNECTED;
+        ++attempts, elapsed = millis() - start
+    ) {
+        log_i("Connecting to Wi-Fi network '%s' attempt %u...", ssid.c_str(), attempts);
+        WiFi.begin(ssid.c_str(), password.isEmpty() ? nullptr : password.c_str());
+        status = static_cast<wl_status_t>(WiFi.waitForConnectResult(WIFI_CONNECTION_TIMEOUT_MS - elapsed));
+    }
+    if (status == WL_CONNECTED) {
+        log_i("Connected to '%s' at %s after %ums", ssid.c_str(), WiFi.localIP().toString().c_str(), millis() - start);
+    } else {
+        log_e("Failed to connect to '%s'", ssid.c_str());
+    }
+    return status;
+}
+
+bool ConfigurationClass::connectToSavedWifi()
+{
+    String ssid = getWifiSsid();
+    if (!ssid.isEmpty()) {
+        return connectToWifi(ssid, getWifiPass()) == WL_CONNECTED;
+    }
+    log_i("No saved Wi-Fi network to connect to");
+    return false;
 }
 
 String ConfigurationClass::getWifiSsid() { return _prefs.getString(KEY_WIFI_SSID); }

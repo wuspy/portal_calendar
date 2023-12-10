@@ -24,6 +24,7 @@ public:
     void reset();
     void startConfigServer();
     bool isConfigured();
+    bool connectToSavedWifi();
 
     String getWifiSsid();
     String getWifiPass();
@@ -65,13 +66,11 @@ private:
     Preferences _prefs;
     DNSServer *_dnsServer = nullptr;
     AsyncWebServer *_httpServer = nullptr;
-    bool _shutdown = true;
-    bool _wifiConnecting = false;
     bool _wasSaved = false;
 
     void deferRequest(AsyncWebServerRequest *request, std::function<void(void)> handler);
-    void connectToSavedWifi();
     bool isApRequest(AsyncWebServerRequest *request);
+    wl_status_t connectToWifi(String ssid, String password);
 
     template<typename T> T prefs_getEnum(const char* key, T defaultValue);
     void prefs_putJsonBool(const JsonObject& json, const char* key);

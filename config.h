@@ -58,6 +58,11 @@ enum class WeatherSecondaryInfo : uint8_t
 #define TZ_LOOKUP_TIMEOUT_SECONDS 5
 
 /**
+ * How long we'll wait for the Wi-Fi to connect before giving up.
+ */
+#define WIFI_CONNECTION_TIMEOUT_SECONDS 10
+
+/**
  * Controls how long before midnight the processor is woken up for the first and second NTP syncs.
  * 
  * Two NTP syncs per day are performed per day because the internal clock in the ESP32 is very inaccurate.
@@ -132,9 +137,9 @@ enum class WeatherSecondaryInfo : uint8_t
 // #define DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
 
 /**
- * Run the webserver connected to a local WiFi network instead of creating an AP. This allows easily testing
- * the website, but connecting to WiFi won't be available and will simply return mock responses based on the
- * WiFi network it's already connected to.
+ * Run the webserver connected to a local Wi-Fi network instead of creating an AP. This allows easily testing
+ * the website, but connecting to Wi-Fi won't be available and will simply return mock responses based on the
+ * Wi-Fi network it's already connected to.
  */
 // #define DEV_WEBSERVER
 // #define DEV_WEBSERVER_WIFI_SSID "ssid"

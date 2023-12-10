@@ -58,33 +58,12 @@ RTC_DATA_ATTR time_t displayedWeatherTime = 0;
 void stopWifi()
 {
     if (WiFi.getMode() != WIFI_OFF) {
-        log_i("Stopping WiFi");
+        log_i("Stopping Wi-Fi");
         unsigned long start = millis();
         WiFi.disconnect(true, true);
         WiFi.mode(WIFI_OFF);
-        log_i("WiFi shutdown took %lums", millis() - start);
+        log_i("Wi-Fi shutdown took %lums", millis() - start);
     }
-}
-
-bool startWifi()
-{
-    if (WiFi.status() == WL_CONNECTED) {
-        return true;
-    }
-
-    log_i("Starting WiFi with hostname %s", Config.getHostname().c_str());
-    WiFi.setHostname(Config.getHostname().c_str());
-
-    unsigned long start = millis();
-    String pass = Config.getWifiPass();
-    WiFi.begin(Config.getWifiSsid().c_str(), pass.length() ? pass.c_str() : nullptr);
-    if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
-        log_e("WiFi connection failed after %lums", millis() - start);
-        stopWifi();
-        return false;
-    }
-    log_i("WiFi connection took %lums", millis() - start);
-    return true;
 }
 
 [[noreturn]] void error(String message)
@@ -192,7 +171,7 @@ void runScheduledActions()
     // Sync timezone
 
     if ((scheduledActions & ACTION_TZ_SYNC) || !isSystemTimeValid()) {
-        if (startWifi()) {
+        if (Config.connectToSavedWifi()) {
             String tz;
             TimezonedResult result = getPosixTz(
                 { Config.getPrimaryTimezonedServer(), Config.getSecondaryTimezonedServer() },
@@ -214,7 +193,7 @@ void runScheduledActions()
     // Sync time
 
     if ((scheduledActions & ACTION_NTP_SYNC) || !lastNtpSync) {
-        if (startWifi()) {
+        if (Config.connectToSavedWifi()) {
             if (syncNtp({ Config.getPrimaryNtpServer(), Config.getSecondaryNtpServer() })) {
                 scheduledActions &= ~ACTION_NTP_SYNC;
             } else if (!isSystemTimeValid()) {
@@ -231,7 +210,7 @@ void runScheduledActions()
     
     if ((scheduledActions & ACTION_WEATHER_SYNC) || !lastWeatherSync) {
         if (Config.getWeatherEnabled()) {
-            if (startWifi()) {
+            if (Config.connectToSavedWifi()) {
                 OwmResult result = refreshWeather();
                 switch (result) {
                     case OwmResult::SUCCESS:
@@ -321,6 +300,7 @@ void setup()
     }
 
     stopWifi();
+    WiFi.setHostname(Config.getHostname().c_str());
 
     time(&t);
     tm now;
