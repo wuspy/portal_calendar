@@ -17,8 +17,13 @@
     const dispatch = createEventDispatcher<{ next: void }>();
 
     function onNetworkClick(network: WifiScanResponse) {
-        selectedNetwork = network;
-        connectModalOpen = true;
+        if (network.ssid === $wifiStatus.ssid && $wifiStatus.connected) {
+            // Already connected to this network
+            dispatch("next");
+        } else {
+            selectedNetwork = network;
+            connectModalOpen = true;
+        }
     }
 
     function onAddNetworkClick() {
