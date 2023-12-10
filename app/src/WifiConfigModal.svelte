@@ -21,7 +21,7 @@
         connectionError = undefined;
         connecting = true;
         try {
-            await (network?.open ? connectToWifi(ssid) : connectToWifi(ssid, password));
+            await (network?.open ? connectToWifi(ssid.trim()) : connectToWifi(ssid.trim(), password));
             dispatch("connected");
         } catch (e) {
             connectionError = e as WifiConnectionError;
