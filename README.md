@@ -59,7 +59,7 @@ Before you begin, note that this project does require soldering and cutting the 
 
     ![](images/ribboncable.jpg)
 
-    Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the ledges on the top and bottom.
+    Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the edges of the case on the top and bottom.
 
 4. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
    
