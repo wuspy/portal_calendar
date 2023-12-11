@@ -622,11 +622,16 @@ void DisplayClass::showConfigServerScreen(String ssid, String password, String h
 void DisplayClass::showDevWebserverScreen(String ssid, IPAddress localIp)
 {
     init();
-    _display->drawMultilineText({
-        "Dev webserver running.",
-        "SSID: " + ssid,
-        "IP: " + localIp.toString()
-    }, FONT_SMALL, H_CENTER, _display->getHeight() / 2, DisplayGDEW075T7::TOP_CENTER);
+    _display->drawMultilineText(
+        "Dev webserver running.\n"
+        "SSID: " + ssid + "\n"
+        "IP: " + localIp.toString(),
+        FONT_SMALL,
+        H_CENTER,
+        _display->getHeight() / 2,
+        _display->getWidth(),
+        DisplayGDEW075T7::TOP_CENTER
+    );
     _display->refresh();
     delete _display;
     _display = nullptr;
