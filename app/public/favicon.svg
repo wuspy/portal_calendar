@@ -5,12 +5,12 @@
             path { fill: white; }
         }
     </style>
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(45, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(90, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(135, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(180, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(225, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(270, 126, 126)" />
-    <path d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" transform="rotate(315, 126, 126)" />
+    <path id="slice" d="M10 77 L126 55 L66 15 A126 126 0 0 0 10 77" />
+    <use href="#slice" transform="rotate(45, 126, 126)" />
+    <use href="#slice" transform="rotate(90, 126, 126)" />
+    <use href="#slice" transform="rotate(135, 126, 126)" />
+    <use href="#slice" transform="rotate(180, 126, 126)" />
+    <use href="#slice" transform="rotate(225, 126, 126)" />
+    <use href="#slice" transform="rotate(270, 126, 126)" />
+    <use href="#slice" transform="rotate(315, 126, 126)" />
 </svg>
