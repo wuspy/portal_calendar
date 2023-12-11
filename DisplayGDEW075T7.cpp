@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include "DisplayGDEW075T7.h"
+#include "config.h"
 #include "unicode.h"
 
 // Display commands
@@ -207,9 +208,11 @@ const uint8_t LUT_DTM2[] = {
 #define BUSY_TIMEOUT 5000
 
 DisplayGDEW075T7::~DisplayGDEW075T7() {
+    #ifndef HEADLESS
     _spi->endTransaction();
     _spi->end();
     delete _spi;
+    #endif
     delete[] _frameBuffer;
 };
 
@@ -225,9 +228,11 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t cop
     pinMode(_dcPin, OUTPUT);
     pinMode(_busyPin, INPUT);
 
+    #ifndef HEADLESS
     _spi = new SPIClass(spi_bus);
     _spi->begin(sck_pin, -1, copi_pin, cs_pin);
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
+    #endif
 
     _frameBuffer = new uint8_t[FRAMEBUFFER_LENGTH];
 
@@ -309,22 +314,28 @@ void DisplayGDEW075T7::wakeup()
 
 void DisplayGDEW075T7::sendCommand(uint8_t command)
 {
+    #ifndef HEADLESS
     digitalWrite(_dcPin, LOW);
     _spi->transfer(command);
     digitalWrite(_dcPin, HIGH);
+    #endif
 }
 
 void DisplayGDEW075T7::sendData(uint8_t data)
 {
+    #ifndef HEADLESS
     _spi->transfer(data);
+    #endif
 }
 
 void DisplayGDEW075T7::waitUntilIdle()
 {
+    #ifndef HEADLESS
     unsigned long start = millis();
     do {
         delay(5);
     } while (digitalRead(_busyPin) == LOW && millis() - start < BUSY_TIMEOUT);
+    #endif
     delay(20);
 }
 
@@ -476,19 +487,70 @@ uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t tra
     }
 
     uint32_t length = 0;
-    uint32_t cpLength = 0;
     Utf8Iterator it = Utf8Iterator(str);
     uint16_t cp;
     while ((cp = it.next())) {
-        ++cpLength;
         if (isSpaceCodePoint(cp)) {
-            length += font.spaceWidth;
+            length += font.spaceWidth + tracking;
         } else {
             const FontGlyph glyph = font.getGlyph(cp);
-            length += glyph.width + glyph.left;
+            length += glyph.width + glyph.left + tracking;
         }
     }
-    return length + tracking * (cpLength - 1);
+    return length - tracking;
+}
+
+std::vector<String> DisplayGDEW075T7::wordWrap(String str, const Font &font, uint32_t maxLineLength, int32_t tracking)
+{
+    std::vector<String> lines;
+
+    if (str.length() == 0) {
+        return lines;
+    }
+
+    unsigned int lineStart = 0, safeLineEnd = 0;
+    uint32_t length = 0, safeLength = 0;
+    Utf8Iterator it = Utf8Iterator(str);
+    uint16_t cp;
+
+    while ((cp = it.next())) {
+        if (isNewlineCodePoint(cp)) {
+            if (maxLineLength > 0 && length > maxLineLength + tracking) {
+                // Wrap at the last word too
+                lines.push_back(str.substring(lineStart, safeLineEnd - 1));
+                lineStart = safeLineEnd;
+            }
+            // Wrap here
+            lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
+            lineStart = safeLineEnd = it.getCurrentPosition();
+            length = safeLength = 0;
+        } else if (isSpaceCodePoint(cp)) {
+            if (maxLineLength > 0 && length > maxLineLength + tracking) {
+                if (safeLineEnd == lineStart) {
+                    // Line cannot be word wrapped, so wrap at current position
+                    lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
+                    lineStart = it.getCurrentPosition();
+                    length = 0;
+                } else {
+                    // Wrap at last word
+                    lines.push_back(str.substring(lineStart, safeLineEnd - 1));
+                    lineStart = safeLineEnd;
+                    length -= safeLength;
+                }
+            } else {
+                length += font.spaceWidth + tracking;
+            }
+            safeLineEnd = it.getCurrentPosition();
+            safeLength = length;
+        } else {
+            const FontGlyph glyph = font.getGlyph(cp);
+            length += glyph.width + glyph.left + tracking;
+        }
+    }
+    if (lineStart < str.length()) {
+        lines.push_back(str.substring(lineStart));
+    }
+    return lines;
 }
 
 void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, Align align, int32_t tracking)
@@ -516,10 +578,11 @@ void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t
 }
 
 void DisplayGDEW075T7::drawMultilineText(
-    std::initializer_list<String> lines,
+    String str,
     const Font &font,
     int32_t x,
     int32_t y,
+    uint32_t maxLineLength,
     Align align,
     int32_t tracking,
     int32_t leading
@@ -527,6 +590,7 @@ void DisplayGDEW075T7::drawMultilineText(
     // This implementation is simple because it assumes justification equals the horizontal alignment,
     // and that's all I needed it to do.
     leading += font.ascent + font.descent;
+    std::vector<String> lines = wordWrap(str, font, maxLineLength, tracking);
 
     if (!(align & _ALIGN_TOP)) {
         adjustAlignment(&x, &y, 0, leading * lines.size(), align);
@@ -537,6 +601,21 @@ void DisplayGDEW075T7::drawMultilineText(
     for (String str : lines) {
         drawText(str, font, x, y, align, tracking);
         y += leading;
+    }
+}
+
+void DisplayGDEW075T7::drawQrCode(qrcodegen::QrCode qrcode, int32_t x, int32_t y, int32_t scale, Align align)
+{
+    const int32_t size = qrcode.getSize() * scale;
+    adjustAlignment(&x, &y, size, size, align);
+
+    DisplayGDEW075T7::Color color;
+    int32_t y2;
+    for(int y1 = 0; y1 < size; ++y1) {
+        y2 = y1 / scale;
+        for (int x1 = 0; x1 < size; ++x1) {
+            setPx(x + x1, y + y1, qrcode.getModule(x1 / scale, y2) ? BLACK : WHITE);
+        }
     }
 }
 

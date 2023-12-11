@@ -28,7 +28,7 @@ The weather icons are based on the designs by Lukas Bischoff and Erik Flowers, a
 # Bill of Materials
 
 - **Waveshare 7.5" 800x480 E-Ink display**
-  
+
     Available [directly from Waveshare](https://www.waveshare.com/product/displays/e-paper/epaper-1/7.5inch-e-paper-hat.htm) or [from Amazon](https://www.amazon.com/gp/product/B075R4QY3L). The display itself is the Good Display GDEW075T7, Waveshare just resells it and gives you a breakout board.
 
     Make sure you buy the bare display with breakout board. Don't buy the one preinstalled in a case. Don't buy the Black/White/Red version of this display either, just the standard Black/White one.
@@ -62,7 +62,7 @@ Before you begin, note that this project does require soldering and cutting the 
     Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the edges of the case on the top and bottom.
 
 4. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
-   
+
    ![](images/back.jpg)
 
    The back cover should be flush with the edges of the front cover. If it's not, the display may not be seated correctly in the front cover. Don't try to force it, remove the back cover and re-seat the display.
@@ -95,11 +95,14 @@ Before you begin, note that this project does require soldering and cutting the 
 
 # Firmware
 
-Read through [config.h](config.h) and fill out the required values. At a minimum, you need to fill out `WIFI_NAME`, `WIFI_PASS`, and `TIME_ZONE`. A WiFi connection is required to keep the ESP32's internal clock synchronized, and to get weather information from OpenWeatherMap if you have that enabled.
-
 ## Building with Arduino IDE
 
-This project depends on ArduinoJson 6.20+, which can be installed through the library manager. You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+This project requires the following dependencies to be installed through the library manager
+
+ - ArduinoJson 6.21.4
+ - ESPAsyncWebSrv 1.2.7
+
+ You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
@@ -115,7 +118,7 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
 
 ![](images/arduino3.png)
 
- The defaults *should* already be what you want, but make sure they match these settings.
+ **The partition scheme will need to be changed to allow the app to fit.** Other than that, the rest of the options *should* already be what you want, but make sure they match these settings.
 
  | Option | Value |
  | ------ | ----- |
@@ -125,7 +128,7 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | Flash Mode | QIO |
  | Flash Size | 4MB (32Mb) |
  | Arduino Runs On | Core 1 |
- | Partition Scheme | Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS) |
+ | **Partition Scheme** | **Huge APP (3MB No OTA/1MB SPIFFS)** |
  | PSRAM | Disabled |
  | Upload Speed | 921600 |
 
@@ -143,12 +146,9 @@ To enable debug logs, add `-DCORE_DEBUG_LEVEL=3` as a build flag in [platformio.
 
 ## Timekeeping
 
-The internal clock in the ESP32 is very inaccurate with a specified inaccuracy of 5%, which corresponds to 72 minutes per day. This is obviously useless for long-term timekeeping so an external clock is required. One solution would be to use an RTC module like a DS3231, but that still requires an external time source for initialization. Given that, I decided to just ditch that extra cost and require a WiFi connection for daily NTP time syncing, which would be required for OpenWeatherMap anyway if you decide to use it. The default NTP servers are `pool.ntp.org` and `time.google.com`, and can be changed in config.h if you want.
+The internal clock in the ESP32 is very inaccurate with a specified inaccuracy of 5%, which corresponds to 72 minutes per day. This is obviously useless for long-term timekeeping so an external clock is required. One solution would be to use an RTC module like a DS3231, but that still requires an external time source for initialization. Given that, I decided to just ditch that extra cost and require a Wi-Fi connection for daily NTP time syncing, which would be required for OpenWeatherMap anyway if you decide to use it. The default NTP servers are `pool.ntp.org` and `time.google.com`, but they can be changed if you want.
 
-The WiFi connection is also used to lookup information for the timezone you provide, using the `timezoned.rop.nl` service from the [ezTime project](https://github.com/ropg/ezTime). Timezoned is a relatively small service maintained by one person, so it does introduce a failure point if it ever goes down. If that's something you're worried about you have a couple options
-
-* Host your own timezoned service. The source code is available in the ezTime repository.
-* Provide a POSIX timezone instead of a timezone name, as explained in config.h.
+The Wi-Fi connection is also used to lookup information for the timezone you provide, using the timezoned service from the [ezTime project](https://github.com/ropg/ezTime). The default timezoned servers are the original one at `timezoned.rop.nl` and mine at `timezoned.jacobjordan.tech`. This does introduce a failure point if these services both go down, and if that's something you're worried about you can host your own timezoned service. The original PHP code is available in ropg's repository, and my Rust rewirite is availble [here](https://github.com/wuspy/timezoned_rs).
 
 ## Graphics
 
@@ -164,8 +164,12 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 # Changelog
 
+### 12/XX/2023
+
+* Add the ability to setup the calendar through a web app instead of changing the firmware and re-flashing.
+
 ### 4/18/2023
-  
+
 * Add ability to toggle between the weather and chamber icon display using a button on GPIO0.
 * Frame REV 04: Fix the boot and reset buttons being labeled backwards, and call the boot button 'mode' since it does something now. If you have frame REV 03 and want to fix this, you only need to print cover.stl since the front and back parts are compatible with it.
 

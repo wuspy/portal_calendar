@@ -1,5 +1,8 @@
+#include <Arduino.h>
 #include <WiFi.h>
+#include <math.h>
 #include "global.h"
+#include "Configuration.h"
 #include "time_util.h"
 #include "Display.h"
 #include "driver/rtc_io.h"
@@ -27,14 +30,8 @@ RTC_DATA_ATTR time_t sleepStartTime = 0;
  */
 RTC_DATA_ATTR int displayedYDay = 0;
 
-#ifdef SHOW_WEATHER
-RTC_DATA_ATTR bool showWeather = true;
+RTC_DATA_ATTR bool showWeather = false;
 RTC_DATA_ATTR time_t displayedWeatherTime = 0;
-#else
-const bool showWeather = false;
-#endif // SHOW_WEATHER
-
-Display display;
 
 [[noreturn]] void deepSleep(time_t seconds)
 {
@@ -43,15 +40,15 @@ Display display;
     correctSleepDuration(&seconds);
     log_i("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
 
-    #ifdef SHOW_WEATHER
-    // Enable wakeup on boot button
-    #ifdef ENABLE_GPIO0_PULLUP
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-    rtc_gpio_pullup_en(GPIO_NUM_0);
-    rtc_gpio_pulldown_dis(GPIO_NUM_0);
-    #endif // ENABLE_GPIO0_PULLUP
-    esp_sleep_enable_ext1_wakeup(0x1 << GPIO_NUM_0, ESP_EXT1_WAKEUP_ALL_LOW);
-    #endif // SHOW_WEATHER
+    if (Config.getWeatherEnabled()) {
+        // Enable wakeup on boot button
+        #ifdef ENABLE_GPIO0_PULLUP
+        esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+        rtc_gpio_pullup_en(GPIO_NUM_0);
+        rtc_gpio_pulldown_dis(GPIO_NUM_0);
+        #endif // ENABLE_GPIO0_PULLUP
+        esp_sleep_enable_ext1_wakeup(0x1 << GPIO_NUM_0, ESP_EXT1_WAKEUP_ALL_LOW);
+    }
 
     // Enable timer wakeup
     esp_sleep_enable_timer_wakeup((uint64_t)seconds * uS_PER_S);
@@ -61,136 +58,109 @@ Display display;
 void stopWifi()
 {
     if (WiFi.getMode() != WIFI_OFF) {
-        log_i("Stopping WiFi");
+        log_i("Stopping Wi-Fi");
         unsigned long start = millis();
         WiFi.disconnect(true, true);
         WiFi.mode(WIFI_OFF);
-        log_i("WiFi shutdown took %lums", millis() - start);
+        log_i("Wi-Fi shutdown took %lums", millis() - start);
     }
 }
 
-bool startWifi()
-{
-    if (WiFi.status() == WL_CONNECTED) {
-        return true;
-    }
-    
-    log_i("Starting WiFi with hostname %s", HOSTNAME);
-    WiFi.setHostname(HOSTNAME);
-
-    unsigned long start = millis();
-    #ifdef WIFI_PASS
-    WiFi.begin(WIFI_NAME, WIFI_PASS);
-    #else
-    WiFi.begin(WIFI_NAME);
-    #endif
-    if (WiFi.waitForConnectResult(10000) != WL_CONNECTED) {
-        log_e("WiFi connection failed after %lums", millis() - start);
-        stopWifi();
-        return false;
-    }
-    log_i("WiFi connection took %lums", millis() - start);
-    return true;
-}
-
-[[noreturn]] void error(std::initializer_list<String> message)
+[[noreturn]] void error(String message)
 {
     log_i("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
-    display.error(message, true);
+    Display.error(message, true);
     deepSleep(SECONDS_PER_HOUR);
 }
 
 [[noreturn]] void errorNoWifi()
 {
-    error({
-        "NO WIFI CONNECTION",
-        "",
-        "Your WiFi network is either down, out of range,",
-        "or you entered the wrong password.",
-        "",
-        "WiFi Name:",
-        "\"" WIFI_NAME "\""
-    });
+    error(
+        "NO WI-FI CONNECTION\n\n"
+        "Your Wi-Fi network is either down, out of range, "
+        "or you entered the wrong password.\n\n"
+        "Wi-Fi Name:\n"
+        + Config.getWifiSsid()
+    );
 }
 
 [[noreturn]] void errorNtpFailed()
 {
-    error({
-        "NO INTERNET CONNECTION",
-        "",
-        "Your WiFi network works, but the NTP servers didn't",
-        "respond. This probably means your WiFi has no internet",
-        "connection. Or, you configured the NTP servers yourself,",
-        "in which case you might have messed something up."
-    });
+    error(
+        "NO INTERNET CONNECTION\n\n"
+        "Your Wi-Fi network works, but the NTP servers didn't "
+        "respond. This probably means your Wi-Fi has no internet "
+        "connection. Or, you configured the NTP servers yourself, "
+        "in which case you might have messed something up.\n\n"
+        "NTP servers:\n"
+        + Config.getPrimaryNtpServer() + "\n"
+        + Config.getSecondaryNtpServer()
+    );
 }
-
-#ifdef TIME_ZONE
 
 [[noreturn]] void errorTzLookupFailed()
 {
-    error({
-        "TIMEZONE LOOKUP FAILED",
-        "",
-        "Your timezone is either invalid, or the timezone servers",
-        "are down. If you configured the timezone servers",
-        "yourself, you might have messed something up.",
-        "",
-        "Your timezone:",
-        "\"" TIME_ZONE "\""
-    });
+    error(
+        "TIMEZONE LOOKUP FAILED\n\n"
+        "Your timezone is either invalid, or the timezone servers "
+        "are down. If you configured the timezone servers "
+        "yourself, you might have messed something up.\n\n"
+        "Your timezone:\n"
+        + Config.getTimezoneName() + "\n\n"
+        "Timezone servers:\n"
+        + Config.getPrimaryTimezonedServer() + "\n"
+        + Config.getSecondaryTimezonedServer()
+    );
 }
-
-#endif // TIME_ZONE
-
-#ifdef SHOW_WEATHER
 
 [[noreturn]] void errorInvalidOwmApiKey()
 {
-    error({
-        "INVALID OPENWEATHERMAP API KEY",
-        "",
-        "OpenWeatherMap.org says your API key is invalid.",
-        "You probably have an issue with your configuration.",
-        "Go to your account -> My API Keys and make sure",
-        "the one there matches the one you entered. Or, just",
+    error(
+        "INVALID OPENWEATHERMAP API KEY\n\n"
+        "OpenWeatherMap.org says your API key is invalid. "
+        "You probably have an issue with your configuration. "
+        "Go to your account -> My API Keys and make sure "
+        "the one there matches the one you entered. Or, just "
         "disable the weather feature entirely."
-    });
+    );
 }
-
-#ifdef WEATHER_LOCATION
-
-[[noreturn]] void errorInvalidOwmLocation()
-{
-    error({
-        "INVALID WEATHER LOCATION",
-        "",
-        "OpenWeatherMap.org couldn't find any results",
-        "for the weather location you entered. You",
-        "probably have an issue with your configuration.",
-        "",
-        "You Location:",
-        "\"" WEATHER_LOCATION "\""
-    });
-}
-
-#endif // WEATHER_LOCATION
-
-#endif // SHOW_WEATHER
 
 [[noreturn]] void errorBrownout()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
     log_w("Brownout detected");
-    display.error({
-        "REPLACE BATTERIES",
-        "",
-        "If the device does not restart automatically",
-        "after new batteries have been inserted,",
-        "press the RESET button on the back."
-    }, false);
+    Display.error(
+        "REPLACE BATTERIES\n\n"
+        "If the device does not restart automatically "
+        "after new batteries have been inserted, "
+        "press the RESET button on the back.",
+        false
+    );
+    // Sleep forever
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+    esp_deep_sleep_start();
+}
+
+void startConfigServer()
+{
+    Config.startConfigServer();
+    if (Config.wasSaved()) {
+        // Reset state
+        scheduledWakeup = 0;
+        scheduledActions = 0;
+        savedTimezone[0] = '\0';
+        showWeather = Config.getWeatherEnabled();
+        displayedYDay = 0;
+        displayedWeatherTime = 0;
+        lastWeatherSync = 0;
+    }
+}
+
+void showWelcomeScreen()
+{
+    Display.showWelcomeScreen();
     // Sleep forever
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     esp_deep_sleep_start();
@@ -198,14 +168,17 @@ bool startWifi()
 
 void runScheduledActions()
 {
-    #ifdef TIME_ZONE
-
     // Sync timezone
 
     if ((scheduledActions & ACTION_TZ_SYNC) || !isSystemTimeValid()) {
-        if (startWifi()) {
-            String tz = getPosixTz(TIME_ZONE);
-            if (!tz.isEmpty()) {
+        if (Config.connectToSavedWifi()) {
+            String tz;
+            TimezonedResult result = getPosixTz(
+                { Config.getPrimaryTimezonedServer(), Config.getSecondaryTimezonedServer() },
+                Config.getTimezoneName(),
+                tz
+            );
+            if (result == TimezonedResult::Ok) {
                 setTimezone(tz.c_str());
                 scheduledActions &= ~ACTION_TZ_SYNC;
             } else if (!savedTimezone[0]) {
@@ -217,15 +190,11 @@ void runScheduledActions()
         }
     }
 
-    #else
-    scheduledActions &= ~ACTION_TZ_SYNC;
-    #endif // TIME_ZONE
-
     // Sync time
 
-    if ((scheduledActions & ACTION_NTP_SYNC) || !isSystemTimeValid()) {
-        if (startWifi()) {
-            if (syncNtp()) {
+    if ((scheduledActions & ACTION_NTP_SYNC) || !lastNtpSync) {
+        if (Config.connectToSavedWifi()) {
+            if (syncNtp({ Config.getPrimaryNtpServer(), Config.getSecondaryNtpServer() })) {
                 scheduledActions &= ~ACTION_NTP_SYNC;
             } else if (!isSystemTimeValid()) {
                 // Sync unsuccesful and we have no idea what time it is
@@ -237,31 +206,29 @@ void runScheduledActions()
         }
     }
 
-    #ifdef SHOW_WEATHER
-
     // Sync weather
     
     if ((scheduledActions & ACTION_WEATHER_SYNC) || !lastWeatherSync) {
-        if (startWifi()) {
-            OwmResult result = refreshWeather();
-            switch (result) {
-                case OwmResult::SUCCESS:
-                    scheduledActions &= ~ACTION_WEATHER_SYNC;
-                    break;
-                case OwmResult::INVALID_API_KEY:
-                    errorInvalidOwmApiKey();
-                default:
-                    // Ignore other OWM errors because weather isn't critical
-                    break;
+        if (Config.getWeatherEnabled()) {
+            if (Config.connectToSavedWifi()) {
+                OwmResult result = refreshWeather();
+                switch (result) {
+                    case OwmResult::SUCCESS:
+                        scheduledActions &= ~ACTION_WEATHER_SYNC;
+                        break;
+                    case OwmResult::INVALID_API_KEY:
+                        errorInvalidOwmApiKey();
+                    default:
+                        // Ignore other OWM errors because weather isn't critical
+                        break;
+                }
+            } else if (!lastWeatherSync) {
+                errorNoWifi();
             }
-        } else if (!lastWeatherSync) {
-            errorNoWifi();
+        } else {
+            scheduledActions &= ~ACTION_WEATHER_SYNC;
         }
     }
-
-    #else
-    scheduledActions &= ~ACTION_WEATHER_SYNC;
-    #endif // SHOW_WEATHER
 }
 
 void setup()
@@ -291,13 +258,41 @@ void setup()
         errorBrownout();
     }
 
-    #ifdef SHOW_WEATHER
+    Config.begin();
+
+    // Check if configuration is required
+    if (!Config.isConfigured()) {
+        log_i("Not configured");
+        while (!Config.isConfigured()) {
+            if (Config.isOnUsbPower()) {
+                log_i("On USB power");
+                startConfigServer();
+            } else {
+                log_i("Not on USB power");
+                showWelcomeScreen();
+            }
+        }
+    }
     // Check for wakeup from boot button press
-    if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1) {
+    else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
         log_i("Toggling showWeather");
         showWeather = !showWeather;
     }
-    #endif // SHOW_WEATHER
+    // Check if config server is manually started by pressing reset while plugged in
+    else if (wakeupCause == ESP_SLEEP_WAKEUP_UNDEFINED && Config.isOnUsbPower()) {    
+        #ifndef DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
+        log_i("Config server was manually started");
+        startConfigServer();
+        if (!Config.isConfigured()) {
+            // Just in case they cleared some required settings
+            showWelcomeScreen();
+        }
+        #else
+        log_i("Config server would have been manually started, but is disabled");
+        #endif
+    }
+
+    time(&t);
 
     if (t >= scheduledWakeup) {
         runScheduledActions();
@@ -305,6 +300,7 @@ void setup()
     }
 
     stopWifi();
+    WiFi.setHostname(Config.getHostname().c_str());
 
     time(&t);
     tm now;
@@ -314,21 +310,19 @@ void setup()
 
     bool needsDisplayUpdate = now.tm_yday != displayedYDay;
 
-    #ifdef SHOW_WEATHER
-    needsDisplayUpdate = needsDisplayUpdate
-        || static_cast<bool>(displayedWeatherTime) != showWeather
-        || (showWeather
-            && lastWeatherSync != displayedWeatherTime
-            && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2);
-    #endif // SHOW_WEATHER
+    if (Config.getWeatherEnabled()) {
+        needsDisplayUpdate = needsDisplayUpdate
+            || static_cast<bool>(displayedWeatherTime) != showWeather
+            || (showWeather
+                && lastWeatherSync != displayedWeatherTime
+                && getSecondsToMidnight(&now) > SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2);
+    }
 
     if (needsDisplayUpdate) {
         log_i("Updating display at %s", printTime(t));
-        display.update(&now, showWeather);
+        Display.update(&now, getLocale(Config.getLocale()), showWeather);
         displayedYDay = now.tm_yday;
-        #ifdef SHOW_WEATHER
-        displayedWeatherTime = showWeather ? lastWeatherSync : 0;
-        #endif
+        displayedWeatherTime = Config.getWeatherEnabled() && showWeather ? lastWeatherSync : 0;
     }
 
     time(&t);
@@ -347,38 +341,45 @@ void setup()
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
-        log_w("Sync failed, will retry");
-        if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
-            // Try to sync 3 more times before midnight
-            deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
-        } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1) {
-            // Try to sync 3 more times before 2nd scheduled NTP sync
-            deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2, (SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) / 3));
-        } else {
-            // Keep trying to sync every hour
-            deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1, 3600));
+        log_w("Sync failed, scheduling retry");
+        if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1) {
+            if (Config.getTwoNtpSyncsPerDay()) {
+                if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
+                    // Try to sync 3 more times before midnight
+                    deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
+                }
+                // Try to sync 3 more times before the 2nd scheduled sync
+                deepSleep(min(
+                    secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2,
+                    (SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) / 3
+                ));
+            }
+            // Try to sync 4 more times before midnight
+            deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 / 4));
         }
-    } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 * 2) {
-        // Sleep until midnight
-        log_i("Sleeping until midnight");
-        deepSleep(secondsToMidnight);
-    } else if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
+        // Keep trying to sync every hour
+        deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1, 3600));
+    }
+
+    if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {
+        if (!Config.getTwoNtpSyncsPerDay() || secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 * 2) {
+            // Sleep until midnight
+            log_i("Sleeping until midnight");
+            deepSleep(secondsToMidnight);
+        }
         // Sleep until second NTP sync
         scheduledActions = ACTION_NTP_SYNC;
         log_i("Sleeping for 2nd NTP sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
-    } else {
-        // Sleep until first NTP sync
-        scheduledActions = ACTION_NTP_SYNC;
-        #ifdef TIME_ZONE
-        scheduledActions |= ACTION_TZ_SYNC;
-        #endif // TIME_ZONE
-        #ifdef SHOW_WEATHER
-        scheduledActions |= ACTION_WEATHER_SYNC;
-        #endif
-        log_i("Sleeping for 1st sync");
-        deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
     }
+
+    // Sleep until first NTP sync
+    scheduledActions =
+        ACTION_NTP_SYNC
+        | ACTION_TZ_SYNC
+        | (Config.getWeatherEnabled() ? ACTION_WEATHER_SYNC : 0);
+    log_i("Sleeping for 1st sync");
+    deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
 }
 
 void loop()

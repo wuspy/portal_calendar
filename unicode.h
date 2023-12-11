@@ -11,7 +11,7 @@
 class Utf8Iterator
 {
 public:
-    Utf8Iterator(String str) 
+    Utf8Iterator(String str)
     {
         _str = str;
         _pos = 0;
@@ -47,8 +47,13 @@ public:
         }
     }
 
+    unsigned int getCurrentPosition()
+    {
+        return _pos;
+    }
+
 private:
-    size_t _pos;
+    unsigned int _pos;
     String _str;
 
     static uint8_t sequenceLength(uint8_t lead)
@@ -69,6 +74,10 @@ private:
 
 bool isSpaceCodePoint(uint16_t cp) {
     return cp == 0x9 || cp == 0x20 || cp == 0xA0;
+};
+
+bool isNewlineCodePoint(uint16_t cp) {
+    return cp == 0xA;
 };
 
 #endif // PORTALCALENDAR_UTF8ITERATOR_H
