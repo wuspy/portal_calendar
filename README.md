@@ -164,7 +164,7 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 # Changelog
 
-### 12/XX/2023
+### 12/11/2023
 
 * Add the ability to setup the calendar through a web app instead of changing the firmware and re-flashing.
 
