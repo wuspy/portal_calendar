@@ -166,7 +166,8 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 ### 12/11/2023
 
-* Add the ability to setup the calendar through a web app instead of changing the firmware and re-flashing.
+* Add the ability to setup the calendar through a web app instead of changing the firmware and re-flashing. There is no longer any need to edit config.h unless you need to change pin assignments or other advanced settings.
+* **This update changes the partition scheme.** If you're building with Arduino IDE, read through the Firmware section again and update your build options.
 
 ### 4/18/2023
 
