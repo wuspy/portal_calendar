@@ -168,6 +168,7 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 * Compress images with simple run-length encoding to save a bit of flash.
 * Draw progress bar with vector draw commands instead of an image to save a bit more flash.
+* Add STEP file.
 
 ### 12/11/2023
 
