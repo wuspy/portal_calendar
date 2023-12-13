@@ -1,7 +1,6 @@
 #!/bin/sh
 
 python build_image.py aperture_logo.gif
-python build_image.py progress_bar.gif
 python build_image.py error.gif
 python build_image.py wifi_64px.gif
 

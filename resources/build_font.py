@@ -12,6 +12,7 @@ class Glyph:
     height: int
     top: int
     left: int
+    rleBits: int
 
     def __init__(self, index: int, char: str, codePoint: int, font: ImageFont):
         self.char = char
@@ -28,7 +29,7 @@ class Glyph:
         return (self.width, self.height)
 
     def compile(self, data: str) -> str:
-        return "{{ 0x{0.codePoint:04X}, {{ .width={0.width}, .height={0.height}, .top={0.top}, .left={0.left}, .data=&_{1}_DATA[{0.index}] }} }}, // '{0.char}'".format(self, data)
+        return "{{ 0x{0.codePoint:04X}, FontGlyph({0.width}, {0.height}, {0.top}, {0.left}, {0.rleBits}, &_{1}_DATA[{0.index}]) }}, // '{0.char}'".format(self, data)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("font", type=str, help="Name or path of the font to be compiled")
@@ -63,26 +64,34 @@ def fontHasCodePoint(codePoint: int) -> bool:
 outputLines: list[str] = []
 outputGlyphs: list[Glyph] = []
 byteCount = 0
+compressionRatioSum = 0
+rleBitsSum = 0
 for codePointRange in codePointRanges:
     for codePoint in range(ord(codePointRange[0]), ord(codePointRange[1] if len(codePointRange) > 1 else codePointRange[0]) + 1):
         char = chr(codePoint)
         glyph = Glyph(byteCount, char, codePoint, font)
         if not fontHasCodePoint(codePoint) and codePoint != 0xFFFD:
-            print("Warning: Font does not contain code point '{}' (U+{:04X})".format(char, codePoint))
+            print(" - Warning: Font does not contain code point '{}' (U+{:04X})".format(char, codePoint))
         elif glyph.empty():
-            print("Skipping whitespace char U+{:04X}".format(codePoint))
+            print(" - Skipping whitespace char U+{:04X}".format(codePoint))
         else:
             outputGlyphs.append(glyph)
             image = Image.new("L", glyph.size(), bgColor)
             draw = ImageDraw.Draw(image)
             draw.text((-glyph.left, -glyph.top), char, font=font, fill=fgColor)
-            charOutputLines, charByteCount = compileImage(image)
+            charOutputLines, charByteCount, charCompressionRatio, glyph.rleBits = compileImage(image)
+            rleBitsSum += glyph.rleBits
+            compressionRatioSum += charCompressionRatio
             outputLines.append("// '{}'".format(char))
             outputLines += charOutputLines
             byteCount += charByteCount
 
-print("Output size: {}".format(byteCount))
-print("Writing to file '{}'".format(outputFileName))
+# Compression ratio here is approximate since it assumes every glyph is the same size
+compressionRatio = round(compressionRatioSum / len(outputGlyphs), 2)
+
+print(" - Optimum RLE bits (average): {}".format(round(rleBitsSum / len(outputGlyphs), 2)))
+print(" - Output size: {} bytes ({} compression ratio)".format(byteCount, compressionRatio))
+print(" - Writing to file '{}'...".format(outputFileName))
 
 outputFile = open(outputFileName, mode="w", encoding="utf8")
 outputFile.writelines([
@@ -91,6 +100,7 @@ outputFile.writelines([
     " * Original font: {}\n".format(fontPath),
     " * Font size: {}px\n".format(fontSize),
     " * Code point ranges: {}\n".format(args.ranges),
+    " * Compression ratio: {}\n".format(compressionRatio),
     " */\n\n",
 
     "#include \"font.h\"\n\n",
@@ -117,4 +127,4 @@ outputFile.writelines([
 ])
 outputFile.close()
 
-print("Done")
+print(" - Done")

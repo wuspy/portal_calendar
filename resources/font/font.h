@@ -1,25 +1,28 @@
 #include <unordered_map>
+#include "../image.h"
 
 #ifndef PORTALCALENDAR_FONT_H
 #define PORTALCALENDAR_FONT_H
 
-typedef struct {
-    const uint16_t width;
-    const uint16_t height;
+struct FontGlyph : Image {
+    FontGlyph(uint16_t width, uint16_t height, uint16_t top, uint16_t left, uint8_t rleBits, const uint8_t *data):
+        Image(width, height, rleBits, data),
+        top(top),
+        left(left)
+    { }
     const int16_t top;
     const int16_t left;
-    const uint8_t *data;
-} FontGlyph;
+};
 
-typedef struct {
-    const std::unordered_map<uint16_t, FontGlyph> glyphs;
+struct Font {
+    const std::unordered_map<uint16_t, const FontGlyph> glyphs;
     const uint8_t fgColor;
     const uint8_t bgColor;
     const uint16_t ascent;
     const uint16_t descent;
     const uint16_t spaceWidth;
 
-    FontGlyph getGlyph(uint16_t cp) const
+    const FontGlyph getGlyph(uint16_t cp) const
     {
         auto iterator = glyphs.find(cp);
         if (iterator != glyphs.cend()) {
@@ -33,6 +36,6 @@ typedef struct {
         // This code should never be hit.
         return glyphs.cbegin()->second;
     };
-} Font;
+};
 
 #endif // PORTALCALENDAR_FONT_H

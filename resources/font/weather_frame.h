@@ -3,6 +3,7 @@
  * Original font: font/Univers LT 59 Ultra Condensed Regular.otf
  * Font size: 18px
  * Code point ranges: .-Z,À-Ö,Ø-ß,�
+ * Compression ratio: 1.02
  */
 
 #include "font.h"
@@ -14,14 +15,14 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     // '.'
     0xFF,0x87,0x87,0xFF,
     // '/'
-    0xFF,0x8B,0xFF,0x4F,0xFF,0x1F,0xFE,0x2F,0xFD,0x3F,0xFD,0x7F,0xFC,0xBF,0xF8,0xFF,0xF5,0xFF,0xF1,0xFF,
-    0xE2,0xFF,0xD3,0xFF,0xC7,0xFF,0xFF,0xFF,
+    0xF8,0x08,0xFC,0x40,0xFD,0x04,0xFC,0x80,0x8F,0xC4,0x0F,0xD5,0xFD,0x08,0xFC,0x80,0xFD,0x5F,0xD0,0x4F,
+    0xC8,0x08,0xFC,0x40,0xFD,0x04,0xFF,0xFC,
     // '0'
     0xE0,0x6F,0xC6,0x1F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,
     0x8B,0x4F,0xC6,0x1F,0xE0,0x6F,0xFF,0xFF,
     // '1'
-    0xF8,0x7F,0xF0,0x7F,0xD0,0x7F,0xE8,0x7F,0xFC,0x7F,0xFC,0x7F,0xFC,0x7F,0xFC,0x7F,0xFC,0x7F,0xFC,0x7F,
-    0xFC,0x7F,0xFC,0x7F,0xFC,0x7F,0xFF,0xFF,
+    0xD8,0x04,0xFC,0x14,0xF4,0x14,0xF9,0x04,0xFD,0x04,0xFD,0x04,0xFD,0x04,0xFD,0x04,0xFD,0x04,0xFD,0x04,
+    0xFD,0x04,0xFD,0x04,0xFD,0x04,0xFF,0xE0,
     // '2'
     0xE0,0x6F,0xC2,0x1F,0x87,0x4F,0xEB,0x4F,0xFF,0x1F,0xFE,0x2F,0xFD,0x3F,0xF8,0x7F,0xF0,0xFF,0xE2,0xFF,
     0xC3,0xFF,0x86,0xAF,0x80,0x0F,0xFF,0xFF,
@@ -38,8 +39,8 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     0xE0,0x6F,0xC1,0x1F,0x8B,0x4F,0x8B,0xAF,0x8A,0xBF,0x80,0x1F,0x87,0x0F,0x8B,0x4F,0x8B,0x4F,0x8B,0x4F,
     0x8B,0x4F,0x86,0x0F,0xD0,0x6F,0xFF,0xFF,
     // '7'
-    0x40,0x0F,0x95,0x0F,0xFF,0x0F,0xFF,0x1F,0xFE,0x2F,0xFD,0x2F,0xFC,0x3F,0xFC,0x7F,0xF8,0xBF,0xF4,0xBF,
-    0xF4,0xFF,0xF1,0xFF,0xE1,0xFF,0xFF,0xFF,
+    0x43,0x0D,0x86,0x1F,0xD1,0xFD,0x04,0xFC,0x80,0x8F,0xC4,0x08,0xFC,0x1F,0xD0,0x4F,0xC8,0x08,0xFC,0x40,
+    0x8F,0xC4,0x0F,0xD0,0x4F,0xC8,0x04,0xFF,0xF0,
     // '8'
     0xE0,0x6F,0xC2,0x1F,0x8B,0x4F,0x8B,0x4F,0x87,0x4F,0xC6,0x1F,0xE0,0x3F,0x87,0x0F,0x8B,0x4F,0x8B,0x4F,
     0x8B,0x4F,0xC6,0x1F,0xE0,0x6F,0xFF,0xFF,
@@ -51,14 +52,13 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     // ';'
     0x87,0x87,0xFF,0xFF,0xFF,0xFF,0xEF,0x87,0x8B,0x8F,0xFF,
     // '<'
-    0xFF,0xFF,0xEF,0xFF,0xFE,0x0F,0xFF,0x90,0x6F,0xF8,0x1B,0xFF,0xC1,0xFF,0xFF,0xD0,0xBF,0xFF,0xFE,0x06,
-    0xFF,0xFF,0xE4,0x1F,0xFF,0xFF,0x9F,0xFF,0xFF,0xFF,
+    0xFF,0xC8,0xFF,0xC8,0x1F,0xD8,0x41,0x48,0xF8,0x14,0x8F,0xD1,0x4F,0xFC,0x41,0x8F,0xFD,0x81,0x48,0xFF,
+    0xC8,0x41,0x4F,0xFD,0x84,0xFF,0xFD,
     // '='
-    0xC0,0x00,0x0F,0xD5,0x55,0x6F,0xFF,0xFF,0xFF,0xEA,0xAA,0xAF,0xC0,0x00,0x0F,0xFF,0xFF,0xFF,0xFF,0xFF,
-    0xFF,0xFF,0xFF,0xFF,
+    0xC0,0x8C,0x97,0x83,0xEA,0x32,0x23,0xFF,0xF5,
     // '>'
-    0xEF,0xFF,0xFF,0xC6,0xFF,0xFF,0xE4,0x1B,0xFF,0xFF,0x91,0xBF,0xFF,0xF9,0x0F,0xFF,0xE4,0x1F,0xFE,0x46,
-    0xFF,0xD0,0x7F,0xFF,0xDB,0xFF,0xFF,0xFF,0xFF,0xFF,
+    0xC8,0xFF,0xE0,0x48,0xFF,0xC8,0x41,0x48,0xFF,0xC8,0x40,0x48,0xFF,0xC8,0x41,0xFE,0x84,0x14,0xFC,0x84,
+    0x04,0x8F,0xC4,0x14,0xFF,0x48,0xFF,0xFF,0xFC,
     // '?'
     0xD0,0xBE,0x14,0xF8,0x93,0xFB,0x4F,0xFC,0x7F,0xE2,0xFF,0x4F,0xFC,0x7F,0xF2,0xFF,0xCB,0xFF,0xFF,0xFD,
     0x7F,0xE1,0xFF,0xFF,0xF0,
@@ -123,8 +123,8 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     0xE0,0x6F,0x85,0x0F,0x8B,0x4F,0x8B,0x9F,0x83,0xFF,0xD1,0xFF,0xF4,0x7F,0xFD,0x2F,0xFF,0x0F,0x9B,0x4F,
     0x4B,0x4F,0x85,0x0F,0xD0,0x6F,0xFF,0xFF,
     // 'T'
-    0x00,0x0B,0x90,0x5F,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,
-    0xF4,0xFF,0xF4,0xFF,0xF4,0xFF,0xFF,0xFF,
+    0x31,0x8C,0x84,0x15,0xF4,0x0F,0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,
+    0xD4,0x0F,0xD4,0x0F,0xD4,0x0F,0xFF,
     // 'U'
     0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,0x8B,0xC7,
     0x8B,0xC7,0xC2,0x4B,0xE4,0x2F,0xFF,0xFF,
@@ -163,9 +163,9 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     0xFD,0x7F,0xFE,0x67,0xFF,0x99,0xFF,0xF5,0xFF,0xFC,0x2F,0xFE,0x0B,0xFF,0x41,0xFF,0xD5,0x3F,0xF1,0x8F,
     0xFC,0xA2,0xFE,0x3C,0xBF,0x4F,0x1F,0xD0,0x03,0xF1,0x54,0xF8,0xBE,0x2E,0x2F,0x8B,0x4F,0xF1,0xFF,0xFF,0xF0,
     // 'Æ'
-    0xFF,0x00,0x03,0xFE,0x01,0x5B,0xFD,0x13,0xFF,0xFC,0x53,0xFF,0xF8,0x93,0xFF,0xF8,0xD1,0xAB,0xF5,0xE0,
-    0x07,0xF2,0xE2,0xFF,0xE0,0x02,0xFF,0xD1,0x52,0xFF,0xC7,0xF1,0xFF,0x8B,0xF1,0xAB,0x4F,0xF0,0x03,0xFF,
-    0xFF,0xFF,
+    0xF3,0x2F,0x82,0x68,0xF4,0x04,0x0F,0xF0,0x50,0xFE,0x80,0x84,0x0F,0xE8,0x0C,0x40,0x4A,0xE5,0xC8,0x34,
+    0xE0,0x8C,0x80,0x8F,0xC8,0x30,0x8F,0xC4,0x06,0x08,0xFC,0x04,0xE0,0x4F,0x80,0x8E,0x04,0xAC,0x40,0xF3,
+    0x0F,0xFF,0xC0,
     // 'Ç'
     0xE4,0x6F,0xC5,0x0F,0x8B,0x4F,0x4B,0x9F,0x4B,0xFF,0x4B,0xFF,0x4B,0xFF,0x4B,0xFF,0x4B,0xFF,0x4B,0x9F,
     0x8B,0x4F,0x86,0x0F,0xE0,0x2F,0xFA,0xFF,0xF9,0x7F,0xFF,0x3F,0xF5,0xBF,0xFF,0xFF,
@@ -239,88 +239,88 @@ const uint8_t _FONT_WEATHER_FRAME_DATA[] = {
     0xD0,0x7F,0x85,0x2F,0x8A,0x2F,0x8A,0x2F,0x89,0x3F,0x88,0x7F,0x89,0x3F,0x8A,0x2F,0x8B,0x0F,0x8B,0x4F,
     0x8B,0x8B,0x8B,0x4F,0x88,0x1F,0xFF,0xFF,0xFF,0xFF,
     // '�'
-    0xFF,
+    0xF0,
 };
 
 const Font FONT_WEATHER_FRAME {
     .glyphs={
-        { 0x002E, { .width=4, .height=4, .top=14, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[0] } }, // '.'
-        { 0x002F, { .width=8, .height=14, .top=4, .left=-1, .data=&_FONT_WEATHER_FRAME_DATA[4] } }, // '/'
-        { 0x0030, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[32] } }, // '0'
-        { 0x0031, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[60] } }, // '1'
-        { 0x0032, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[88] } }, // '2'
-        { 0x0033, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[116] } }, // '3'
-        { 0x0034, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[144] } }, // '4'
-        { 0x0035, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[172] } }, // '5'
-        { 0x0036, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[200] } }, // '6'
-        { 0x0037, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[228] } }, // '7'
-        { 0x0038, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[256] } }, // '8'
-        { 0x0039, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[284] } }, // '9'
-        { 0x003A, { .width=4, .height=10, .top=8, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[312] } }, // ':'
-        { 0x003B, { .width=4, .height=11, .top=8, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[322] } }, // ';'
-        { 0x003C, { .width=12, .height=10, .top=8, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[333] } }, // '<'
-        { 0x003D, { .width=12, .height=8, .top=10, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[363] } }, // '='
-        { 0x003E, { .width=12, .height=10, .top=8, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[387] } }, // '>'
-        { 0x003F, { .width=7, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[417] } }, // '?'
-        { 0x0040, { .width=15, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[442] } }, // '@'
-        { 0x0041, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[495] } }, // 'A'
-        { 0x0042, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[527] } }, // 'B'
-        { 0x0043, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[555] } }, // 'C'
-        { 0x0044, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[583] } }, // 'D'
-        { 0x0045, { .width=7, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[611] } }, // 'E'
-        { 0x0046, { .width=7, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[636] } }, // 'F'
-        { 0x0047, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[661] } }, // 'G'
-        { 0x0048, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[689] } }, // 'H'
-        { 0x0049, { .width=4, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[717] } }, // 'I'
-        { 0x004A, { .width=7, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[731] } }, // 'J'
-        { 0x004B, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[756] } }, // 'K'
-        { 0x004C, { .width=7, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[788] } }, // 'L'
-        { 0x004D, { .width=11, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[813] } }, // 'M'
-        { 0x004E, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[852] } }, // 'N'
-        { 0x004F, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[884] } }, // 'O'
-        { 0x0050, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[912] } }, // 'P'
-        { 0x0051, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[940] } }, // 'Q'
-        { 0x0052, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[972] } }, // 'R'
-        { 0x0053, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1000] } }, // 'S'
-        { 0x0054, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1028] } }, // 'T'
-        { 0x0055, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1056] } }, // 'U'
-        { 0x0056, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1084] } }, // 'V'
-        { 0x0057, { .width=13, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1116] } }, // 'W'
-        { 0x0058, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1162] } }, // 'X'
-        { 0x0059, { .width=9, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1194] } }, // 'Y'
-        { 0x005A, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1226] } }, // 'Z'
-        { 0x00C0, { .width=9, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1254] } }, // 'À'
-        { 0x00C1, { .width=9, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1295] } }, // 'Á'
-        { 0x00C2, { .width=9, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1336] } }, // 'Â'
-        { 0x00C3, { .width=9, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1377] } }, // 'Ã'
-        { 0x00C4, { .width=9, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1416] } }, // 'Ä'
-        { 0x00C5, { .width=9, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1455] } }, // 'Å'
-        { 0x00C6, { .width=12, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1496] } }, // 'Æ'
-        { 0x00C7, { .width=8, .height=18, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1538] } }, // 'Ç'
-        { 0x00C8, { .width=7, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1574] } }, // 'È'
-        { 0x00C9, { .width=7, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1606] } }, // 'É'
-        { 0x00CA, { .width=7, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1638] } }, // 'Ê'
-        { 0x00CB, { .width=7, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1670] } }, // 'Ë'
-        { 0x00CC, { .width=5, .height=18, .top=0, .left=-1, .data=&_FONT_WEATHER_FRAME_DATA[1700] } }, // 'Ì'
-        { 0x00CD, { .width=5, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1723] } }, // 'Í'
-        { 0x00CE, { .width=6, .height=18, .top=0, .left=-1, .data=&_FONT_WEATHER_FRAME_DATA[1746] } }, // 'Î'
-        { 0x00CF, { .width=6, .height=17, .top=1, .left=-1, .data=&_FONT_WEATHER_FRAME_DATA[1773] } }, // 'Ï'
-        { 0x00D0, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1799] } }, // 'Ð'
-        { 0x00D1, { .width=9, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1827] } }, // 'Ñ'
-        { 0x00D2, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1866] } }, // 'Ò'
-        { 0x00D3, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1902] } }, // 'Ó'
-        { 0x00D4, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1938] } }, // 'Ô'
-        { 0x00D5, { .width=8, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[1974] } }, // 'Õ'
-        { 0x00D6, { .width=8, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2008] } }, // 'Ö'
-        { 0x00D8, { .width=8, .height=16, .top=3, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2042] } }, // 'Ø'
-        { 0x00D9, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2074] } }, // 'Ù'
-        { 0x00DA, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2110] } }, // 'Ú'
-        { 0x00DB, { .width=8, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2146] } }, // 'Û'
-        { 0x00DC, { .width=8, .height=17, .top=1, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2182] } }, // 'Ü'
-        { 0x00DD, { .width=9, .height=18, .top=0, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2216] } }, // 'Ý'
-        { 0x00DE, { .width=8, .height=14, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2257] } }, // 'Þ'
-        { 0x00DF, { .width=8, .height=15, .top=4, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2285] } }, // 'ß'
-        { 0xFFFD, { .width=4, .height=1, .top=17, .left=0, .data=&_FONT_WEATHER_FRAME_DATA[2315] } }, // '�'
+        { 0x002E, FontGlyph(4, 4, 14, 0, 0, &_FONT_WEATHER_FRAME_DATA[0]) }, // '.'
+        { 0x002F, FontGlyph(8, 14, 4, -1, 2, &_FONT_WEATHER_FRAME_DATA[4]) }, // '/'
+        { 0x0030, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[32]) }, // '0'
+        { 0x0031, FontGlyph(8, 14, 4, 0, 2, &_FONT_WEATHER_FRAME_DATA[60]) }, // '1'
+        { 0x0032, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[88]) }, // '2'
+        { 0x0033, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[116]) }, // '3'
+        { 0x0034, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[144]) }, // '4'
+        { 0x0035, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[172]) }, // '5'
+        { 0x0036, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[200]) }, // '6'
+        { 0x0037, FontGlyph(8, 14, 4, 0, 2, &_FONT_WEATHER_FRAME_DATA[228]) }, // '7'
+        { 0x0038, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[257]) }, // '8'
+        { 0x0039, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[285]) }, // '9'
+        { 0x003A, FontGlyph(4, 10, 8, 0, 0, &_FONT_WEATHER_FRAME_DATA[313]) }, // ':'
+        { 0x003B, FontGlyph(4, 11, 8, 0, 0, &_FONT_WEATHER_FRAME_DATA[323]) }, // ';'
+        { 0x003C, FontGlyph(12, 10, 8, 0, 2, &_FONT_WEATHER_FRAME_DATA[334]) }, // '<'
+        { 0x003D, FontGlyph(12, 8, 10, 0, 4, &_FONT_WEATHER_FRAME_DATA[361]) }, // '='
+        { 0x003E, FontGlyph(12, 10, 8, 0, 2, &_FONT_WEATHER_FRAME_DATA[370]) }, // '>'
+        { 0x003F, FontGlyph(7, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[399]) }, // '?'
+        { 0x0040, FontGlyph(15, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[424]) }, // '@'
+        { 0x0041, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[477]) }, // 'A'
+        { 0x0042, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[509]) }, // 'B'
+        { 0x0043, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[537]) }, // 'C'
+        { 0x0044, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[565]) }, // 'D'
+        { 0x0045, FontGlyph(7, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[593]) }, // 'E'
+        { 0x0046, FontGlyph(7, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[618]) }, // 'F'
+        { 0x0047, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[643]) }, // 'G'
+        { 0x0048, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[671]) }, // 'H'
+        { 0x0049, FontGlyph(4, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[699]) }, // 'I'
+        { 0x004A, FontGlyph(7, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[713]) }, // 'J'
+        { 0x004B, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[738]) }, // 'K'
+        { 0x004C, FontGlyph(7, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[770]) }, // 'L'
+        { 0x004D, FontGlyph(11, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[795]) }, // 'M'
+        { 0x004E, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[834]) }, // 'N'
+        { 0x004F, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[866]) }, // 'O'
+        { 0x0050, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[894]) }, // 'P'
+        { 0x0051, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[922]) }, // 'Q'
+        { 0x0052, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[954]) }, // 'R'
+        { 0x0053, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[982]) }, // 'S'
+        { 0x0054, FontGlyph(8, 14, 4, 0, 2, &_FONT_WEATHER_FRAME_DATA[1010]) }, // 'T'
+        { 0x0055, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1037]) }, // 'U'
+        { 0x0056, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1065]) }, // 'V'
+        { 0x0057, FontGlyph(13, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1097]) }, // 'W'
+        { 0x0058, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1143]) }, // 'X'
+        { 0x0059, FontGlyph(9, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1175]) }, // 'Y'
+        { 0x005A, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1207]) }, // 'Z'
+        { 0x00C0, FontGlyph(9, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1235]) }, // 'À'
+        { 0x00C1, FontGlyph(9, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1276]) }, // 'Á'
+        { 0x00C2, FontGlyph(9, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1317]) }, // 'Â'
+        { 0x00C3, FontGlyph(9, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1358]) }, // 'Ã'
+        { 0x00C4, FontGlyph(9, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1397]) }, // 'Ä'
+        { 0x00C5, FontGlyph(9, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1436]) }, // 'Å'
+        { 0x00C6, FontGlyph(12, 14, 4, 0, 2, &_FONT_WEATHER_FRAME_DATA[1477]) }, // 'Æ'
+        { 0x00C7, FontGlyph(8, 18, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1520]) }, // 'Ç'
+        { 0x00C8, FontGlyph(7, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1556]) }, // 'È'
+        { 0x00C9, FontGlyph(7, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1588]) }, // 'É'
+        { 0x00CA, FontGlyph(7, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1620]) }, // 'Ê'
+        { 0x00CB, FontGlyph(7, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1652]) }, // 'Ë'
+        { 0x00CC, FontGlyph(5, 18, 0, -1, 0, &_FONT_WEATHER_FRAME_DATA[1682]) }, // 'Ì'
+        { 0x00CD, FontGlyph(5, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1705]) }, // 'Í'
+        { 0x00CE, FontGlyph(6, 18, 0, -1, 0, &_FONT_WEATHER_FRAME_DATA[1728]) }, // 'Î'
+        { 0x00CF, FontGlyph(6, 17, 1, -1, 0, &_FONT_WEATHER_FRAME_DATA[1755]) }, // 'Ï'
+        { 0x00D0, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[1781]) }, // 'Ð'
+        { 0x00D1, FontGlyph(9, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1809]) }, // 'Ñ'
+        { 0x00D2, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1848]) }, // 'Ò'
+        { 0x00D3, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1884]) }, // 'Ó'
+        { 0x00D4, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[1920]) }, // 'Ô'
+        { 0x00D5, FontGlyph(8, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1956]) }, // 'Õ'
+        { 0x00D6, FontGlyph(8, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[1990]) }, // 'Ö'
+        { 0x00D8, FontGlyph(8, 16, 3, 0, 0, &_FONT_WEATHER_FRAME_DATA[2024]) }, // 'Ø'
+        { 0x00D9, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[2056]) }, // 'Ù'
+        { 0x00DA, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[2092]) }, // 'Ú'
+        { 0x00DB, FontGlyph(8, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[2128]) }, // 'Û'
+        { 0x00DC, FontGlyph(8, 17, 1, 0, 0, &_FONT_WEATHER_FRAME_DATA[2164]) }, // 'Ü'
+        { 0x00DD, FontGlyph(9, 18, 0, 0, 0, &_FONT_WEATHER_FRAME_DATA[2198]) }, // 'Ý'
+        { 0x00DE, FontGlyph(8, 14, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[2239]) }, // 'Þ'
+        { 0x00DF, FontGlyph(8, 15, 4, 0, 0, &_FONT_WEATHER_FRAME_DATA[2267]) }, // 'ß'
+        { 0xFFFD, FontGlyph(4, 1, 17, 0, 2, &_FONT_WEATHER_FRAME_DATA[2297]) }, // '�'
     },
     .fgColor=0b00,
     .bgColor=0b11,

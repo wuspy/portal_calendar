@@ -466,15 +466,18 @@ void DisplayGDEW075T7::setPx(int32_t x, int32_t y, Color color)
 
 void DisplayGDEW075T7::drawImage(const Image &image, int32_t x, int32_t y, Align align)
 {
+    ImageReader reader = ImageReader(image);
     adjustAlignment(&x, &y, image.width, image.height, align);
 
-    size_t i = 0;
     Color color;
+    uint32_t y_dst;
+
     for (uint32_t y_src = 0; y_src < image.height; ++y_src) {
-        for (uint32_t x_src = 0; x_src < image.width; ++x_src, ++i) {
-            color = (Color)((image.data[i / 4] >> ((3 - i % 4) * 2)) & 0b11);
+        y_dst = y + y_src;
+        for (uint32_t x_src = 0; x_src < image.width; ++x_src) {
+            color = static_cast<Color>(reader.next());    
             if (color != _alpha) {
-                setPx(x + x_src, y + y_src, color);
+                setPx(x + x_src, y_dst, color);
             }
         }
     }
@@ -571,7 +574,7 @@ void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t
         } else {
             const FontGlyph glyph = font.getGlyph(cp);
             x += glyph.left;
-            drawImage({ width: glyph.width, height: glyph.height, data: glyph.data }, x, y + glyph.top);
+            drawImage(glyph, x, y + glyph.top);
             x += glyph.width + tracking;
         }
     }

@@ -9,7 +9,6 @@
 #include "resources/font/chamber_number.h"
 
 #include "resources/aperture_logo.h"
-#include "resources/progress_bar.h"
 #include "resources/wifi_64px.h"
 #include "resources/error.h"
 
@@ -296,9 +295,10 @@ void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
     }
 
     // Progress bar
-    _display->drawImage(IMG_PROGRESS_BAR, LEFT, 438);
-    int32_t progressWidth = IMG_PROGRESS_BAR.width * now->tm_mday / daysInMonth;
-    _display->fillRect(LEFT + progressWidth, 438, IMG_PROGRESS_BAR.width - progressWidth, IMG_PROGRESS_BAR.height, DisplayGDEW075T7::WHITE);
+    int32_t progressWidth = WIDTH * now->tm_mday / daysInMonth - 2;
+    for (int32_t i = 0; i < progressWidth; i += 10) {
+        _display->fillRect(LEFT + i, 438, 5, 34, DisplayGDEW075T7::BLACK);
+    }
 
     if (Config.getWeatherEnabled() && showWeather) {
         // Weather

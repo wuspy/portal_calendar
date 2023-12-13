@@ -158,11 +158,16 @@ A consequence of this is that I've had to write my own simple 2-bit drawing libr
 
 All of the bitmap and font resources are in the [resources](resources) directory, which can be compiled to C header files using [build_image.py](resources/build_image.py) and [build_font.py](resources/build_font.py) respectively. I chose to simply compile resources to C code that can be embedded into the firmware instead of loading them from the ESP32's SPIFFS because it greatly simplifies the flashing process.
 
-The build_image.py script can take in any image format supported by PIL and will output a C header file of the same name that can be included and drawn to the display. All of the images used in this project are inclued in this repo both as the original GIF images and the compiled C header files.
+The build_image.py script can take in any image format supported by PIL and will output a 2-bit-per-pixel [run-length encoded](https://en.wikipedia.org/wiki/Run-length_encoding) C header file of the same name that can be included and drawn to the display. All of the images used in this project are inclued in this repo both as the original GIF images and the compiled C header files.
 
-The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
+The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file, using the same encoding format as build_image. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # Changelog
+
+### 12/12/2023
+
+* Compress images with simple run-length encoding to save a bit of flash.
+* Draw progress bar with vector draw commands instead of an image to save a bit more flash.
 
 ### 12/11/2023
 

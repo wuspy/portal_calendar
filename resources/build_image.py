@@ -17,16 +17,18 @@ print("Loaded file '{}'".format(imagePath))
 
 width, height = image.size
 
-outputLines, byteCount = compileImage(image)
-
-print("Output size: {}".format(byteCount))
-print("Writing to file '{}'".format(outputFileName))
+print(" - Compiling image...")
+outputLines, byteCount, compressionRatio, rleBits = compileImage(image)
+print(" - Optimum RLE bits: {}".format(rleBits))
+print(" - Output size: {} bytes ({} compression ratio)".format(byteCount, round(compressionRatio, 2)))
+print(" - Writing to file '{}'...".format(outputFileName))
 
 outputFile = open(outputFileName, mode="w", encoding="utf8")
 outputFile.writelines([
     "/**\n",
     " * This is a generated source file.\n",
     " * Original image: {}\n".format(imagePath),
+    " * Compression ratio: {}\n".format(round(compressionRatio, 2)),
     " */\n\n",
 
     "#include \"image.h\"\n\n",
@@ -38,14 +40,10 @@ outputFile.writelines([
         *map(lambda line : "    {}\n".format(line), outputLines),
     "};\n\n",
 
-    "const Image {} {{\n".format(imageCName),
-    "    .width={},\n".format(width),
-    "    .height={},\n".format(height),
-    "    .data=_{}_DATA,\n".format(imageCName),
-    "};\n\n",
+    "const Image {0} = Image({1}, {2}, {3}, _{0}_DATA);\n\n".format(imageCName, width, height, rleBits),
 
     "#endif // {}_H\n".format(imageCName),
 ])
 outputFile.close()
 
-print("Done")
+print(" - Done")
