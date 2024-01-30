@@ -55,13 +55,15 @@ Before you begin, note that this project does require soldering and cutting the 
 
     ![](images/display.jpg)
 
-    This should go without saying, but the display and the ribbon cable connection are very fragile. Here's a close-up of how the ribbon cable should seat in the slot
+    This should go without saying, but the display and the ribbon cable connection are very fragile. Here's a close-up of how the ribbon cable should seat in the slot.
+
+    Recent versions of this display have a slimmer ribbon cable than shown in these pictures, however it should be the same length and have the same pinout, and is fully compatible.
 
     ![](images/ribboncable.jpg)
 
     Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the edges of the case on the top and bottom.
 
-4. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
+5. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
 
    ![](images/back.jpg)
 
@@ -69,8 +71,10 @@ Before you begin, note that this project does require soldering and cutting the 
 
    Once the back cover is installed, you can secure it with an **M3x8** screw in each corner.
 
-5. Insert the e-Paper Driver HAT into the slot by the ribbon cable and clip the ribbon cable into the connector. Make sure you get it fully seated in the connector, and **make sure to latch it closed**, otherwise the display may not work when you try to power it on. Also, make sure the **Display Config** switch is in the **B** position, and the **Interface Config** switch is in the **0** position.
-6. Now the fun part begins, cutting wires to length and soldering them to the ESP32. Note the colors listed below are the ones used in the wiring harness I got, yours is probably the same but it may be different if Waveshare changed it.
+6. Insert the e-Paper Driver HAT into the slot by the ribbon cable and clip the ribbon cable into the connector. Make sure you get it fully seated in the connector, and **make sure to latch it closed**, otherwise the display may not work when you try to power it on. Also, make sure the **Display Config** switch is in the **B** position, and the **Interface Config** switch is in the **0** position.
+7. Now the fun part begins, cutting wires to length and soldering them to the ESP32. Note the colors listed below are the ones used in the wiring harness I got, yours is probably the same but it may be different if Waveshare changed it.
+
+   **NOTE: Waveshare has recently started shipping a new revision (Rev2.3) of their driver board that is not currently supported by this project. See [here](https://github.com/wuspy/portal_calendar/issues/22). This should be updated soon, but in the meantime you will need to do your own research for how to wire this board.**
 
     | e-Paper HAT   |     | ESP32 |
     | ------------  | --- | ----- |
@@ -85,9 +89,9 @@ Before you begin, note that this project does require soldering and cutting the 
 
     ![](images/back2.jpg)
 
-7. Glue in the battery holder (I used JB weld plastic bonder), and solder the red and black wires to the **Vin** and **GND** pins on the ESP32. 
+9. Glue in the battery holder (I used JB weld plastic bonder), and solder the red and black wires to the **Vin** and **GND** pins on the ESP32. 
 
-8.  Make sure all the wires are inside the recess on the back cover so they aren't pinched, and make sure the ESP32 is seated in its recess. Then you can install [cover.stl](frame/cover.stl) and secure it with an **M3x8** screw in each corner, and one in the center above the battery holder.
+10.  Make sure all the wires are inside the recess on the back cover so they aren't pinched, and make sure the ESP32 is seated in its recess. Then you can install [cover.stl](frame/cover.stl) and secure it with an **M3x8** screw in each corner, and one in the center above the battery holder.
 
     ![](images/cover.jpg)
 
