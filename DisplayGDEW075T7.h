@@ -52,7 +52,7 @@ public:
         BLACK = 0b11,
     };
 
-    DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin);
+    DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin, uint8_t pwr_pin);
     ~DisplayGDEW075T7();
     void clear(Color color = WHITE);
     void test();
@@ -106,6 +106,7 @@ private:
     uint8_t _dcPin;
     uint8_t _csPin;
     uint8_t _busyPin;
+    uint8_t _pwrPin;
     uint32_t _width;
     uint32_t _height;
     uint8_t _alpha;

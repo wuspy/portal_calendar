@@ -63,7 +63,7 @@ Before you begin, note that this project does require soldering and cutting the 
 
     Once it's inserted, make sure the display is sitting flat and that the edges of the display are flush with the edges of the case on the top and bottom.
 
-5. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
+4. Insert [back.stl](frame/back.stl) on top of the display, flat side down, being careful that the ribbon cable doesn't get snagged when sliding in the slot on the side.
 
    ![](images/back.jpg)
 
@@ -71,10 +71,11 @@ Before you begin, note that this project does require soldering and cutting the 
 
    Once the back cover is installed, you can secure it with an **M3x8** screw in each corner.
 
-6. Insert the e-Paper Driver HAT into the slot by the ribbon cable and clip the ribbon cable into the connector. Make sure you get it fully seated in the connector, and **make sure to latch it closed**, otherwise the display may not work when you try to power it on. Also, make sure the **Display Config** switch is in the **B** position, and the **Interface Config** switch is in the **0** position.
-7. Now the fun part begins, cutting wires to length and soldering them to the ESP32. Note the colors listed below are the ones used in the wiring harness I got, yours is probably the same but it may be different if Waveshare changed it.
+5. Insert the e-Paper Driver HAT into the slot by the ribbon cable and clip the ribbon cable into the connector. Make sure you get it fully seated in the connector, and **make sure to latch it closed**, otherwise the display may not work when you try to power it on. Also, make sure the **Display Config** switch is in the **B** position, and the **Interface Config** switch is in the **0** position.
 
-   **NOTE: Waveshare has recently started shipping a new revision (Rev2.3) of their driver board that is not currently supported by this project. See [here](https://github.com/wuspy/portal_calendar/issues/22). This should be updated soon, but in the meantime you will need to do your own research for how to wire this board.**
+6. Now the fun part begins, cutting wires to length and soldering them to the ESP32. Note the colors listed below are the ones used in the wiring harness I got, yours is probably the same but it may be different if Waveshare changed it.
+
+    Note that the PWR pin does not exist prior to revision 2.3 of the waveshare driver board. If you have revision 2.2 or earlier, ignore that pin in the chart below. The firmware will work with both, no other changes are needed.
 
     | e-Paper HAT   |     | ESP32 |
     | ------------  | --- | ----- |
@@ -86,12 +87,15 @@ Before you begin, note that this project does require soldering and cutting the 
     | DC (Green)    | <-> | IO23  |
     | RST (White)   | <-> | IO33  |
     | BUSY (Purple) | <-> | IO27  |
+    | PWR (Red)     | <-> | IO32  |
+
+7. Glue in the battery holder (I used JB weld plastic bonder), and solder the red and black wires to the **Vin** and **GND** pins on the ESP32.
+
+    Here's what everything should look like once wired up. Note that this photo shows the older waveshare driver board without PWR pin.
 
     ![](images/back2.jpg)
 
-9. Glue in the battery holder (I used JB weld plastic bonder), and solder the red and black wires to the **Vin** and **GND** pins on the ESP32. 
-
-10.  Make sure all the wires are inside the recess on the back cover so they aren't pinched, and make sure the ESP32 is seated in its recess. Then you can install [cover.stl](frame/cover.stl) and secure it with an **M3x8** screw in each corner, and one in the center above the battery holder.
+8. Make sure all the wires are inside the recess on the back cover so they aren't pinched, and make sure the ESP32 is seated in its recess. Then you can install [cover.stl](frame/cover.stl) and secure it with an **M3x8** screw in each corner, and one in the center above the battery holder.
 
     ![](images/cover.jpg)
 
@@ -167,6 +171,11 @@ The build_image.py script can take in any image format supported by PIL and will
 The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file, using the same encoding format as build_image. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # Changelog
+
+### 2/12/2024
+
+* Add compatibility with Rev2.3 Waveshare driver board.
+* Slightly adjust VCOM_DC for a bit better contrast.
 
 ### 12/12/2023
 

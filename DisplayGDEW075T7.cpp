@@ -216,17 +216,19 @@ DisplayGDEW075T7::~DisplayGDEW075T7() {
     delete[] _frameBuffer;
 };
 
-DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin)
+DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin, uint8_t pwr_pin)
 {
     _resetPin = reset_pin;
     _dcPin = dc_pin;
     _csPin = cs_pin;
     _busyPin = busy_pin;
+    _pwrPin = pwr_pin;
 
     pinMode(_csPin, OUTPUT);
     pinMode(_resetPin, OUTPUT);
     pinMode(_dcPin, OUTPUT);
     pinMode(_busyPin, INPUT);
+    pinMode(_pwrPin, OUTPUT);
 
     #ifndef HEADLESS
     _spi = new SPIClass(spi_bus);
@@ -244,6 +246,7 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t cop
 
 void DisplayGDEW075T7::wakeup()
 {
+    digitalWrite(_pwrPin, HIGH);
     digitalWrite(_resetPin, HIGH);
     delay(20);
     digitalWrite(_resetPin, LOW);
@@ -388,6 +391,7 @@ void DisplayGDEW075T7::sleep()
     sendCommand(CMD_DEEPSLEEP);
     sendData(CHK_DEEPSLEEP);
     digitalWrite(_csPin, HIGH);
+    digitalWrite(_pwrPin, LOW);
 }
 
 void DisplayGDEW075T7::clear(Color color)

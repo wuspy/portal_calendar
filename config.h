@@ -115,6 +115,7 @@ enum class WeatherSecondaryInfo : uint8_t
 #define DC_PIN          23 // Any OUTPUT pin
 #define RESET_PIN       33 // Any OUTPUT pin
 #define BUSY_PIN        27 // Any INPUT pin
+#define PWR_PIN         32 // Any OUTPUT pin, unused prior to Rev2.3 driver board
 #define PD_PIN          19 // Pin that changes when the device is on USB/DC power
 #define PD_PIN_STATE    HIGH
 
