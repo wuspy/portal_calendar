@@ -263,7 +263,7 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x11);         // VDHR=5.8v
 
     sendCommand(CMD_VDCS);  // VCOM DC Setting (min 0x00 = -0.1v, max 0x4F = -4.05v)
-    sendData(0x26);         // -2.0v
+    sendData(0x22);         // -1.8v
 
     sendCommand(CMD_BTST);  // Booster Setting
     sendData(0x27);
