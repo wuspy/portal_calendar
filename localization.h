@@ -153,6 +153,26 @@ const Locale LOCALES[] = {
         .days = {"SÖNDAG", "MÅNDAG", "TISDAG", "ONSDAG", "TORSDAG", "FREDAG", "LÖRDAG"},
         .dayAbbreviations = {"SÖN", "MÅN", "TIS", "ONS", "TORS", "FRE", "LÖR"},
     },
+    {
+        .code = "lv",
+        .name = "Latviešu",
+        .months = {
+            "JANVĀRIS",
+            "FEBRUĀRIS",
+            "MARTS",
+            "APRĪLIS",
+            "MAIJS",
+            "JŪNIJS",
+            "JŪLIJS",
+            "AUGUSTS",
+            "SEPTEMBRIS",
+            "OKTOBRIS",
+            "NOVEMBRIS",
+            "DECEMBRIS",
+        },
+        .days = {"SVĒTDIENA", "PIRMDIENA", "OTRDIENA", "TREŠDIENA", "CETURTDIENA", "PIEKTDIENA", "SESTDIENA"},
+        .dayAbbreviations = {"SV", "PR", "OT", "TR", "CE", "PK", "SE"},
+    },
 };
 
 const Locale getLocale(String code);
