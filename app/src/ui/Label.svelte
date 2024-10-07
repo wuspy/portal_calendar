@@ -1,21 +1,29 @@
 <script lang="ts">
+    import type { HTMLLabelAttributes } from "svelte/elements";
     import classNames from "classnames";
-    export let disabled = false;
-    export let show: boolean = true;
+    import type { Snippet } from "svelte";
+
+    interface Props extends HTMLLabelAttributes {
+        show?: boolean;
+        disabled?: boolean | null;
+        children: Snippet;
+    }
+
+    let { show = true, disabled = false, children, ...props }: Props = $props();
 </script>
 
 {#if show}
-    <!-- svelte-ignore a11y-label-has-associated-control -->
+    <!-- svelte-ignore a11y_label_has_associated_control -->
     <label
-        {...$$restProps}
+        {...props}
         class={classNames(
             "text-sm font-medium block",
             disabled ? "text-gray-400" : "text-gray-900",
-            $$restProps.class
+            props.class
         )}
     >
-        <slot />
+        {@render children()}
     </label>
 {:else}
-    <slot />
+    {@render children()}
 {/if}

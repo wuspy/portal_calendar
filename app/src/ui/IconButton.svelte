@@ -3,11 +3,22 @@
     import classNames from "classnames";
     import type { IconType } from "./SvgIcon.svelte";
     import SvgIcon from "./SvgIcon.svelte";
+    import type { HTMLButtonAttributes } from "svelte/elements";
 
-    export let color: UiColor = "base";
-    export let name: string | undefined = undefined;
-    export let size: SizeType = "md";
-    export let icon: IconType;
+    interface Props extends HTMLButtonAttributes {
+        color?: UiColor;
+        name?: string;
+        size?: SizeType;
+        icon: IconType;
+    }
+
+    let {
+        color = "base",
+        name,
+        size = "md",
+        icon,
+        ...props
+    }: Props = $props();
 
     const colors: Record<UiColor, string> = {
         base: "focus:ring-gray-400 hover:bg-gray-100",
@@ -22,20 +33,17 @@
         lg: "rounded-lg focus:ring-2 p-2",
         xl: "rounded-lg focus:ring-2 p-3",
     };
-    let buttonClass: string;
-    $: buttonClass = classNames(
-        "focus:outline-none whitespace-normal",
-        sizing[size],
-        colors[color],
-        $$props.class
-    );
 </script>
 
 <button
-    on:click
     type="button"
-    {...$$restProps}
-    class={buttonClass}
+    {...props}
+    class={classNames(
+        "focus:outline-none whitespace-normal",
+        sizing[size],
+        colors[color],
+        props.class
+    )}
     aria-label={name}
 >
     <SvgIcon {icon} {size} title={name} />

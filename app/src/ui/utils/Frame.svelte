@@ -1,27 +1,38 @@
 <script lang="ts">
     import classNames from "classnames";
+    import type { Snippet } from "svelte";
+    import type { HTMLAttributes } from "svelte/elements";
 
-    export let tag: string = "div";
-    export let rounded: boolean = false;
-    export let border: boolean = false;
-    export let shadow: boolean = false;
+    interface Props extends HTMLAttributes<HTMLDivElement> {
+        tag?: string;
+        rounded?: boolean;
+        border?: boolean;
+        shadow?: boolean;
+        children: Snippet;
+    }
 
-    let divClass: string;
+    let {
+        tag = "div",
+        rounded = false,
+        border = false,
+        shadow = false,
+        children,
+        ...props
+    }: Props = $props();
 
-    $: divClass = classNames(
+    let divClass = $derived(classNames(
         "bg-white text-gray-500",
         rounded && "rounded-lg",
         border && "border border-gray-200",
         shadow && "shadow-md",
-        $$props.class
-    );
+        props.class
+    ));
 </script>
 
 <svelte:element
+    {...props}
     this={tag}
-    {...$$restProps}
     class={divClass}
 >
-    <slot />
+    {@render children()}
 </svelte:element>
-

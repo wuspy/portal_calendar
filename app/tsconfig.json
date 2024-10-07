@@ -1,12 +1,25 @@
 {
-	"extends": "@tsconfig/svelte/tsconfig.json",
-	"include": ["src/**/*", "src/node_modules/**/*", "vite.config.ts"],
+	"include": ["src/**/*", "vite.config.ts"],
 	"exclude": ["node_modules/*"],
 	"compilerOptions": {
-        "strict": true,
-        "allowJs": false,
-        "noImplicitAny": true,
-        "noImplicitOverride": true,
-        "isolatedModules": true,
+        "module": "ESNext",
+		"moduleResolution": "bundler",
+        "target": "es2017",
+        "verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"lib": [
+			"esnext",
+			"DOM",
+			"DOM.Iterable"
+		],
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"noEmit": true,
     },
 }

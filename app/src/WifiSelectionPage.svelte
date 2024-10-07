@@ -6,20 +6,23 @@
     import Api from "./api";
     import WifiInterfaceConfigModal from "./WifiInterfaceConfigModal.svelte";
     import { wifiStatus } from "./store";
-    import { createEventDispatcher } from "svelte";
     import ConfirmForgetNetworkModal from "./ConfirmForgetNetworkModal.svelte";
 
-    let propertiesModalOpen = false;
-    let connectModalOpen = false;
-    let confirmForgetNetworkModalOpen = false;
-    let selectedNetwork: WifiScanResponse | undefined;
+    interface Props {
+        onNext: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{ next: void }>();
+    let { onNext }: Props = $props();
+
+    let propertiesModalOpen = $state(false);
+    let connectModalOpen = $state(false);
+    let confirmForgetNetworkModalOpen = $state(false);
+    let selectedNetwork: WifiScanResponse | undefined = $state();
 
     function onNetworkClick(network: WifiScanResponse) {
         if (network.ssid === $wifiStatus.ssid && $wifiStatus.connected) {
             // Already connected to this network
-            dispatch("next");
+            onNext();
         } else {
             selectedNetwork = network;
             connectModalOpen = true;
@@ -54,13 +57,13 @@
         }
     }
 
-    let networks = refreshNetworks();
+    let networks = $state(refreshNetworks());
 </script>
 
 <div class="flex items-center">
     <PageTitle class="grow">Select Wi-Fi Network</PageTitle>
     {#await networks then}
-        <IconButton icon="Refresh" name="Refresh" size="lg" on:click={() => networks = refreshNetworks()} />
+        <IconButton icon="Refresh" name="Refresh" size="lg" onclick={() => networks = refreshNetworks()} />
     {/await}
 </div>
 {#await networks}
@@ -93,22 +96,22 @@
 {/await}
 <div class="my-3 space-y-3 flex flex-col items-start">
     {#if $wifiStatus.connected}
-        <Button variant="text" on:click={() => dispatch("next")}>
+        <Button variant="text" onclick={onNext}>
             <SvgIcon icon="Undo" size="md" class="mr-4" />
             Keep using '{$wifiStatus.ssid}'
         </Button>
     {/if}
     {#if $wifiStatus.ssid}
-        <Button variant="text" on:click={() => confirmForgetNetworkModalOpen = true}>
+        <Button variant="text" onclick={() => confirmForgetNetworkModalOpen = true}>
             <SvgIcon icon="Close" size="md" class="mr-4" />
             Forget network '{$wifiStatus.ssid}'
         </Button>
     {/if}
-    <Button variant="text" on:click={onAddNetworkClick}>
+    <Button variant="text" onclick={onAddNetworkClick}>
         <SvgIcon icon="Add" size="md" class="mr-4" />
         <span>Add network manually</span>
     </Button>
-    <Button variant="text" on:click={() => propertiesModalOpen = true}>
+    <Button variant="text" onclick={() => propertiesModalOpen = true}>
         <SvgIcon icon="Tune" size="md" class="mr-4" />
         <span>Interface properties</span>
     </Button>
@@ -117,15 +120,15 @@
 {#if connectModalOpen}
     <WifiConfigModal
         network={selectedNetwork}
-        on:close={() => connectModalOpen = false}
-        on:connected={() => dispatch("next")}
+        onClose={() => connectModalOpen = false}
+        onConnected={onNext}
     />
 {/if}
 
 {#if propertiesModalOpen}
-    <WifiInterfaceConfigModal on:close={() => propertiesModalOpen = false}/>
+    <WifiInterfaceConfigModal onClose={() => propertiesModalOpen = false}/>
 {/if}
 
 {#if confirmForgetNetworkModalOpen}
-    <ConfirmForgetNetworkModal on:close={() => confirmForgetNetworkModalOpen = false}/>
+    <ConfirmForgetNetworkModal onClose={() => confirmForgetNetworkModalOpen = false}/>
 {/if}

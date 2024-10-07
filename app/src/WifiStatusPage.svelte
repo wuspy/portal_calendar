@@ -1,35 +1,42 @@
 <script lang="ts">
     import { Button, getWifiRssiIcon, Modal, SvgIcon, WizardPageLayout } from "./ui";
     import { loadWifiStatus, wifiStatus } from "./store";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
 
-    let signalStrength: string;
-    $: if ($wifiStatus.connected) {
-        signalStrength = `${$wifiStatus.rssi} dBm `
-        if ($wifiStatus.rssi > -56) {
-            signalStrength += "(Excellent)";
-        } else if ($wifiStatus.rssi > -67) {
-            signalStrength += "(Good)";
-        } else if ($wifiStatus.rssi > -78) {
-            signalStrength += "(Fair)";
-        } else if ($wifiStatus.rssi > -89) {
-            signalStrength += "(Weak)";
-        } else {
-            signalStrength += "(Very Weak)";
-        }
+    interface Props {
+        onBack: () => void;
+        onNext: () => void;
     }
 
-    let changeNetworkDisabledModalOpen = false;
+    let { onBack: parentOnBack, onNext }: Props = $props();
+
+    let signalStrength = $derived.by(() => {
+        if ($wifiStatus.connected) {
+            let signalStrength = `${$wifiStatus.rssi} dBm `
+            if ($wifiStatus.rssi > -56) {
+                signalStrength += "(Excellent)";
+            } else if ($wifiStatus.rssi > -67) {
+                signalStrength += "(Good)";
+            } else if ($wifiStatus.rssi > -78) {
+                signalStrength += "(Fair)";
+            } else if ($wifiStatus.rssi > -89) {
+                signalStrength += "(Weak)";
+            } else {
+                signalStrength += "(Very Weak)";
+            }
+            return signalStrength;
+        }
+    });
+
+    let changeNetworkDisabledModalOpen = $state(false);
 
     const statusLabelClass = "text-xs font-medium text-white px-1.5 py-0.5 rounded uppercase";
-
-    const dispatch = createEventDispatcher<{ back: void, next: void }>();
 
     function onBack() {
         if ($wifiStatus.connected && $wifiStatus.inUse) {
             changeNetworkDisabledModalOpen = true;
         } else {
-            dispatch("back");
+            parentOnBack();
         }
     }
 
@@ -39,7 +46,7 @@
     });
 </script>
 
-<WizardPageLayout title="Wi-Fi Network" backButtonLabel="Change" on:next on:back={onBack} nextDisabled={!$wifiStatus.connected}>
+<WizardPageLayout title="Wi-Fi Network" backButtonLabel="Change" {onNext} {onBack} nextDisabled={!$wifiStatus.connected}>
     <div class="w-full flex flex-col items-center">
         <SvgIcon icon={getWifiRssiIcon($wifiStatus.connected && $wifiStatus.rssi)} size="xl" />
         <h1 class="mt-2 mb-1 text-2xl font-medium break-all">{$wifiStatus.ssid}</h1>
@@ -73,8 +80,8 @@
             on the calendar's screen.
         </p>
         <div class="flex flex-row">
-            <span class="grow-[2]" />
-            <Button class="grow" on:click={() => changeNetworkDisabledModalOpen = false}>Ok</Button>
+            <span class="grow-[2]"></span>
+            <Button class="grow" onclick={() => changeNetworkDisabledModalOpen = false}>Ok</Button>
         </div>
     </Modal>
 {/if}

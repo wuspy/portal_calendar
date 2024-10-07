@@ -8,24 +8,40 @@
 <script lang="ts">
     import Wrapper from "./utils/Wrapper.svelte";
     import classNames from "classnames";
-    import { createEventDispatcher, getContext, onMount } from "svelte";
+    import { getContext, onMount, type Snippet } from "svelte";
     import type { InputType, UiColor, InputValidator } from "./types";
     import Label from "./Label.svelte";
     import Helper from "./Helper.svelte";
+    import type { HTMLInputAttributes } from "svelte/elements";
 
-    const dispatch = createEventDispatcher<{ change: Event }>();
+    interface Props extends Omit<HTMLInputAttributes, "size" | "children"> {
+        type?: InputType;
+        size?: FormSizeType;
+        label?: string;
+        help?: string;
+        status?: InputStatus;
+        validator?: InputValidator;
+        validateOnMount?: boolean;
+        left?: Snippet;
+        right?: Snippet;
+    }
 
-    export let type: InputType = "text";
-    export let value: string | number = "";
-    export let size: FormSizeType | undefined = undefined;
-    export let label: string = "";
-    export let help: string = "";
-    export let autofocus = false;
-    export let disabled = false;
-    export let required = false;
-    export let validator: InputValidator | undefined = undefined;
-    export let validateOnMount = false;
-    export let status: InputStatus = {};
+    let {
+        type = "text",
+        value = $bindable(""),
+        size = undefined,
+        label = "",
+        help = "",
+        status = $bindable({}),
+        validator,
+        validateOnMount = false,
+        autofocus,
+        disabled,
+        required,
+        left,
+        right,
+        ...inputProps
+    }: Props = $props();
 
     let inputElement: HTMLInputElement;
 
@@ -62,13 +78,14 @@
     const rightPadding = { sm: "pr-9", md: "pr-10", lg: "pr-11" };
     const inputPadding = { sm: "p-2", md: "p-2.5", lg: "p-4" };
 
-    $: _size = size || clampSize(group?.size) || "md";
-    let inputClass: string;
-    $: inputClass = classNames(
+    let color: UiColor = $derived(status.validating ? "yellow" : status.error ? "red" : status.success ? "green" : "base");
+    let message = $derived(status.validating || status.error || status.success ? status.message ?? help : help);
+    let _size = $derived(size || clampSize(group?.size) || "md");
+    let inputClass = $derived(classNames(
         "block w-full",
         disabledClass,
-        $$slots.left && leftPadding[_size],
-        $$slots.right && rightPadding[_size],
+        left && leftPadding[_size],
+        right && rightPadding[_size],
         colorClasses[color],
         textColorClasses[color],
         inputPadding[_size],
@@ -76,8 +93,8 @@
         group || "rounded-lg",
         group && "first:rounded-l-lg last:rounded-r-lg",
         group && "border-l-0 first:border-l last:border-r",
-        $$props.class
-    );
+        inputProps.class
+    ));
     let floatClass = "flex absolute inset-y-0 items-center text-gray-500";
 
     let validatorCount = 0;
@@ -107,11 +124,6 @@
         onChange(value);
     };
 
-    let message: string;
-    $: message = status.validating || status.error || status.success ? status.message ?? help : help;
-    let color: UiColor;
-    $: color = status.validating ? "yellow" : status.error ? "red" : status.success ? "green" : "base";
-
     onMount(() => {
         if (autofocus) {
             inputElement.focus();
@@ -122,40 +134,28 @@
     });
 </script>
 
-<Label class="space-y-2" disabled={disabled} show={!!label || !!message}>
+<Label class="space-y-2" {disabled} show={!!label || !!message}>
     {#if label}<span>{label}</span>{/if}
-    <Wrapper class="relative w-full" show={$$slots.left || $$slots.right}>
-        {#if $$slots.left}
-            <div class={classNames(floatClass, disabledClass, textColorClasses[color], "left-0 pl-2.5 pointer-events-none")}><slot name="left" /></div>
+    <Wrapper class="relative w-full" show={!!(left || right)}>
+        {#if left}
+            <div class={classNames(floatClass, disabledClass, textColorClasses[color], "left-0 pl-2.5 pointer-events-none")}>{@render left()}</div>
         {/if}
         <input
-            {...$$restProps}
+            {...inputProps}
+            {disabled}
+            {required}
+            class={inputClass}
             bind:value
             bind:this={inputElement}
-            on:change={e => {
-                dispatch("change", e);
+            use:setType={type}
+            onchange={e => {
+                inputProps.onchange && inputProps.onchange(e);
                 onChange(e.currentTarget.value);
             }}
-            on:blur
-            on:click
-            on:contextmenu
-            on:focus
-            on:keydown
-            on:keypress
-            on:keyup
-            on:mouseover
-            on:mouseenter
-            on:mouseleave
-            on:paste
-            on:input
-            use:setType={type}
-            class={inputClass}
-            disabled={disabled}
-            required={required}
         />
-        {#if $$slots.right}
-            <div class={classNames(floatClass, disabledClass, textColorClasses[color], "right-0 pr-2.5")}><slot name="right" /></div>
+        {#if right}
+            <div class={classNames(floatClass, disabledClass, textColorClasses[color], "right-0 pr-2.5")}>{@render right()}</div>
         {/if}
     </Wrapper>
-    {#if message}<Helper color={color}>{message}</Helper>{/if}
+    {#if message}<Helper {color}>{message}</Helper>{/if}
 </Label>

@@ -1,5 +1,4 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
@@ -8,9 +7,7 @@ import generateCppHeader from "./scripts/generateCppHeader";
 
 export default defineConfig({
     plugins: [
-        svelte({
-            preprocess: [sveltePreprocess({ typescript: true })],
-        }),
+        svelte(),
         visualizer({
             gzipSize: true,
         }),

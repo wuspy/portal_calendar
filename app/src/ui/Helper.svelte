@@ -1,9 +1,15 @@
 <script lang="ts">
     import classNames from "classnames";
     import type { UiColor } from "./types";
+    import type { HTMLAttributes } from "svelte/elements";
+    import type { Snippet } from "svelte";
 
-    export let helperClass: string = "text-xs font-normal";
-    export let color: UiColor = "base";
+    interface Props extends HTMLAttributes<HTMLParagraphElement> {
+        color?: UiColor;
+        children: Snippet;
+    }
+
+    let { color = "base", children, ...props }: Props = $props();
 
     const colorClasses: Record<UiColor, string> = {
         base: "text-gray-400",
@@ -14,8 +20,8 @@
 </script>
 
 <p
-    {...$$restProps}
-    class={classNames(helperClass, colorClasses[color], $$props.class)}
+    {...props}
+    class={classNames("text-xs font-normal", colorClasses[color], props.class)}
 >
-    <slot />
+    {@render children()}
 </p>

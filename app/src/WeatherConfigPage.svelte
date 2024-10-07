@@ -11,26 +11,26 @@
     import { openSaveFailedModal } from "./SaveFailedModal.svelte";
     import { preferences, savePreferences } from "./store";
     import { Checkbox, Input, PasswordInput, Select, type SelectOptionType, type InputValidator, WizardPageLayout } from "./ui";
-    import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher<{ back: void, next: void }>();
+    let weatherEnabled = $state($preferences.weatherEnabled);
+    let weatherLocName = $state($preferences.weatherLocName);
+    let owmApiKey = $state($preferences.owmApiKey);
+    let weatherLat = $state($preferences.weatherLat);
+    let weatherLon = $state($preferences.weatherLon);
+    let weatherDisplay = $state($preferences.weatherDisplay);
+    let weatherUnits = $state($preferences.weatherUnits);
+    let weatherInfo = $state($preferences.weatherInfo);
+    let weatherStartHr = $state($preferences.weatherStartHr);
+    let show24Hr = $state($preferences.show24Hr);
 
-    let {
-        weatherEnabled,
-        weatherLocName,
-        owmApiKey,
-        weatherLat,
-        weatherLon,
-        weatherDisplay,
-        weatherUnits,
-        weatherInfo,
-        weatherStartHr,
-        show24Hr,
-    } = $preferences;
+    interface Props {
+        onBack: () => void;
+        onNext: () => void;
+    }
 
-    let saving = false;
+    let { onBack, onNext }: Props = $props();
 
-    let revalidateLocation: () => void;
+    let saving = $state(false);
 
     const validateLocation: InputValidator = async (location: string) => {
         location = location.trim();
@@ -63,9 +63,6 @@
     const validateApiKey: InputValidator = async (owmApiKey: string) => {
         owmApiKey = owmApiKey.trim();
         if (validApiKeys.includes(owmApiKey)) {
-            if (weatherLocName) {
-                revalidateLocation();
-            }
             return [true, "Verified"];
         }
         try {
@@ -110,8 +107,7 @@
         return `${hour12}:00 ${amPm}`;
     };
 
-    let startingHourOptions: SelectOptionType[];
-    $: startingHourOptions = [...Array(24).keys()].map(start => {
+    let startingHourOptions: SelectOptionType[] = $derived([...Array(24).keys()].map(start => {
         const end = (start + 12) % 24;
         return {
             value: start,
@@ -119,7 +115,7 @@
                 ? `${format24HourTime(start)} - ${format24HourTime(end)}`
                 : `${format12HourTime(start)} - ${format12HourTime(end)}`
         };
-    });
+    }));
 
     async function saveAndContinue() {
         saving = true;
@@ -135,7 +131,7 @@
             weatherStartHr,
             show24Hr,
         })) {
-            dispatch("next");
+            onNext();
         } else {
             saving = false;
             openSaveFailedModal();
@@ -145,8 +141,8 @@
 
 <WizardPageLayout
     title="Weather"
-    on:back
-    on:next={saveAndContinue}
+    {onBack}
+    onNext={saveAndContinue}
     {saving}
     nextDisabled={weatherEnabled && (!owmApiKey || (!weatherLat && !weatherLon))}
 >
@@ -156,7 +152,7 @@
         help="Show a weather forecast in place of the chamber icons. You can switch between the two at any time using the MODE button."
     />
     {#if weatherEnabled}
-        <span class="border-t" />
+        <span class="border-t" ></span>
         <div class="space-y-6" in:fly="{{y: -20, duration: 200}}">
             <PasswordInput
                 label="OpenWeatherMap API Key"
@@ -173,7 +169,6 @@
                 label="Weather Location"
                 placeholder="enter the location you want the weather for"
                 bind:value={weatherLocName}
-                bind:revalidate={revalidateLocation}
                 validator={validateLocation}
                 validateOnMount={!!weatherLocName}
                 required

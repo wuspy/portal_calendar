@@ -32,25 +32,31 @@
         WizardPageLayout,
         type InputStatus,
     } from "./ui";
-    import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher<{ next: void, back: void }>();
+    interface Props {
+        onBack: () => void;
+        onNext: () => void;
+    }
 
-    let showAdvanced: boolean = false;
+    let { onBack, onNext }: Props = $props();
 
-    let {
-        timezone,
-        locale,
-        twoNtpSyncs,
-        rtcCorrection,
-        ntpServer1,
-        ntpServer2,
-        tzdServer1,
-        tzdServer2,
-        showDay,
-        showMonth,
-        showYear,
-    } = $preferences;
+    let timezone = $state($preferences.timezone || browserTimezone);
+    let locale = $state($preferences.locale);
+    let twoNtpSyncs = $state($preferences.twoNtpSyncs);
+    let rtcCorrection = $state($preferences.rtcCorrection);
+    let ntpServer1 = $state($preferences.ntpServer1);
+    let ntpServer2 = $state($preferences.ntpServer2);
+    let tzdServer1 = $state($preferences.tzdServer1);
+    let tzdServer2 = $state($preferences.tzdServer2);
+    let showDay = $state($preferences.showDay);
+    let showMonth = $state($preferences.showMonth);
+    let showYear = $state($preferences.showYear);
+
+    let showAdvanced = $state(false);
+    let rtcStatus: InputStatus = $state({});
+    let primaryNtpServerStatus: InputStatus = $state({});
+    let primaryTimezonedServerStatus: InputStatus = $state({});
+    let saving = $state(false);
 
     const checkNtpServer: InputValidator = async (server: string) => {
         server = server.trim();
@@ -102,16 +108,11 @@
         }
     };
 
-    let rtcStatus: InputStatus = {};
-    let primaryNtpServerStatus: InputStatus = {};
-    let primaryTimezonedServerStatus: InputStatus = {};
-
     const checkRtcCorrectionFactor: InputValidator = async (value: number) =>
         value > 1 || value < 0
             ? [false, "Enter a number between 0 and 1"]
             : true;
 
-    let saving = false;
     async function saveAndContinue() {
         saving = true;
         if (await savePreferences({
@@ -127,22 +128,18 @@
             showMonth,
             showYear,
         })) {
-            dispatch("next");
+            onNext();
         } else {
             openSaveFailedModal();
             saving = false;
         }
     }
-
-    if (!timezone) {
-        timezone = browserTimezone;
-    }
 </script>
 
 <WizardPageLayout
     title="Date & Time"
-    on:back
-    on:next={saveAndContinue}
+    {onBack}
+    onNext={saveAndContinue}
     {saving}
     nextDisabled={!timezone || primaryNtpServerStatus.error || primaryTimezonedServerStatus.error || rtcStatus.error}
 >
@@ -183,7 +180,7 @@
         <Button
             variant="text"
             class="-mb-4 grow"
-            on:click={() => (showAdvanced = !showAdvanced)}
+            onclick={() => (showAdvanced = !showAdvanced)}
         >
             {#if showAdvanced}
                 <SvgIcon icon="ExpandLess" size="md" />
@@ -195,7 +192,7 @@
         </Button>
     </div>
     {#if showAdvanced}
-        <div class="border-t" />
+        <div class="border-t"></div>
         <div class="space-y-6" in:fly={{ y: -20, duration: 200 }}>
             <Checkbox
                 label="Perform two NTP syncs per day"
@@ -212,7 +209,9 @@
                     placeholder="Primary NTP server"
                     required
                 >
-                    <span class="mx-1" slot="left">1.</span>
+                    {#snippet left()}
+                        <span class="mx-1">1.</span>
+                    {/snippet}
                 </Input>
                 <Input
                     bind:value={ntpServer2}
@@ -220,7 +219,9 @@
                     validateOnMount
                     placeholder="Secondary NTP server"
                 >
-                    <span class="mx-1" slot="left">2.</span>
+                    {#snippet left()}
+                        <span class="mx-1">2.</span>
+                    {/snippet}
                 </Input>
             </Label>
             <Label class="space-y-2">
@@ -233,7 +234,9 @@
                     placeholder="Primary timezoned server"
                     required
                 >
-                    <span class="mx-1" slot="left">1.</span>
+                    {#snippet left()}
+                        <span class="mx-1">1.</span>
+                    {/snippet}
                 </Input>
                 <Input
                     bind:value={tzdServer2}
@@ -241,7 +244,9 @@
                     validateOnMount
                     placeholder="Secondary timezoned server"
                 >
-                    <span class="mx-1" slot="left">2.</span>
+                    {#snippet left()}
+                        <span class="mx-1">2.</span>
+                    {/snippet}
                 </Input>
             </Label>
             <Input

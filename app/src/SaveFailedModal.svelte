@@ -1,16 +1,15 @@
 <script context="module" lang="ts">
     import { wifiStatus } from "./store";
     import { Button, Modal } from "./ui";
-    import { writable } from "svelte/store";
 
-    const open = writable(false);
-    export const openSaveFailedModal = () => open.set(true);
+    let open = $state(false);
+    export const openSaveFailedModal = () => open = true;
 </script>
 
-{#if $open}
+{#if open}
     <Modal title="Error" size="xs">
         <p class="text-md">
-            {#if $wifiStatus.ssid}
+            {#if $wifiStatus?.ssid}
                 Failed to save settings. Make sure the calendar is plugged in, and that
                 you're connected either to its Wi-Fi network or the network '{$wifiStatus.ssid}',
                 then try again.
@@ -24,8 +23,8 @@
             <a href="https://github.com/wuspy/portal_calendar">https://github.com/wuspy/portal_calendar</a>.
         </p>
         <div class="flex flex-row">
-            <span class="grow-[2]" />
-            <Button class="grow" on:click={() => open.set(false)}>Ok</Button>
+            <span class="grow-[2]"></span>
+            <Button class="grow" onclick={() => open = false}>Ok</Button>
         </div>
     </Modal>
 {/if}

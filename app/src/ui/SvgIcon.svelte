@@ -50,23 +50,32 @@
 
 <script lang="ts">
     import classNames from "classnames";
-import type {SizeType} from "./types";
+    import type {SizeType} from "./types";
+    import type { SVGAttributes } from "svelte/elements";
 
-    export let icon: IconType;
-    export let size: SizeType | undefined = undefined;
-    export let title: string = "";
+    interface Props extends Omit<SVGAttributes<SVGElement>, "viewBox" | "role" | "xmlns"> {
+        icon: IconType;
+        size?: SizeType;
+        title?: string;
+    }
 
-    let viewBox: string, path: string;
-    $: [viewBox, path] = icons[icon];
+    let {
+        icon,
+        size,
+        title = "",
+        ...props
+    }: Props = $props();
+
+    let [viewBox, path] = $derived(icons[icon]);
 </script>
 
 <svg
     role="img"
     xmlns="http://www.w3.org/2000/svg"
     fill="currentColor"
-    {...$$restProps}
+    {...props}
     {viewBox}
-    class={classNames("shrink-0", size && svgSizes[size], $$props.class)}
+    class={classNames("shrink-0", size && svgSizes[size], props.class)}
 >
     {#if title}<title>{title}</title>{/if}
     <path d={path} />

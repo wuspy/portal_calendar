@@ -3,7 +3,7 @@ import type { Preferences, WifiScanResponse, LocationQueryResponse, WifiStatus, 
 // Running in dev mode assumes the calendar is running with DEB_WEBSERVER and is therefore available
 // on a local wifi network rather than its own AP. This address can be replaced with the current address
 // of the calendar on the local network.
-const ROOT_URL = process.env.NODE_ENV === "development" ? "http://192.168.1.9" : "";
+const ROOT_URL = process.env.NODE_ENV === "development" ? "http://192.168.1.14" : "";
 
 namespace Api {
     export type Result<T> = Omit<Response, "json"> & { json(): Promise<T> }
