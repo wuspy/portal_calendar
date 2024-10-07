@@ -20,14 +20,14 @@ extern char savedTimezone[];
 /**
  * Adjusts the provided sleep duration by the RTC correction factor.
  */
-void correctSleepDuration(time_t *timeAsleep);
+void correctSleepDuration(uint32_t *timeAsleep);
 
 /**
  * Updates the system clock to reflect the actual time after waking up from a sleep corrected by correctSleepDuration
  */
 void correctSystemClock(time_t timeAsleep);
 
-int getSecondsToMidnight(tm *now);
+uint32_t getSecondsToMidnight(tm *now);
 
 int getDaysInMonth(int month, int year);
 
