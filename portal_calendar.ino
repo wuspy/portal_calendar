@@ -338,7 +338,7 @@ void setup()
 
     localtime_r(&t, &now);
     uint32_t secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
-    log_i("%d seconds to midnight", secondsToMidnight);
+    log_i("%u seconds to midnight", secondsToMidnight);
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
