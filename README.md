@@ -114,7 +114,7 @@ This project requires the following dependencies to be installed through the lib
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-Then, go to `Tools -> Boards -> Boards Manager...` and search for esp32
+Then, go to `Tools -> Board -> Boards Manager...` and search for "esp32". **Install the one by Espressif Systems, not Arduino.**
 
 ![](images/arduino1.png)
 
@@ -131,16 +131,19 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | Option | Value |
  | ------ | ----- |
  | CPU Frequency | 240 Mhz (WiFi/BT) |
+ | Core Debug Level | None* |
  | Events Run On | Core 1 |
  | Flash Frequency | 80Mhz |
  | Flash Mode | QIO |
  | Flash Size | 4MB (32Mb) |
+ | JTAG Adapter | Disabled |
  | Arduino Runs On | Core 1 |
  | **Partition Scheme** | **Huge APP (3MB No OTA/1MB SPIFFS)** |
  | PSRAM | Disabled |
  | Upload Speed | 921600 |
+ | Zigbee Mode | Disabled |
 
-To enable debug logs, choose `Info` for Core Debug Level. Otherwise, leave it set to `None`.
+*To enable debug logs, choose `Info` for Core Debug Level. Otherwise, leave it set to `None`.
 
 Now you can just flash it like any other arduino.
 
