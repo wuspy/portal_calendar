@@ -33,12 +33,12 @@ RTC_DATA_ATTR int displayedYDay = 0;
 RTC_DATA_ATTR bool showWeather = false;
 RTC_DATA_ATTR time_t displayedWeatherTime = 0;
 
-void deepSleep(uint32_t seconds)
+void deepSleep(time_t seconds)
 {
     time(&sleepStartTime);
     scheduledWakeup = sleepStartTime + seconds;
     correctSleepDuration(&seconds);
-    log_i("Sleeping for %us, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
+    log_i("Sleeping for %llds, scheduled wakeup is %s\n\n", (long long)seconds, printTime(scheduledWakeup));
 
     if (Config.getWeatherEnabled()) {
         // Enable wakeup on boot button
@@ -337,8 +337,8 @@ void setup()
     // Schedule next wakeup
 
     localtime_r(&t, &now);
-    uint32_t secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
-    log_i("%u seconds to midnight", secondsToMidnight);
+    int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
+    log_i("%d seconds to midnight", secondsToMidnight);
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
@@ -347,19 +347,19 @@ void setup()
             if (Config.getTwoNtpSyncsPerDay()) {
                 if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) {
                     // Try to sync 3 more times before midnight
-                    deepSleep(min(secondsToMidnight, (uint32_t)SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
+                    deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2 / 3));
                 }
                 // Try to sync 3 more times before the 2nd scheduled sync
                 deepSleep(min(
                     secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2,
-                    (uint32_t)(SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) / 3
+                    (SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2) / 3
                 ));
             }
             // Try to sync 4 more times before midnight
-            deepSleep(min(secondsToMidnight, (uint32_t)SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 / 4));
+            deepSleep(min(secondsToMidnight, SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 / 4));
         }
         // Keep trying to sync every hour
-        deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1, (uint32_t)3600));
+        deepSleep(min(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1, 3600));
     }
 
     if (secondsToMidnight <= SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1 * 2) {

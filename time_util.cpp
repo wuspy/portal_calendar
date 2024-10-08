@@ -12,14 +12,14 @@ RTC_DATA_ATTR time_t lastNtpSync = 0;
 RTC_DATA_ATTR float rtcCorrectionFactor = 0.0;
 RTC_DATA_ATTR char savedTimezone[57] = {'\0'};
 
-void correctSleepDuration(uint32_t *timeAsleep)
+void correctSleepDuration(time_t *timeAsleep)
 {
     if (*timeAsleep < MIN_CORRECTABLE_SLEEP_DURATION) {
         return;
     }
 
-    int32_t adjustment = (int32_t)round((float)*timeAsleep * rtcCorrectionFactor);
-    log_i("RTC correction for this sleep duration is %ds (factor %0.6f)", adjustment, rtcCorrectionFactor);
+    time_t adjustment = (time_t)round((float)*timeAsleep * rtcCorrectionFactor);
+    log_i("RTC correction for this sleep duration is %llds (factor %0.6f)", (long long)adjustment, rtcCorrectionFactor);
     *timeAsleep += adjustment;
 }
 
@@ -30,7 +30,7 @@ void correctSystemClock(time_t timeAsleep)
     }
 
     float adjustment = (float)timeAsleep * rtcCorrectionFactor;
-    log_i("Was asleep for %ds, adjusting system clock by %0.6fs (factor %0.6f)", timeAsleep, -adjustment, rtcCorrectionFactor);
+    log_i("Was asleep for %llds, adjusting system clock by %0.6fs (factor %0.6f)", (long long)timeAsleep, -adjustment, rtcCorrectionFactor);
     suseconds_t adjtv_usec = (suseconds_t)(std::modf(adjustment, &adjustment) * uS_PER_S);
     time_t adjtv_sec = (time_t)adjustment;
     timeval tvnow;
@@ -47,12 +47,12 @@ void correctSystemClock(time_t timeAsleep)
     settimeofday(&tvnow, nullptr);
 }
 
-uint32_t getSecondsToMidnight(tm *now)
+int getSecondsToMidnight(tm *now)
 {
     tm tomorrow = *now;
     ++tomorrow.tm_mday; // mktime will handle day/month rolling over
     tomorrow.tm_hour = tomorrow.tm_min = tomorrow.tm_sec = 0;
-    return static_cast<uint32_t>(ceil(difftime(mktime(&tomorrow), mktime(now))));
+    return static_cast<int>(ceil(difftime(mktime(&tomorrow), mktime(now))));
 }
 
 bool setTimezone(const char* tz)
