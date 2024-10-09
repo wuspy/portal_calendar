@@ -107,10 +107,10 @@ Before you begin, note that this project does require soldering and cutting the 
 
 This project requires the following dependencies to be installed through the library manager
 
- - ArduinoJson 6.21.4
- - ESPAsyncWebSrv 1.2.7
+ - ArduinoJson 7.2.0
+ - ESPAsyncWebSrv 1.2.8
 
- You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+ You also need to install the ESP32 board package 3.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
@@ -174,6 +174,11 @@ The build_image.py script can take in any image format supported by PIL and will
 The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file, using the same encoding format as build_image. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # Changelog
+
+### 10/9/2024
+
+* Add compatability with arduino-esp32 v3 and latest Arduino IDE.
+* Support 64-bit time_t if the environment uses it.
 
 ### 2/12/2024
 
