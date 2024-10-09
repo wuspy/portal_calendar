@@ -160,6 +160,7 @@ void startConfigServer()
 
 void showWelcomeScreen()
 {
+    log_i("Showing welcome screen");
     Display.showWelcomeScreen();
     // Sleep forever
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
@@ -226,6 +227,7 @@ void runScheduledActions()
                 errorNoWifi();
             }
         } else {
+            // Weather not enabled, do nothing and clear the action
             scheduledActions &= ~ACTION_WEATHER_SYNC;
         }
     }
@@ -261,20 +263,19 @@ void setup()
     Config.begin();
 
     // Check if configuration is required
-    if (!Config.isConfigured()) {
+    while (!Config.isConfigured()) {
         log_i("Not configured");
-        while (!Config.isConfigured()) {
-            if (Config.isOnUsbPower()) {
-                log_i("On USB power");
-                startConfigServer();
-            } else {
-                log_i("Not on USB power");
-                showWelcomeScreen();
-            }
+        if (Config.isOnUsbPower()) {
+            log_i("On USB power");
+            startConfigServer();
+        } else {
+            log_i("Not on USB power");
+            showWelcomeScreen();
         }
     }
+
     // Check for wakeup from boot button press
-    else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
+    if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
         log_i("Toggling showWeather");
         showWeather = !showWeather;
     }
@@ -370,15 +371,12 @@ void setup()
         }
         // Sleep until second NTP sync
         scheduledActions = ACTION_NTP_SYNC;
-        log_i("Sleeping for 2nd NTP sync");
+        log_i("Sleeping for 2nd sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
     }
 
     // Sleep until first NTP sync
-    scheduledActions =
-        ACTION_NTP_SYNC
-        | ACTION_TZ_SYNC
-        | (Config.getWeatherEnabled() ? ACTION_WEATHER_SYNC : 0);
+    scheduledActions = ACTION_NTP_SYNC | ACTION_TZ_SYNC | ACTION_WEATHER_SYNC;
     log_i("Sleeping for 1st sync");
     deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
 }
