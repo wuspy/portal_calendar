@@ -151,7 +151,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
             recv += (char)udp.read();
         }
         udp.stop();
-        log_i("Response from %s: %s", server.c_str(), result.c_str());
+        log_i("Response from %s: %s", server.c_str(), recv.c_str());
         if (recv.startsWith("OK ")) {
             result = recv.substring(recv.indexOf(" ", 4) + 1);
             return TimezonedResult::Ok;
