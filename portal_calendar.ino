@@ -263,19 +263,20 @@ void setup()
     Config.begin();
 
     // Check if configuration is required
-    while (!Config.isConfigured()) {
-        log_i("Not configured");
-        if (Config.isOnUsbPower()) {
-            log_i("On USB power");
-            startConfigServer();
-        } else {
-            log_i("Not on USB power");
-            showWelcomeScreen();
-        }
+    if (!Config.isConfigured()) {
+        do {
+            log_i("Not configured");
+            if (Config.isOnUsbPower()) {
+                log_i("On USB power");
+                startConfigServer();
+            } else {
+                log_i("Not on USB power");
+                showWelcomeScreen();
+            }
+        } while (!Config.isConfigured());
     }
-
     // Check for wakeup from boot button press
-    if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
+    else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
         log_i("Toggling showWeather");
         showWeather = !showWeather;
     }
