@@ -19,7 +19,7 @@ void correctSleepDuration(time_t *timeAsleep)
     }
 
     time_t adjustment = (time_t)round((float)*timeAsleep * rtcCorrectionFactor);
-    log_i("RTC correction for this sleep duration is %ds (factor %0.6f)", adjustment, rtcCorrectionFactor);
+    log_i("RTC correction for this sleep duration is %llds (factor %0.6f)", (long long)adjustment, rtcCorrectionFactor);
     *timeAsleep += adjustment;
 }
 
@@ -30,7 +30,7 @@ void correctSystemClock(time_t timeAsleep)
     }
 
     float adjustment = (float)timeAsleep * rtcCorrectionFactor;
-    log_i("Was asleep for %ds, adjusting system clock by %0.6fs (factor %0.6f)", timeAsleep, -adjustment, rtcCorrectionFactor);
+    log_i("Was asleep for %llds, adjusting system clock by %0.6fs (factor %0.6f)", (long long)timeAsleep, -adjustment, rtcCorrectionFactor);
     suseconds_t adjtv_usec = (suseconds_t)(std::modf(adjustment, &adjustment) * uS_PER_S);
     time_t adjtv_sec = (time_t)adjustment;
     timeval tvnow;
@@ -151,7 +151,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
             recv += (char)udp.read();
         }
         udp.stop();
-        log_i("Response from %s: %s", server.c_str(), result.c_str());
+        log_i("Response from %s: %s", server.c_str(), recv.c_str());
         if (recv.startsWith("OK ")) {
             result = recv.substring(recv.indexOf(" ", 4) + 1);
             return TimezonedResult::Ok;

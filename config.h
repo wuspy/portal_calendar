@@ -109,8 +109,8 @@ enum class WeatherSecondaryInfo : uint8_t
  * Pin assignments
  */
 #define SPI_BUS         HSPI
-#define DIN_PIN         -1 // COPI
-#define CLK_PIN         -1 // SCK
+#define DIN_PIN         13 // COPI
+#define CLK_PIN         14 // SCK
 #define CS_PIN          15 // CS
 #define DC_PIN          23 // Any OUTPUT pin
 #define RESET_PIN       33 // Any OUTPUT pin

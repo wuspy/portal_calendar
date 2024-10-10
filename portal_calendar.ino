@@ -33,12 +33,12 @@ RTC_DATA_ATTR int displayedYDay = 0;
 RTC_DATA_ATTR bool showWeather = false;
 RTC_DATA_ATTR time_t displayedWeatherTime = 0;
 
-[[noreturn]] void deepSleep(time_t seconds)
+void deepSleep(time_t seconds)
 {
     time(&sleepStartTime);
     scheduledWakeup = sleepStartTime + seconds;
     correctSleepDuration(&seconds);
-    log_i("Sleeping for %lus, scheduled wakeup is %s\n\n", seconds, printTime(scheduledWakeup));
+    log_i("Sleeping for %llds, scheduled wakeup is %s\n\n", (long long)seconds, printTime(scheduledWakeup));
 
     if (Config.getWeatherEnabled()) {
         // Enable wakeup on boot button
@@ -66,7 +66,7 @@ void stopWifi()
     }
 }
 
-[[noreturn]] void error(String message)
+void error(String message)
 {
     log_i("Sleeping with error");
     stopWifi(); // Power down wifi before updating display to limit current draw from battery
@@ -74,7 +74,7 @@ void stopWifi()
     deepSleep(SECONDS_PER_HOUR);
 }
 
-[[noreturn]] void errorNoWifi()
+void errorNoWifi()
 {
     error(
         "NO WI-FI CONNECTION\n\n"
@@ -85,7 +85,7 @@ void stopWifi()
     );
 }
 
-[[noreturn]] void errorNtpFailed()
+void errorNtpFailed()
 {
     error(
         "NO INTERNET CONNECTION\n\n"
@@ -99,7 +99,7 @@ void stopWifi()
     );
 }
 
-[[noreturn]] void errorTzLookupFailed()
+void errorTzLookupFailed()
 {
     error(
         "TIMEZONE LOOKUP FAILED\n\n"
@@ -114,7 +114,7 @@ void stopWifi()
     );
 }
 
-[[noreturn]] void errorInvalidOwmApiKey()
+void errorInvalidOwmApiKey()
 {
     error(
         "INVALID OPENWEATHERMAP API KEY\n\n"
@@ -126,7 +126,7 @@ void stopWifi()
     );
 }
 
-[[noreturn]] void errorBrownout()
+void errorBrownout()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
     // enough power to refresh the display
@@ -160,6 +160,7 @@ void startConfigServer()
 
 void showWelcomeScreen()
 {
+    log_i("Showing welcome screen");
     Display.showWelcomeScreen();
     // Sleep forever
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
@@ -226,6 +227,7 @@ void runScheduledActions()
                 errorNoWifi();
             }
         } else {
+            // Weather not enabled, do nothing and clear the action
             scheduledActions &= ~ACTION_WEATHER_SYNC;
         }
     }
@@ -262,8 +264,8 @@ void setup()
 
     // Check if configuration is required
     if (!Config.isConfigured()) {
-        log_i("Not configured");
-        while (!Config.isConfigured()) {
+        do {
+            log_i("Not configured");
             if (Config.isOnUsbPower()) {
                 log_i("On USB power");
                 startConfigServer();
@@ -271,7 +273,7 @@ void setup()
                 log_i("Not on USB power");
                 showWelcomeScreen();
             }
-        }
+        } while (!Config.isConfigured());
     }
     // Check for wakeup from boot button press
     else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
@@ -338,6 +340,7 @@ void setup()
 
     localtime_r(&t, &now);
     int secondsToMidnight = getSecondsToMidnight(&now) + 1; // +1 to make sure it's actually at or past midnight
+    log_i("%d seconds to midnight", secondsToMidnight);
     // failedActions doesn't care about timezone sync because as long as we've got it once it's probably still correct
     uint8_t failedActions = scheduledActions & ~ACTION_TZ_SYNC;
     if (failedActions) {
@@ -369,15 +372,12 @@ void setup()
         }
         // Sleep until second NTP sync
         scheduledActions = ACTION_NTP_SYNC;
-        log_i("Sleeping for 2nd NTP sync");
+        log_i("Sleeping for 2nd sync");
         deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_2);
     }
 
     // Sleep until first NTP sync
-    scheduledActions =
-        ACTION_NTP_SYNC
-        | ACTION_TZ_SYNC
-        | (Config.getWeatherEnabled() ? ACTION_WEATHER_SYNC : 0);
+    scheduledActions = ACTION_NTP_SYNC | ACTION_TZ_SYNC | ACTION_WEATHER_SYNC;
     log_i("Sleeping for 1st sync");
     deepSleep(secondsToMidnight - SECONDS_BEFORE_MIDNIGHT_TO_SYNC_1);
 }

@@ -107,14 +107,14 @@ Before you begin, note that this project does require soldering and cutting the 
 
 This project requires the following dependencies to be installed through the library manager
 
- - ArduinoJson 6.21.4
- - ESPAsyncWebSrv 1.2.7
+ - ArduinoJson 7.2.0
+ - ESPAsyncWebSrv 1.2.8
 
- You also need to install the ESP32 board package 2.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+ You also need to install the ESP32 board package 3.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
 
     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-Then, go to `Tools -> Boards -> Boards Manager...` and search for esp32
+Then, go to `Tools -> Board -> Boards Manager...` and search for "esp32". **Install the one by Espressif Systems, not Arduino.**
 
 ![](images/arduino1.png)
 
@@ -131,16 +131,19 @@ Once that's selected you'll see a bunch of other options show up in the Tools me
  | Option | Value |
  | ------ | ----- |
  | CPU Frequency | 240 Mhz (WiFi/BT) |
+ | Core Debug Level | None* |
  | Events Run On | Core 1 |
  | Flash Frequency | 80Mhz |
  | Flash Mode | QIO |
  | Flash Size | 4MB (32Mb) |
+ | JTAG Adapter | Disabled |
  | Arduino Runs On | Core 1 |
  | **Partition Scheme** | **Huge APP (3MB No OTA/1MB SPIFFS)** |
  | PSRAM | Disabled |
  | Upload Speed | 921600 |
+ | Zigbee Mode | Disabled |
 
-To enable debug logs, choose `Info` for Core Debug Level. Otherwise, leave it set to `None`.
+*To enable debug logs, choose `Info` for Core Debug Level. Otherwise, leave it set to `None`.
 
 Now you can just flash it like any other arduino.
 
@@ -171,6 +174,11 @@ The build_image.py script can take in any image format supported by PIL and will
 The build_font.py script will take in TrueType or OpenType fonts and output a bitmap font rendered at the specified size to a C header file, using the same encoding format as build_image. Look at [build_fonts.sh](resources/build_fonts.sh) for usage examples. Unlike for the images, I haven't included the source fonts in this repository because they are the original, proprietary fonts used in the Portal games. If you want to rebuild those fonts, it's up to you to find them online.
 
 # Changelog
+
+### 10/9/2024
+
+* Add compatability with arduino-esp32 v3 and latest Arduino IDE.
+* Support 64-bit time_t if the environment uses it.
 
 ### 2/12/2024
 
