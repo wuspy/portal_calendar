@@ -177,7 +177,7 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 ### 10/9/2024
 
-* Add compatability with arduino-esp32 v3 and latest Arduino IDE.
+* Add compatibility with arduino-esp32 v3 and latest Arduino IDE.
 * Support 64-bit time_t if the environment uses it.
 
 ### 2/12/2024
