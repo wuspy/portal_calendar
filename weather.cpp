@@ -265,7 +265,7 @@ OwmResult refreshWeather()
     http.begin(url);
     int status = http.GET();
     if (status == 200) {
-        StaticJsonDocument<256> filter;
+        JsonDocument filter;
         filter["city"]["sunrise"] = true;
         filter["city"]["sunset"] = true;
         filter["cnt"] = true;
@@ -276,7 +276,7 @@ OwmResult refreshWeather()
         filter["list"][0]["weather"][0]["id"] = true;
         filter["list"][0]["pop"] = true;
 
-        DynamicJsonDocument response(10000);
+        JsonDocument response;
         DeserializationError error = deserializeJson(response, http.getStream(), DeserializationOption::Filter(filter));
         http.end();
         log_i("Request to openweathermap took %lums", millis() - start);
@@ -343,13 +343,13 @@ OwmLocation queryLocation(String location, String apiKey)
     http.begin(buffer);
     int status = http.GET();
     if (status == 200) {
-        StaticJsonDocument<128> filter;
+        JsonDocument filter;
         filter[0]["name"] = true;
         filter[0]["state"] = true;
         filter[0]["country"] = true;
         filter[0]["lat"] = true;
         filter[0]["lon"] = true;
-        DynamicJsonDocument response(1000);
+        JsonDocument response;
         DeserializationError error = deserializeJson(response, http.getStream(), DeserializationOption::Filter(filter));
         http.end();
         log_i("Request to openweathermap took %lums", millis() - start);

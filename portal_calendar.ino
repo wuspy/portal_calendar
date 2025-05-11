@@ -126,6 +126,22 @@ void errorInvalidOwmApiKey()
     );
 }
 
+void errorCrash()
+{
+    error(
+        "UNKNOWN ERROR\n\n"
+        "The calendar experienced a fatal error. "
+        "If this problem persists, open an issue describing "
+        "what you were doing, along with any other details "
+        "that may be relevant, at:\n\n"
+        "https://github.com/wuspy/portal_calendar/issues\n\n"
+        "To troubleshoot this error yourself, follow the "
+        "instructions in the project README to enable debug "
+        "logs, and use a serial monitor to attempt to locate "
+        "where the error is occurring."
+    );
+}
+
 void errorBrownout()
 {
     // Brownout was likely caused by the wifi radio, so hopefully there's still
@@ -143,19 +159,16 @@ void errorBrownout()
     esp_deep_sleep_start();
 }
 
-void startConfigServer()
+void onSettingsSaved()
 {
-    Config.startConfigServer();
-    if (Config.wasSaved()) {
-        // Reset state
-        scheduledWakeup = 0;
-        scheduledActions = 0;
-        savedTimezone[0] = '\0';
-        showWeather = Config.getWeatherEnabled();
-        displayedYDay = 0;
-        displayedWeatherTime = 0;
-        lastWeatherSync = 0;
-    }
+    // Reset state
+    scheduledWakeup = 0;
+    scheduledActions = 0;
+    savedTimezone[0] = '\0';
+    showWeather = Config.getWeatherEnabled();
+    displayedYDay = 0;
+    displayedWeatherTime = 0;
+    lastWeatherSync = 0;
 }
 
 void showWelcomeScreen()
@@ -256,24 +269,30 @@ void setup()
 
     log_i("Wakeup cause: %u, Reset reason: %u", wakeupCause, resetReason);
 
-    if (resetReason == ESP_RST_BROWNOUT) {
-        errorBrownout();
+    switch (resetReason) {
+        case ESP_RST_BROWNOUT:
+            errorBrownout();
+            break;
+        case ESP_RST_PANIC:
+        case ESP_RST_INT_WDT:
+        case ESP_RST_TASK_WDT:
+        case ESP_RST_WDT:
+            errorCrash();
+            break;
     }
 
     Config.begin();
 
     // Check if configuration is required
     if (!Config.isConfigured()) {
-        do {
-            log_i("Not configured");
-            if (Config.isOnUsbPower()) {
-                log_i("On USB power");
-                startConfigServer();
-            } else {
-                log_i("Not on USB power");
-                showWelcomeScreen();
-            }
-        } while (!Config.isConfigured());
+        log_i("Not configured");
+        if (Config.isOnUsbPower()) {
+            log_i("On USB power");
+            Config.runConfigServer(onSettingsSaved);
+        } else {
+            log_i("Not on USB power");
+            showWelcomeScreen();
+        }
     }
     // Check for wakeup from boot button press
     else if (wakeupCause == ESP_SLEEP_WAKEUP_EXT1 && Config.getWeatherEnabled() && isSystemTimeValid()) {
@@ -284,11 +303,7 @@ void setup()
     else if (wakeupCause == ESP_SLEEP_WAKEUP_UNDEFINED && Config.isOnUsbPower()) {    
         #ifndef DISABLE_MANUAL_CONFIG_SERVER_ACTIVATION
         log_i("Config server was manually started");
-        startConfigServer();
-        if (!Config.isConfigured()) {
-            // Just in case they cleared some required settings
-            showWelcomeScreen();
-        }
+        Config.runConfigServer(onSettingsSaved);
         #else
         log_i("Config server would have been manually started, but is disabled");
         #endif

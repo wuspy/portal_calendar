@@ -2,13 +2,7 @@
 #include <AsyncJson.h>
 #include <AsyncTCP.h>
 #include <DNSServer.h>
-#ifdef PLATFORMIO
 #include <ESPAsyncWebServer.h>
-#else
-// This project appears abandoned and is not published as an Arduino library.
-// It is however published as a fork under a different name, which is what this is importing.
-#include <ESPAsyncWebSrv.h>
-#endif // PLATFORMIO
 #include <Preferences.h>
 #include <WiFi.h>
 #include "global.h"
@@ -22,7 +16,7 @@ public:
     ~ConfigurationClass();
     void begin();
     void reset();
-    void startConfigServer();
+    void runConfigServer(std::function<void(void)> onSettingsSaved);
     bool isConfigured();
     bool connectToSavedWifi();
 
@@ -51,24 +45,25 @@ public:
     float getMaxRtcCorrectionFactor();
     bool getTwoNtpSyncsPerDay();
 
-    inline bool wasSaved()
-    {
-        return _wasSaved;
-    }
-
     inline bool isOnUsbPower()
     {
         return digitalRead(PD_PIN) == PD_PIN_STATE;
     }
 
 private:
+    typedef std::shared_ptr<AsyncWebServerRequest> AsyncWebServerRequestSharedPtr;
+    typedef std::function<void(AsyncWebServerRequestSharedPtr)> ArDeferredRequestHandlerFunction;
+    typedef struct {
+        AsyncWebServerRequestPtr request;
+        ArDeferredRequestHandlerFunction handler;
+    } DeferredRequest;
+
     QueueHandle_t _deferredRequestQueue;
     Preferences _prefs;
     DNSServer *_dnsServer = nullptr;
     AsyncWebServer *_httpServer = nullptr;
-    bool _wasSaved = false;
 
-    void deferRequest(AsyncWebServerRequest *request, std::function<void(void)> handler);
+    void deferRequest(AsyncWebServerRequest *request, ArDeferredRequestHandlerFunction handler);
     bool isApRequest(AsyncWebServerRequest *request);
     wl_status_t connectToWifi(String ssid, String password);
 
@@ -80,7 +75,7 @@ private:
     template<typename T> void prefs_putJsonEnum(const JsonObject& json, const char* key, std::initializer_list<T> values);
 
     AsyncCallbackWebHandler& on(const char* uri, WebRequestMethodComposite method, ArRequestHandlerFunction onRequest);
-    AsyncCallbackJsonWebHandler& on(const char* uri, WebRequestMethodComposite method, size_t maxJsonBufferSize, ArJsonRequestHandlerFunction onRequest);
+    AsyncCallbackJsonWebHandler& on(const char* uri, WebRequestMethodComposite method, ArJsonRequestHandlerFunction onRequest);
 };
 
 extern ConfigurationClass Config;

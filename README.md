@@ -107,18 +107,21 @@ Before you begin, note that this project does require soldering and cutting the 
 
 This project requires the following dependencies to be installed through the library manager
 
- - ArduinoJson 7.2.0
- - ESPAsyncWebSrv 1.2.8
+ - **ArduinoJson** by Benoit Blanchon - 7.4.1
+ - **ESP Async WebServer** by ESP32Async - 3.7.7
+ - **Async TCP** by ESP32Async - 3.4.1
 
- You also need to install the ESP32 board package 3.0+. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+ Make sure you install the correct versions of these libraries, and for ESP Async WebServer and Async TCP, **install the ones by ESP32Async**, as there are many forks of these libraries out there and I can't guarantee compatability with any others.
 
-    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-
-Then, go to `Tools -> Board -> Boards Manager...` and search for "esp32". **Install the one by Espressif Systems, not Arduino.**
+ You also need to install the ESP32 board package 3.0+. Go to `Tools -> Board -> Boards Manager...` and search for "esp32". **Install the one by Espressif Systems, not Arduino.**
 
 ![](images/arduino1.png)
 
-Then, select `ESP32 Dev Module` for your board.
+If you can't find the esp32 board package, you might need an additional board manager URL for it. This shouldn't be necessary anymore, but I'm still including this step just in case. Go to `File -> Preferences` and add the following URL to `Additional Boards Manager URLs`
+
+    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+After the board package is installed, go to `Select Board -> Select other board and port...` and select `ESP32 Dev Module` for your board.
 
 ![](images/arduino2.png)
 

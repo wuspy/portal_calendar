@@ -13,6 +13,7 @@
 #define HTTP_CONFLICT 409
 #define HTTP_INTERNAL_SERVER_ERROR 500
 #define HTTP_BAD_GATEWAY 502
+#define HTTP_SERVICE_UNAVAILABLE 503
 #define HTTP_NETWORK_AUTHENTICATION_REQUIRED 511
 
 // Max 15 characters
@@ -41,8 +42,6 @@
 #define KEY_MAX_RTC_CORRECTION_FACTOR "rtcCorrection"
 #define KEY_2_NTP_SYNCS_PER_DAY "twoNtpSyncs"
 
-#define DEFERRED_REQUEST_TIMEOUT 30000
-
 ConfigurationClass Config;
 
 ConfigurationClass::~ConfigurationClass()
@@ -58,7 +57,9 @@ ConfigurationClass::~ConfigurationClass()
 
 void ConfigurationClass::begin()
 {
-    _prefs.begin("portalcalendar");
+    if (!_prefs.begin("portalcalendar")) {
+        abort();
+    }
     pinMode(PD_PIN, PD_PIN_STATE == HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
 }
 
@@ -67,7 +68,7 @@ void ConfigurationClass::reset()
     _prefs.clear();
 }
 
-void ConfigurationClass::startConfigServer()
+void ConfigurationClass::runConfigServer(std::function<void(void)> onSettingsSaved)
 {
     const String hostname = getHostname();
     log_i("Starting configuration server with hostname %s", hostname.c_str());
@@ -125,12 +126,12 @@ void ConfigurationClass::startConfigServer()
     }
 
     _httpServer = new AsyncWebServer(80);
-    _deferredRequestQueue = xQueueCreate(20, sizeof(std::function<void(void)>));
     bool shutdown = false;
 
     on("/wifi/scan", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /wifi/scan");
-        deferRequest(request, [request] {
+
+        deferRequest(request, [](AsyncWebServerRequestSharedPtr request) {
             if (WiFi.scanComplete() == WIFI_SCAN_FAILED) {
                 WiFi.scanNetworks();
             }
@@ -143,10 +144,10 @@ void ConfigurationClass::startConfigServer()
                 return request->send(HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            AsyncJsonResponse *response = new AsyncJsonResponse(true, 8192);
+            AsyncJsonResponse *response = new AsyncJsonResponse(true);
             JsonArray networks = response->getRoot();
             for (int i = 0; i < count; ++i) {
-                JsonObject network = networks.createNestedObject();
+                JsonObject network = networks.add<JsonObject>();
                 network["ssid"] = WiFi.SSID(i);
                 network["rssi"] = WiFi.RSSI(i);
                 network["open"] = WiFi.encryptionType(i) == WIFI_AUTH_OPEN;
@@ -159,7 +160,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/wifi/interface", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /wifi/interface");
-        AsyncJsonResponse *response = new AsyncJsonResponse(false, 512);
+
+        AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
 
         root["mac"] = WiFi.macAddress();
@@ -171,6 +173,7 @@ void ConfigurationClass::startConfigServer()
 
     on("/wifi/interface", HTTP_PATCH, [&](AsyncWebServerRequest *request) {
         log_i("PATCH /wifi/interface");
+
         String hostname = request->getParam("hostname", true)->value();
         if (!hostname || hostname.length() > 63) {
             return request->send(HTTP_BAD_REQUEST);
@@ -189,6 +192,7 @@ void ConfigurationClass::startConfigServer()
 
     on("/wifi", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /wifi");
+
         AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
 
@@ -214,7 +218,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/wifi", HTTP_POST, [&](AsyncWebServerRequest *request) {
         log_i("POST /wifi");
-        deferRequest(request, [request, this] {
+
+        deferRequest(request, [this](AsyncWebServerRequestSharedPtr request) {
             String ssid = request->getParam("ssid", true)->value();
             String password = request->getParam("password", true)->value();
             log_i("Connecting to wifi '%s'", ssid.c_str());
@@ -227,6 +232,7 @@ void ConfigurationClass::startConfigServer()
             wl_status_t status = connectToWifi(ssid, password);
             #endif // DEV_WEBSERVER
             log_i("Connection result: %u", status);
+
             if (status == WL_CONNECTED) {
                 _prefs.putString(KEY_WIFI_SSID, ssid);
                 _prefs.putString(KEY_WIFI_PASS, password);
@@ -242,7 +248,7 @@ void ConfigurationClass::startConfigServer()
                 root["mask"] = WiFi.subnetMask();
                 root["dns0"] = WiFi.dnsIP(0);
                 root["dns1"] = WiFi.dnsIP(1);
-                root["inUse"] = !isApRequest(request);
+                root["inUse"] = !isApRequest(request.get());
                 response->setLength();
                 request->send(response);
             } else if (status == WL_NO_SSID_AVAIL) {
@@ -269,7 +275,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/locales", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /locales");
-        AsyncJsonResponse *response = new AsyncJsonResponse(false, 1024);
+
+        AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
 
         for (Locale locale: LOCALES) {
@@ -282,7 +289,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/preferences", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /preferences");
-        AsyncJsonResponse *response = new AsyncJsonResponse(false, 4096);
+
+        AsyncJsonResponse *response = new AsyncJsonResponse();
         JsonObject root = response->getRoot();
         root[KEY_SHOW_DAY] = getShowDay();
         root[KEY_SHOW_MONTH] = getShowMonth();
@@ -305,11 +313,12 @@ void ConfigurationClass::startConfigServer()
         root[KEY_SHOW_24_HOUR_TIME] = getShow24HourTime();
         root[KEY_2_NTP_SYNCS_PER_DAY] = getTwoNtpSyncsPerDay();
         root[KEY_MAX_RTC_CORRECTION_FACTOR] = getMaxRtcCorrectionFactor();
+
         response->setLength();
         request->send(response);
     });
 
-    on("/preferences", HTTP_PATCH, 4096, [&](AsyncWebServerRequest *request, JsonVariant& body) {
+    on("/preferences", HTTP_PATCH, [&](AsyncWebServerRequest *request, JsonVariant& body) {
         log_i("PATCH /preferences");
 
         prefs_putJsonBool(body, KEY_SHOW_DAY);
@@ -343,13 +352,14 @@ void ConfigurationClass::startConfigServer()
         prefs_putJsonBool(body, KEY_2_NTP_SYNCS_PER_DAY);
         prefs_putJsonFloat(body, KEY_MAX_RTC_CORRECTION_FACTOR, 0, 1);
 
-        _wasSaved = true;
+        onSettingsSaved();
         request->send(HTTP_OK);
     });
 
     on("/weather/test", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /weather/test");
-        deferRequest(request, [request] {
+
+        deferRequest(request, [](AsyncWebServerRequestSharedPtr request) {
             String key = request->hasParam("appid") ? request->getParam("appid")->value() : "";
             if (key.length() != 32) {
                 return request->send(HTTP_BAD_REQUEST);
@@ -374,7 +384,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/weather/location", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /weather/location");
-        deferRequest(request, [request] {
+
+        deferRequest(request, [](AsyncWebServerRequestSharedPtr request) {
             String key = request->hasParam("appid") ? request->getParam("appid")->value() : "";
             String location = request->hasParam("q") ? request->getParam("q")->value() : "";
             if (key.length() != 32  || !location.length() || location.length() > 100) {
@@ -406,7 +417,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/ntp/test", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /ntp/test");
-        deferRequest(request, [request] {
+
+        deferRequest(request, [](AsyncWebServerRequestSharedPtr request) {
             String server = request->hasParam("server") ? request->getParam("server")->value() : "";
             if (!server.length()) {
                 return request->send(HTTP_BAD_REQUEST);
@@ -425,7 +437,8 @@ void ConfigurationClass::startConfigServer()
 
     on("/timezoned/lookup", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET /timezoned/lookup");
-        deferRequest(request, [request] {
+
+        deferRequest(request, [](AsyncWebServerRequestSharedPtr request) {
             String server = request->hasParam("server") ? request->getParam("server")->value() : "";
             String timezone = request->hasParam("timezone") ? request->getParam("timezone")->value() : "";
             if (!server.length() || !timezone.length()) {
@@ -450,13 +463,15 @@ void ConfigurationClass::startConfigServer()
 
     on("/shutdown", HTTP_POST, [&](AsyncWebServerRequest *request) {
         log_i("POST /shutdown");
+
         request->send(HTTP_OK);
         shutdown = true;
     });
 
     on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
         log_i("GET http://%s/", request->host().c_str());
-        AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", &INDEX_HTML_DATA[0], sizeof(INDEX_HTML_DATA));
+
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/html", &INDEX_HTML_DATA[0], sizeof(INDEX_HTML_DATA));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -477,14 +492,11 @@ void ConfigurationClass::startConfigServer()
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "*");
     #endif // DEV_WEBSERVER
 
-    log_i("Starting webserver");
-    _httpServer->begin();
-
     #ifdef DEV_WEBSERVER
-    log_i("DEV Webserver ready at %s", WiFi.localIP().toString().c_str());
+    log_i("Starting DEV Webserver at %s", WiFi.localIP().toString().c_str());
     Display.showDevWebserverScreen(WiFi.SSID(), WiFi.localIP());
     #else
-    log_i("Webserver ready at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    log_i("Starting webserver at %s, %s", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
     Display.showConfigServerScreen(
         WiFi.softAPSSID(),
         apPassword,
@@ -493,21 +505,25 @@ void ConfigurationClass::startConfigServer()
     );
     #endif
 
-    std::function<void(void)> request;
+    _deferredRequestQueue = xQueueCreate(10, sizeof(DeferredRequest));
+    DeferredRequest data;
+
+    _httpServer->begin();
+    log_i("Server is running");
 
     while (isOnUsbPower() && !shutdown) {
         // Process DNS requests
         _dnsServer->processNextRequest();
         // Process deferred request handlers
-        if (uxQueueMessagesWaiting(_deferredRequestQueue) && xQueueReceive(_deferredRequestQueue, &request, 0)) {
-            request();
+        if (uxQueueMessagesWaiting(_deferredRequestQueue) && xQueueReceive(_deferredRequestQueue, &data, 0)) {
+            if (auto request = data.request.lock()) {
+                data.handler(request);
+            }
         }
         yield();
     }
 
     log_i("Shutting down webserver...");
-
-    delay(100);
 
     _dnsServer->stop();
     delete _dnsServer;
@@ -520,7 +536,11 @@ void ConfigurationClass::startConfigServer()
     vQueueDelete(_deferredRequestQueue);
     mdns_free();
 
-    log_i("Webserver has stopped");
+    WiFi.disconnect(true, true);
+    WiFi.mode(WIFI_OFF);
+
+    log_i("Webserver has stopped, restarting");
+    esp_deep_sleep(0); // Use this instead of esp_restart to avoid clearing RTC memory
 }
 
 /**
@@ -528,13 +548,17 @@ void ConfigurationClass::startConfigServer()
  * This must be done if the request could take longer than a few seconds, since AsyncTCP handlers run on a higher
  * priority task and will trip the watchdog if they take too long.
  */
-void ConfigurationClass::deferRequest(AsyncWebServerRequest *request, std::function<void(void)> handler)
+void ConfigurationClass::deferRequest(AsyncWebServerRequest *request, ArDeferredRequestHandlerFunction handler)
 {
-    // Set a longer timeout on this request since it could take a while
-    request->client()->setRxTimeout(DEFERRED_REQUEST_TIMEOUT);
-    if (xQueueSend(_deferredRequestQueue, &handler, (TickType_t)1000 * portTICK_PERIOD_MS) != pdPASS) {
+    DeferredRequest data = {
+        .request=request->pause(),
+        .handler=handler,
+    };
+    if (xQueueSend(_deferredRequestQueue, &data, (TickType_t)1000 * portTICK_PERIOD_MS) != pdPASS) {
         // Request queue is already full
-        request->send(HTTP_INTERNAL_SERVER_ERROR);
+        if (auto request = data.request.lock()) {
+            request->send(HTTP_SERVICE_UNAVAILABLE);
+        }
     }
 }
 
@@ -700,9 +724,9 @@ AsyncCallbackWebHandler& ConfigurationClass::on(const char* uri, WebRequestMetho
     return _httpServer->on(uri, method, onRequest);
 }
 
-AsyncCallbackJsonWebHandler& ConfigurationClass::on(const char* uri, WebRequestMethodComposite method, size_t maxJsonBufferSize, ArJsonRequestHandlerFunction onRequest)
+AsyncCallbackJsonWebHandler& ConfigurationClass::on(const char* uri, WebRequestMethodComposite method, ArJsonRequestHandlerFunction onRequest)
 {
-    AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler(uri, onRequest, maxJsonBufferSize);
+    AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler(uri, onRequest);
     handler->setMethod(method);
     _httpServer->addHandler(handler);
     return *handler;
