@@ -178,6 +178,13 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 # Changelog
 
+
+### 5/15/2025
+
+* Switch to ESP32Async's fork of ESP Async WebServer.
+* Refactor some display code, and blank the display before/after entering settings mode for quicker feedback.
+* Show a crash screen if the device crashed on last boot.
+
 ### 10/9/2024
 
 * Add compatibility with arduino-esp32 v3 and latest Arduino IDE.
