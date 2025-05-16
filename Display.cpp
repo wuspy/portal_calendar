@@ -249,26 +249,43 @@ DisplayClass Display;
 
 DisplayClass::~DisplayClass()
 {
+    cleanup();
+}
+
+void DisplayClass::initDisplay()
+{
+    if (!_display) {
+        _display = new DisplayGDEW075T7(SPI_BUS, CLK_PIN, DIN_PIN, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN, PWR_PIN);
+    }
+}
+
+void DisplayClass::initFrameBuffer()
+{
+    if (!_frameBuffer) {
+        _frameBuffer = new FrameBuffer(DisplayGDEW075T7::NATIVE_WIDTH, DisplayGDEW075T7::NATIVE_HEIGHT);
+        _frameBuffer->setRotation(FrameBuffer::ROTATION_270);
+        _frameBuffer->setAlpha(FrameBuffer::WHITE);
+    } else {
+        _frameBuffer->clear();
+    }
+}
+
+void DisplayClass::cleanup()
+{
     if (_display) {
         delete _display;
         _display = nullptr;
     }
-}
-
-void DisplayClass::init()
-{
-    if (!_display) {
-        _display = new DisplayGDEW075T7(SPI_BUS, CLK_PIN, DIN_PIN, CS_PIN, RESET_PIN, DC_PIN, BUSY_PIN, PWR_PIN);
-        _display->setRotation(DisplayGDEW075T7::ROTATION_270);
-        _display->setAlpha(DisplayGDEW075T7::WHITE);
-    } else {
-        _display->clear();
+    if (_frameBuffer) {
+        delete _frameBuffer;
+        _frameBuffer = nullptr;
     }
 }
 
 void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
 {
-    init();
+    initDisplay();
+    initFrameBuffer();
 
     const int year = now->tm_year + 1900;
     const int daysInMonth = getDaysInMonth(now->tm_mon, year);
@@ -279,25 +296,25 @@ void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
 
     if (Config.getShowDay()) {
         // Day name
-        _display->drawText(locale.days[now->tm_wday], FONT_MEDIUM, RIGHT, 394, DisplayGDEW075T7::TOP_RIGHT);
+        _frameBuffer->drawText(locale.days[now->tm_wday], FONT_MEDIUM, RIGHT, 394, FrameBuffer::TOP_RIGHT);
     }
 
     if (Config.getShowMonth()) {
         // Month name
-        _display->drawText(locale.months[now->tm_mon], FONT_MEDIUM, LEFT, 14);
+        _frameBuffer->drawText(locale.months[now->tm_mon], FONT_MEDIUM, LEFT, 14);
     }
 
     if (Config.getShowYear()) {
         // Year
         char buffer[5];
         sprintf(buffer, "%d", year);
-        _display->drawText(buffer, FONT_MEDIUM, RIGHT, 14, DisplayGDEW075T7::TOP_RIGHT);
+        _frameBuffer->drawText(buffer, FONT_MEDIUM, RIGHT, 14, FrameBuffer::TOP_RIGHT);
     }
 
     // Progress bar
     int32_t progressWidth = WIDTH * now->tm_mday / daysInMonth - 2;
     for (int32_t i = 0; i < progressWidth; i += 10) {
-        _display->fillRect(LEFT + i, 438, 5, 34, DisplayGDEW075T7::BLACK);
+        _frameBuffer->fillRect(LEFT + i, 438, 5, 34, FrameBuffer::BLACK);
     }
 
     if (Config.getWeatherEnabled() && showWeather) {
@@ -332,7 +349,8 @@ void DisplayClass::update(const tm *now, const Locale& locale, bool showWeather)
         }
     }
 
-    _display->refresh();
+    _display->refresh(_frameBuffer);
+    cleanup();
 }
 
 const Image* DisplayClass::getWeatherConditionIcon(WeatherCondition condition, bool day)
@@ -365,13 +383,13 @@ const Image* DisplayClass::getWeatherConditionIcon(WeatherCondition condition, b
 void DisplayClass::drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y)
 {
     if (symbol) {
-        uint32_t textWidth = _display->measureText(text, FONT_SMALL);
+        uint32_t textWidth = _frameBuffer->measureText(text, FONT_SMALL);
         // The extra /2 gives less weight to the symbol so the text appears more centered
         x -= (textWidth + symbol->width / 2) / 2;
-        _display->drawText(text, FONT_SMALL, x, y);
-        _display->drawImage(*symbol, x + textWidth, y);
+        _frameBuffer->drawText(text, FONT_SMALL, x, y);
+        _frameBuffer->drawImage(*symbol, x + textWidth, y);
     } else {
-        _display->drawText(text, FONT_SMALL, x, y, DisplayGDEW075T7::TOP_CENTER);
+        _frameBuffer->drawText(text, FONT_SMALL, x, y, FrameBuffer::TOP_CENTER);
     }
 }
 
@@ -380,27 +398,27 @@ void DisplayClass::drawDailyWeather(const DailyWeather& weather, int32_t x, cons
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
     if (weather.mday == -1) {
-        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
+        _frameBuffer->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
         return;
     }
 
     char text[10];
 
     // Draw frame
-    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
+    _frameBuffer->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
 
     // Draw condition icon
     const Image* icon = getWeatherConditionIcon(weather.condition, weather.daylight);
     if (icon) {
-        _display->drawImage(*icon, x + 2, ICON_TOP + 21);
+        _frameBuffer->drawImage(*icon, x + 2, ICON_TOP + 21);
     }
 
     // Draw day
-    _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(locale.dayAbbreviations[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
+    _frameBuffer->setAlpha(FrameBuffer::BLACK);
+    _frameBuffer->drawText(locale.dayAbbreviations[weather.wday], FONT_WEATHER_FRAME, x + 5, ICON_TOP);
     sprintf(text, "%d", weather.mday);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, DisplayGDEW075T7::TOP_RIGHT);
-    _display->setAlpha(DisplayGDEW075T7::WHITE);
+    _frameBuffer->drawText(text, FONT_WEATHER_FRAME, x + 64 - 5, ICON_TOP, FrameBuffer::TOP_RIGHT);
+    _frameBuffer->setAlpha(FrameBuffer::WHITE);
 
     // Draw high temp
     sprintf(text, "%d", weather.highTemp);
@@ -416,19 +434,19 @@ void DisplayClass::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
     x = LEFT + x * (ICON_SIZE + ICON_SPACING);
 
     if (weather.mday == -1) {
-        _display->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
+        _frameBuffer->drawImage(IMG_WEATHER_FRAME_EMPTY, x, ICON_TOP);
         return;
     }
 
     char text[10];
 
     // Draw frame
-    _display->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
+    _frameBuffer->drawImage(IMG_WEATHER_FRAME, x, ICON_TOP);
 
     // Draw condition icon
     const Image* icon = getWeatherConditionIcon(weather.condition, weather.daylight);
     if (icon) {
-        _display->drawImage(*icon, x + 2, ICON_TOP + 21);
+        _frameBuffer->drawImage(*icon, x + 2, ICON_TOP + 21);
     }
 
     // Draw time
@@ -442,9 +460,9 @@ void DisplayClass::drawWeatherEntry(const WeatherEntry& weather, int32_t x)
         sprintf(text, "%d:%02d %s", hour12, weather.minute, weather.hour > 11 ? "PM" : "AM");
     }
 
-    _display->setAlpha(DisplayGDEW075T7::BLACK);
-    _display->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, DisplayGDEW075T7::TOP_CENTER);
-    _display->setAlpha(DisplayGDEW075T7::WHITE);
+    _frameBuffer->setAlpha(FrameBuffer::BLACK);
+    _frameBuffer->drawText(text, FONT_WEATHER_FRAME, x + 32, ICON_TOP, FrameBuffer::TOP_CENTER);
+    _frameBuffer->setAlpha(FrameBuffer::WHITE);
 
     // Draw temperature
     sprintf(text, "%d", weather.temp);
@@ -493,7 +511,7 @@ void DisplayClass::testChamberIcons()
 
 void DisplayClass::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
 {
-    _display->drawImage(
+    _frameBuffer->drawImage(
         icon,
         LEFT + x * (ICON_SIZE + ICON_SPACING),
         ICON_TOP + y * (ICON_SIZE + ICON_SPACING)
@@ -502,9 +520,9 @@ void DisplayClass::drawChamberIcon(const Image& icon, int32_t x, int32_t y)
 
 void DisplayClass::drawStandardSeparators()
 {
-    _display->drawHLine(LEFT, 50, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
-    _display->drawHLine(LEFT, 430, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
-    _display->drawHLine(LEFT, 538, WIDTH, 2, DisplayGDEW075T7::BLACK, DisplayGDEW075T7::TOP_LEFT);
+    _frameBuffer->drawHLine(LEFT, 50, WIDTH, 2, FrameBuffer::BLACK, FrameBuffer::TOP_LEFT);
+    _frameBuffer->drawHLine(LEFT, 430, WIDTH, 2, FrameBuffer::BLACK, FrameBuffer::TOP_LEFT);
+    _frameBuffer->drawHLine(LEFT, 538, WIDTH, 2, FrameBuffer::BLACK, FrameBuffer::TOP_LEFT);
 }
 
 void DisplayClass::drawChamberNumber(int number, int total)
@@ -513,55 +531,59 @@ void DisplayClass::drawChamberNumber(int number, int total)
     
     // BIG date
     sprintf(buffer, "%02d", number);
-    _display->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, DisplayGDEW075T7::TOP_LEFT, 10);
+    _frameBuffer->drawText(buffer, FONT_CHAMBER_NUMBER, LEFT, 16, FrameBuffer::TOP_LEFT, 10);
 
     // Small "XX/XX" date
     sprintf(buffer, "%02d/%02d", number, total);
-    _display->drawText(buffer, FONT_MEDIUM, LEFT, 394);    
+    _frameBuffer->drawText(buffer, FONT_MEDIUM, LEFT, 394);    
 }
 
 void DisplayClass::drawApertureLogo()
 {
-    _display->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
+    _frameBuffer->drawImage(IMG_APERTURE_LOGO, LEFT, 740);
 }
 
 void DisplayClass::error(String message, bool willRetry)
 {
-    init();
-    const int32_t y = _display->getHeight() - _display->getHeight() / 1.618;
-    _display->drawImage(IMG_ERROR, H_CENTER, y, DisplayGDEW075T7::BOTTOM_CENTER);
-    _display->drawMultilineText(
+    initDisplay();
+    initFrameBuffer();
+
+    const int32_t y = _frameBuffer->getHeight() - _frameBuffer->getHeight() / 1.618;
+    _frameBuffer->drawImage(IMG_ERROR, H_CENTER, y, FrameBuffer::BOTTOM_CENTER);
+    _frameBuffer->drawMultilineText(
         message,
         FONT_SMALL,
         H_CENTER,
         y + FONT_SMALL.ascent + FONT_SMALL.descent,
         408,
-        DisplayGDEW075T7::TOP_CENTER
+        FrameBuffer::TOP_CENTER
     );
 
     if (willRetry) {
-        _display->drawMultilineText(
+        _frameBuffer->drawMultilineText(
             "Will try again in 1 hour. Or, press the RESET button on the back of the device to retry now.",
             FONT_SMALL,
             H_CENTER,
-            _display->getHeight() - 12,
+            _frameBuffer->getHeight() - 12,
             400,
-            DisplayGDEW075T7::BOTTOM_CENTER
+            FrameBuffer::BOTTOM_CENTER
         );
     }
 
-    _display->refresh();
+    _display->refresh(_frameBuffer);
 }
 
 void DisplayClass::showWelcomeScreen()
 {
-    init();
+    initDisplay();
+    initFrameBuffer();
+
     drawStandardSeparators();
     drawApertureLogo();
     drawChamberNumber(0, 0);
 
-    _display->drawText("WELCOME!", FONT_MEDIUM, LEFT, 502);
-    _display->drawMultilineText(
+    _frameBuffer->drawText("WELCOME!", FONT_MEDIUM, LEFT, 502);
+    _frameBuffer->drawMultilineText(
         "Connect to USB power, then press the RESET button on the back to begin setup.",
         FONT_SMALL,
         LEFT,
@@ -569,7 +591,16 @@ void DisplayClass::showWelcomeScreen()
         360
     );
 
-    _display->refresh();
+    _display->refresh(_frameBuffer);
+}
+
+void DisplayClass::fastClear(bool black)
+{
+    initDisplay();
+
+    _display->fastClear(black);
+
+    cleanup();
 }
 
 void DisplayClass::showConfigServerScreen(String ssid, String password, String hostname, String connectedWifiName)
@@ -579,27 +610,29 @@ void DisplayClass::showConfigServerScreen(String ssid, String password, String h
     sprintf(&str[0], "WIFI:T:WPA;S:%s;P:%s;;", ssid.c_str(), password.c_str());
     QrCode qrCode = QrCode::encodeText(&str[0], QrCode::Ecc::ECC_HIGH);
 
-    init();
+    initDisplay();
+    initFrameBuffer();
+
     drawStandardSeparators();
     drawApertureLogo();
 
-    _display->drawQrCode(qrCode, LEFT, 75, QR_SCALE);
+    _frameBuffer->drawQrCode(qrCode, LEFT, 75, QR_SCALE);
     const uint32_t qrX = LEFT + qrCode.getSize() * QR_SCALE / 2;
     const uint32_t qrY = 75 + qrCode.getSize() * QR_SCALE / 2;
-    _display->fillRect(qrX, qrY, 77, 77, DisplayGDEW075T7::WHITE, DisplayGDEW075T7::CENTER);
-    _display->drawImage(IMG_WIFI_64PX, qrX, qrY, DisplayGDEW075T7::CENTER);
-    _display->drawMultilineText(
+    _frameBuffer->fillRect(qrX, qrY, 77, 77, FrameBuffer::WHITE, FrameBuffer::CENTER);
+    _frameBuffer->drawImage(IMG_WIFI_64PX, qrX, qrY, FrameBuffer::CENTER);
+    _frameBuffer->drawMultilineText(
         "Wi-Fi Name: " + ssid + "\n"
         "Password: " + password,
         FONT_SMALL,
         qrX,
         75 + qrCode.getSize() * QR_SCALE + 12,
         0,
-        DisplayGDEW075T7::TOP_CENTER
+        FrameBuffer::TOP_CENTER
     );
 
-    _display->drawText("SETUP", FONT_MEDIUM, LEFT, 502);
-    _display->drawMultilineText(
+    _frameBuffer->drawText("SETUP", FONT_MEDIUM, LEFT, 502);
+    _frameBuffer->drawMultilineText(
         connectedWifiName.isEmpty()
             ? "Connect to this Wi-Fi network, then open a web browser and go to:\n\n"
               "http://" + hostname + ".local"
@@ -612,29 +645,28 @@ void DisplayClass::showConfigServerScreen(String ssid, String password, String h
         360
     );
 
-    _display->refresh();
-    delete _display;
-    _display = nullptr;
+    _display->refresh(_frameBuffer);
+    cleanup();
 }
 
 #ifdef DEV_WEBSERVER
 
 void DisplayClass::showDevWebserverScreen(String ssid, IPAddress localIp)
 {
-    init();
-    _display->drawMultilineText(
+    initDisplay();
+    initFrameBuffer();
+    _frameBuffer->drawMultilineText(
         "Dev webserver running.\n"
         "SSID: " + ssid + "\n"
         "IP: " + localIp.toString(),
         FONT_SMALL,
         H_CENTER,
-        _display->getHeight() / 2,
-        _display->getWidth(),
-        DisplayGDEW075T7::TOP_CENTER
+        _frameBuffer->getHeight() / 2,
+        _frameBuffer->getWidth(),
+        FrameBuffer::TOP_CENTER
     );
-    _display->refresh();
-    delete _display;
-    _display = nullptr;
+    _display->refresh(_frameBuffer);
+    cleanup();
 }
 
 #endif // DEV_WEBSERVER

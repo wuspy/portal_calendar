@@ -16,6 +16,7 @@ public:
     void update(const tm *now, const Locale& locale, bool showWeather);
     void showWelcomeScreen();
     void showConfigServerScreen(String ssid, String password, String hostname, String connectedWifiName);
+    void fastClear(bool black = false);
     #ifdef DEV_WEBSERVER
     void showDevWebserverScreen(String ssid, IPAddress localIp);
     #endif
@@ -24,7 +25,9 @@ public:
     #endif
 
 private:
-    void init();
+    void initDisplay();
+    void initFrameBuffer();
+    void cleanup();
     const Image* getWeatherConditionIcon(WeatherCondition condition, bool day);
     void drawWeatherInfoText(const char* text, const Image* symbol, int32_t x, int32_t y);
     void drawDailyWeather(const DailyWeather& weather, int32_t x, const Locale& locale);
@@ -34,6 +37,7 @@ private:
     void drawChamberNumber(int number, int total);
     void drawApertureLogo();
     DisplayGDEW075T7 *_display = nullptr;
+    FrameBuffer *_frameBuffer = nullptr;
 };
 
 extern DisplayClass Display;

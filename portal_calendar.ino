@@ -128,6 +128,7 @@ void errorInvalidOwmApiKey()
 
 void errorCrash()
 {
+    log_w("Crash detected on last boot");
     error(
         "UNKNOWN ERROR\n\n"
         "The calendar experienced a fatal error. "

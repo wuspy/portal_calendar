@@ -7,11 +7,8 @@
  * https://www.smart-prototyping.com/image/data/9_Modules/EinkDisplay/GDEW0154T8/IL0373.pdf
  */
 
-#include <Arduino.h>
-#include <stdlib.h>
 #include "DisplayGDEW075T7.h"
 #include "config.h"
-#include "unicode.h"
 
 // Display commands
 const uint8_t CMD_PSR           = 0x00;
@@ -187,6 +184,40 @@ const uint8_t LUT_BLACK_2BIT[] = {
 };
 
 /**
+ * LUTs for blanking the screen quickly
+ */
+
+const uint8_t LUT_VCOM_FAST_CLEAR[] = {
+    LUT_ROW(LEVEL_VCOM_VCMDC, 15, LEVEL_VCOM_VCMDC, 15, 0, 0, 0, 0, 1),
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+};
+
+const uint8_t LUT_WHITE_FAST_CLEAR[] = {
+    LUT_ROW(LEVEL_GND, 15, LEVEL_VDL, 15, 0, 0, 0, 0, 1),
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+};
+
+const uint8_t LUT_BLACK_FAST_CLEAR[] = {
+    LUT_ROW(LEVEL_GND, 15, LEVEL_VDH, 15, 0, 0, 0, 0, 1),
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+    LUT_ROW_NOOP,
+};
+
+/**
  * These aren't waveform LUTs, they map 2-bit color values to the old (DTM1) and new (DTM2)
  * data values sent to the display.
  */
@@ -213,11 +244,18 @@ DisplayGDEW075T7::~DisplayGDEW075T7() {
     _spi->end();
     delete _spi;
     #endif
-    delete[] _frameBuffer;
 };
 
-DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t copi_pin, uint8_t cs_pin, uint8_t reset_pin, uint8_t dc_pin, uint8_t busy_pin, uint8_t pwr_pin)
-{
+DisplayGDEW075T7::DisplayGDEW075T7(
+    uint8_t spi_bus,
+    uint8_t sck_pin,
+    uint8_t copi_pin,
+    uint8_t cs_pin,
+    uint8_t reset_pin,
+    uint8_t dc_pin,
+    uint8_t busy_pin,
+    uint8_t pwr_pin
+) {
     _resetPin = reset_pin;
     _dcPin = dc_pin;
     _csPin = cs_pin;
@@ -235,13 +273,6 @@ DisplayGDEW075T7::DisplayGDEW075T7(uint8_t spi_bus, uint8_t sck_pin, uint8_t cop
     _spi->begin(sck_pin, -1, copi_pin, cs_pin);
     _spi->beginTransaction(SPISettings(7000000, MSBFIRST, SPI_MODE0));
     #endif
-
-    _frameBuffer = new uint8_t[FRAMEBUFFER_LENGTH];
-
-    setRotation(ROTATION_0);
-    setAlpha(NO_ALPHA);
-
-    clear();
 };
 
 void DisplayGDEW075T7::wakeup()
@@ -306,13 +337,6 @@ void DisplayGDEW075T7::wakeup()
     sendData(0x00);
     sendData(0x00);
     sendData(0x00);
-
-    setLut(CMD_SET_LUTVCOM, LUT_VCOM_2BIT);
-    setLut(CMD_SET_LUTWW, LUT_WHITE_2BIT);
-    setLut(CMD_SET_LUTBW, LUT_DGREY_2BIT);
-    setLut(CMD_SET_LUTWB, LUT_LGREY_2BIT);
-    setLut(CMD_SET_LUTBB, LUT_BLACK_2BIT);
-    setLut(CMD_SET_LUTBD, LUT_WHITE_2BIT);
 }
 
 void DisplayGDEW075T7::sendCommand(uint8_t command)
@@ -350,33 +374,59 @@ void DisplayGDEW075T7::setLut(uint8_t cmd, const uint8_t* lut)
     }
 }
 
-void DisplayGDEW075T7::refresh()
+void DisplayGDEW075T7::refresh(const FrameBuffer *frameBuffer)
 {
     wakeup();
+
+    setLut(CMD_SET_LUTVCOM, LUT_VCOM_2BIT);
+    setLut(CMD_SET_LUTWW, LUT_WHITE_2BIT);
+    setLut(CMD_SET_LUTBW, LUT_DGREY_2BIT);
+    setLut(CMD_SET_LUTWB, LUT_LGREY_2BIT);
+    setLut(CMD_SET_LUTBB, LUT_BLACK_2BIT);
+    setLut(CMD_SET_LUTBD, LUT_WHITE_2BIT);
 
     size_t i;
     uint8_t j;
     uint16_t chunk; // Holds 8px of frame_buffer
-    uint8_t data;   // Holds 8px of display output
+    uint8_t output;   // Holds 8px of display output
+    size_t len = frameBuffer->getLength();
+    const uint8_t *data = frameBuffer->data;
 
     sendCommand(CMD_DTM1);
-    for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
-        data = 0;
-        chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
+    for (i = 0; i < len; i += 2) {
+        output = 0;
+        chunk = (data[i] << 8) | data[i + 1];
         for (j = 0; j < 8; ++j) {
-            data |= LUT_DTM1[(chunk >> (j * 2)) & 0b11] << j;
+            output |= LUT_DTM1[(chunk >> (j * 2)) & 0b11] << j;
         }
-        sendData(data);
+        sendData(output);
     }
     sendCommand(CMD_DTM2);
-    for (i = 0; i < FRAMEBUFFER_LENGTH; i += 2) {
-        data = 0;
-        chunk = (_frameBuffer[i] << 8) | _frameBuffer[i + 1];
+    for (i = 0; i < len; i += 2) {
+        output = 0;
+        chunk = (data[i] << 8) | data[i + 1];
         for (j = 0; j < 8; ++j) {
-            data |= LUT_DTM2[(chunk >> (j * 2)) & 0b11] << j;
+            output |= LUT_DTM2[(chunk >> (j * 2)) & 0b11] << j;
         }
-        sendData(data);
+        sendData(output);
     }
+
+    sendCommand(CMD_REFRESH);
+    delay(100);
+    waitUntilIdle();
+    sleep();
+}
+
+void DisplayGDEW075T7::fastClear(bool black)
+{
+    wakeup();
+
+    setLut(CMD_SET_LUTVCOM, LUT_VCOM_FAST_CLEAR);
+    setLut(CMD_SET_LUTWW, black ? LUT_BLACK_FAST_CLEAR : LUT_WHITE_FAST_CLEAR);
+    setLut(CMD_SET_LUTBW, black ? LUT_BLACK_FAST_CLEAR : LUT_WHITE_FAST_CLEAR);
+    setLut(CMD_SET_LUTWB, black ? LUT_BLACK_FAST_CLEAR : LUT_WHITE_FAST_CLEAR);
+    setLut(CMD_SET_LUTBB, black ? LUT_BLACK_FAST_CLEAR : LUT_WHITE_FAST_CLEAR);
+    setLut(CMD_SET_LUTBD, black ? LUT_BLACK_FAST_CLEAR : LUT_WHITE_FAST_CLEAR);
 
     sendCommand(CMD_REFRESH);
     delay(100);
@@ -392,362 +442,4 @@ void DisplayGDEW075T7::sleep()
     sendData(CHK_DEEPSLEEP);
     digitalWrite(_csPin, HIGH);
     digitalWrite(_pwrPin, LOW);
-}
-
-void DisplayGDEW075T7::clear(Color color)
-{
-    memset(_frameBuffer, (color << 6) | (color << 4) | (color << 2) | color, FRAMEBUFFER_LENGTH);
-}
-
-void DisplayGDEW075T7::test()
-{
-    memset(
-        _frameBuffer,
-        (BLACK << 6) | (BLACK << 4) | (BLACK << 2) | BLACK,
-        FRAMEBUFFER_LENGTH / 4
-    );
-    memset(
-        &_frameBuffer[FRAMEBUFFER_LENGTH / 4],
-        (DGREY << 6) | (DGREY << 4) | (DGREY << 2) | DGREY,
-        FRAMEBUFFER_LENGTH / 4
-    );
-    memset(
-        &_frameBuffer[FRAMEBUFFER_LENGTH / 2],
-        (LGREY << 6) | (LGREY << 4) | (LGREY << 2) | LGREY,
-        FRAMEBUFFER_LENGTH / 4
-    );
-    memset(
-        &_frameBuffer[FRAMEBUFFER_LENGTH * 3 / 4],
-        (WHITE << 6) | (WHITE << 4) | (WHITE << 2) | WHITE,
-        FRAMEBUFFER_LENGTH / 4
-    );
-}
-
-size_t DisplayGDEW075T7::getPixelIndex(int32_t x, int32_t y)
-{
-    if (x < 0 || x >= _width || y < 0 || y >= _height) {
-        return SIZE_MAX;
-    }
-    switch (_rotation) {
-        case ROTATION_90:
-            std::swap(x, y);
-            x = NATIVE_WIDTH - 1 - x;
-            break;
-        case ROTATION_180:
-            x = NATIVE_WIDTH - 1 - x;
-            y = NATIVE_HEIGHT - 1 - y;
-            break;
-        case ROTATION_270:
-            std::swap(x, y);
-            y = NATIVE_HEIGHT - 1 - y;
-            break;
-        default:
-            break;
-    }
-    return NATIVE_WIDTH * y + x;
-}
-
-uint8_t DisplayGDEW075T7::getPx(int32_t x, int32_t y)
-{
-    const size_t i = getPixelIndex(x, y);
-    if (i != SIZE_MAX) {
-        return (_frameBuffer[i / 4] >> ((3 - i % 4) * 2)) & 0b11;
-    } else {
-        return 0;
-    }
-}
-
-void DisplayGDEW075T7::setPx(int32_t x, int32_t y, Color color)
-{
-    const size_t i = getPixelIndex(x, y);
-    if (i != SIZE_MAX) {
-        uint8_t *fb = &_frameBuffer[i / 4];
-        const uint8_t shift = (3 - i % 4) * 2;
-        *fb &= ~(0b11 << shift);
-        *fb |= (color & 0b11) << shift;
-    }
-}
-
-void DisplayGDEW075T7::drawImage(const Image &image, int32_t x, int32_t y, Align align)
-{
-    ImageReader reader = ImageReader(image);
-    adjustAlignment(&x, &y, image.width, image.height, align);
-
-    Color color;
-    uint32_t y_dst;
-
-    for (uint32_t y_src = 0; y_src < image.height; ++y_src) {
-        y_dst = y + y_src;
-        for (uint32_t x_src = 0; x_src < image.width; ++x_src) {
-            color = static_cast<Color>(reader.next());    
-            if (color != _alpha) {
-                setPx(x + x_src, y_dst, color);
-            }
-        }
-    }
-}
-
-uint32_t DisplayGDEW075T7::measureText(String str, const Font &font, int32_t tracking)
-{
-    if (str.length() == 0) {
-        return 0;
-    }
-
-    uint32_t length = 0;
-    Utf8Iterator it = Utf8Iterator(str);
-    uint16_t cp;
-    while ((cp = it.next())) {
-        if (isSpaceCodePoint(cp)) {
-            length += font.spaceWidth + tracking;
-        } else {
-            const FontGlyph glyph = font.getGlyph(cp);
-            length += glyph.width + glyph.left + tracking;
-        }
-    }
-    return length - tracking;
-}
-
-std::vector<String> DisplayGDEW075T7::wordWrap(String str, const Font &font, uint32_t maxLineLength, int32_t tracking)
-{
-    std::vector<String> lines;
-
-    if (str.length() == 0) {
-        return lines;
-    }
-
-    unsigned int lineStart = 0, safeLineEnd = 0;
-    uint32_t length = 0, safeLength = 0;
-    Utf8Iterator it = Utf8Iterator(str);
-    uint16_t cp;
-
-    while ((cp = it.next())) {
-        if (isNewlineCodePoint(cp)) {
-            if (maxLineLength > 0 && length > maxLineLength + tracking) {
-                // Wrap at the last word too
-                lines.push_back(str.substring(lineStart, safeLineEnd - 1));
-                lineStart = safeLineEnd;
-            }
-            // Wrap here
-            lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
-            lineStart = safeLineEnd = it.getCurrentPosition();
-            length = safeLength = 0;
-        } else if (isSpaceCodePoint(cp)) {
-            if (maxLineLength > 0 && length > maxLineLength + tracking) {
-                if (safeLineEnd == lineStart) {
-                    // Line cannot be word wrapped, so wrap at current position
-                    lines.push_back(str.substring(lineStart, it.getCurrentPosition() - 1));
-                    lineStart = it.getCurrentPosition();
-                    length = 0;
-                } else {
-                    // Wrap at last word
-                    lines.push_back(str.substring(lineStart, safeLineEnd - 1));
-                    lineStart = safeLineEnd;
-                    length -= safeLength;
-                }
-            } else {
-                length += font.spaceWidth + tracking;
-            }
-            safeLineEnd = it.getCurrentPosition();
-            safeLength = length;
-        } else {
-            const FontGlyph glyph = font.getGlyph(cp);
-            length += glyph.width + glyph.left + tracking;
-        }
-    }
-    if (lineStart < str.length()) {
-        lines.push_back(str.substring(lineStart));
-    }
-    return lines;
-}
-
-void DisplayGDEW075T7::drawText(String str, const Font &font, int32_t x, int32_t y, Align align, int32_t tracking)
-{
-    if (align != TOP_LEFT) {
-        uint32_t width;
-        // Measurement isn't needed and width isn't used by adjustAligment if horizontal alignment is left
-        if (!(align & _ALIGN_LEFT)) {
-            width = measureText(str, font);
-        }
-        adjustAlignment(&x, &y, width, font.ascent + font.descent, align);
-    }
-    Utf8Iterator it = Utf8Iterator(str);
-    uint16_t cp;
-    while ((cp = it.next())) {
-        if (isSpaceCodePoint(cp)) {
-            x += font.spaceWidth + tracking;
-        } else {
-            const FontGlyph glyph = font.getGlyph(cp);
-            x += glyph.left;
-            drawImage(glyph, x, y + glyph.top);
-            x += glyph.width + tracking;
-        }
-    }
-}
-
-void DisplayGDEW075T7::drawMultilineText(
-    String str,
-    const Font &font,
-    int32_t x,
-    int32_t y,
-    uint32_t maxLineLength,
-    Align align,
-    int32_t tracking,
-    int32_t leading
-) {
-    // This implementation is simple because it assumes justification equals the horizontal alignment,
-    // and that's all I needed it to do.
-    leading += font.ascent + font.descent;
-    std::vector<String> lines = wordWrap(str, font, maxLineLength, tracking);
-
-    if (!(align & _ALIGN_TOP)) {
-        adjustAlignment(&x, &y, 0, leading * lines.size(), align);
-    }
-
-    // Use top alignment for each line since that axis has already been adjusted for the whole block
-    align = (Align)(align & ~_ALIGN_BOTTOM & ~_ALIGN_VCENTER | _ALIGN_TOP);
-    for (String str : lines) {
-        drawText(str, font, x, y, align, tracking);
-        y += leading;
-    }
-}
-
-void DisplayGDEW075T7::drawQrCode(qrcodegen::QrCode qrcode, int32_t x, int32_t y, int32_t scale, Align align)
-{
-    const int32_t size = qrcode.getSize() * scale;
-    adjustAlignment(&x, &y, size, size, align);
-
-    DisplayGDEW075T7::Color color;
-    int32_t y2;
-    for(int y1 = 0; y1 < size; ++y1) {
-        y2 = y1 / scale;
-        for (int x1 = 0; x1 < size; ++x1) {
-            setPx(x + x1, y + y1, qrcode.getModule(x1 / scale, y2) ? BLACK : WHITE);
-        }
-    }
-}
-
-void DisplayGDEW075T7::drawHLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align)
-{
-    if (length < 0) {
-        x += length;
-        length = -length;
-    }
-    adjustAlignment(&x, &y, length, thickness, align);
-    const int32_t ymax = y + thickness;
-    int32_t i, y1;
-    for (i = 0; i < length; ++i) {
-        for (y1 = y; y1 < ymax; ++y1) {
-            setPx(x + i, y1, color);
-        }
-    }
-}
-
-void DisplayGDEW075T7::drawVLine(int32_t x, int32_t y, int32_t length, uint32_t thickness, Color color, Align align)
-{
-    if (length < 0) {
-        y += length;
-        length = -length;
-    }
-    adjustAlignment(&x, &y, thickness, length, align);
-    const int32_t xmax = x + thickness;
-    int32_t i, x1;
-    for (i = 0; i < length; ++i) {
-        for (x1 = x; x1 < xmax; ++x1) {
-            setPx(x1, y + i, color);
-        }
-    }
-}
-
-void DisplayGDEW075T7::fillRect(int32_t x, int32_t y, int32_t width, int32_t height, Color color, Align align)
-{
-    if (width < 0) {
-        x += width;
-        width = -width;
-    }
-    if (height < 0) {
-        y += height;
-        height = -height;
-    }
-    adjustAlignment(&x, &y, width, height, align);
-    int32_t x2 = x + width, y2 = y + height;
-    for (int xi = x; xi < x2; ++xi) {
-        for (int yi = y; yi < y2; ++yi) {
-            setPx(xi, yi, color);
-        }
-    }
-}
-
-void DisplayGDEW075T7::strokeRect(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t strokeWidth, Color color, bool strokeOutside, Align align)
-{
-    if (width < 0) {
-        x += width;
-        width = -width;
-    }
-    if (height < 0) {
-        y += height;
-        height = -height;
-    }
-    adjustAlignment(&x, &y, width, height, align);
-    if (strokeOutside) {
-        x -= strokeWidth;
-        y -= strokeWidth;
-        width += strokeWidth * 2;
-        height += strokeWidth * 2;
-    }
-    drawHLine(x, y, width, strokeWidth, color, TOP_LEFT);
-    drawVLine(x, y, height, strokeWidth, color, TOP_LEFT);
-    drawHLine(x, y + height, width, strokeWidth, color, BOTTOM_LEFT);
-    drawVLine(x + width, y, height, strokeWidth, color, TOP_RIGHT);
-}
-
-void DisplayGDEW075T7::adjustAlignment(int32_t *x, int32_t *y, int32_t width, int32_t height, Align align)
-{
-    if (align & _ALIGN_HCENTER) {
-        *x -= width / 2;
-    } else if (align & _ALIGN_RIGHT) {
-        *x -= width;
-    }
-
-    if (align & _ALIGN_VCENTER) {
-        *y -= height / 2;
-    } else if (align & _ALIGN_BOTTOM) {
-        *y -= height;
-    }
-}
-
-uint32_t DisplayGDEW075T7::getWidth()
-{
-    return _width;
-}
-
-uint32_t DisplayGDEW075T7::getHeight()
-{
-    return _height;
-}
-
-DisplayGDEW075T7::Rotation DisplayGDEW075T7::getRotation()
-{
-    return _rotation;
-}
-
-void DisplayGDEW075T7::setRotation(Rotation rotation)
-{
-    _rotation = rotation;
-    if (rotation == ROTATION_0 || rotation == ROTATION_180) {
-        _width = NATIVE_WIDTH;
-        _height = NATIVE_HEIGHT;
-    } else {
-        _width = NATIVE_HEIGHT;
-        _height = NATIVE_WIDTH;
-    }
-}
-
-uint8_t DisplayGDEW075T7::getAlpha()
-{
-    return _alpha;
-}
-
-void DisplayGDEW075T7::setAlpha(uint8_t alpha)
-{
-    _alpha = alpha;
 }

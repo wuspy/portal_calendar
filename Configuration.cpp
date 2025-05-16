@@ -70,6 +70,8 @@ void ConfigurationClass::reset()
 
 void ConfigurationClass::runConfigServer(std::function<void(void)> onSettingsSaved)
 {
+    Display.fastClear(true);
+
     const String hostname = getHostname();
     log_i("Starting configuration server with hostname %s", hostname.c_str());
     WiFi.setHostname(hostname.c_str());
@@ -540,6 +542,7 @@ void ConfigurationClass::runConfigServer(std::function<void(void)> onSettingsSav
     WiFi.mode(WIFI_OFF);
 
     log_i("Webserver has stopped, restarting");
+    Display.fastClear();
     esp_deep_sleep(0); // Use this instead of esp_restart to avoid clearing RTC memory
 }
 
