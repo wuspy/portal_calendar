@@ -9,7 +9,7 @@
 #include "resources/font/chamber_number.h"
 
 #include "resources/aperture_logo.h"
-#include "resources/wifi_64px.h"
+#include "resources/wifi_48px.h"
 #include "resources/error.h"
 
 #include "resources/font/weather_frame.h"
@@ -605,10 +605,15 @@ void DisplayClass::fastClear(bool black)
 
 void DisplayClass::showConfigServerScreen(String ssid, String password, String hostname, String connectedWifiName)
 {
-    const int32_t QR_SCALE = 7;
-    char str[120];
-    sprintf(&str[0], "WIFI:T:WPA;S:%s;P:%s;;", ssid.c_str(), password.c_str());
-    QrCode qrCode = QrCode::encodeText(&str[0], QrCode::Ecc::ECC_HIGH);
+    const int32_t QR_SCALE = 6;
+    const int32_t QR_TOP = 75;
+    const int QR_MARGIN = 20;
+    const int QR_BORDER = 32;
+
+    char *str = new char[120];
+    sprintf(str, "WIFI:T:WPA;S:%s;P:%s;;", ssid.c_str(), password.c_str());
+    QrCode qrCode = QrCode::encodeText(str, QrCode::Ecc::ECC_HIGH);
+    delete[] str;
 
     initDisplay();
     initFrameBuffer();
@@ -616,21 +621,83 @@ void DisplayClass::showConfigServerScreen(String ssid, String password, String h
     drawStandardSeparators();
     drawApertureLogo();
 
-    _frameBuffer->drawQrCode(qrCode, LEFT, 75, QR_SCALE);
-    const uint32_t qrX = LEFT + qrCode.getSize() * QR_SCALE / 2;
-    const uint32_t qrY = 75 + qrCode.getSize() * QR_SCALE / 2;
-    _frameBuffer->fillRect(qrX, qrY, 77, 77, FrameBuffer::WHITE, FrameBuffer::CENTER);
-    _frameBuffer->drawImage(IMG_WIFI_64PX, qrX, qrY, FrameBuffer::CENTER);
+    // Top left QR border
+    _frameBuffer->drawHLine(LEFT, QR_TOP, QR_BORDER, 2, FrameBuffer::BLACK, FrameBuffer::TOP_LEFT);
+    _frameBuffer->drawVLine(LEFT, QR_TOP, QR_BORDER, 2, FrameBuffer::BLACK, FrameBuffer::TOP_LEFT);
+
+    // Top right QR border
+    _frameBuffer->drawHLine(
+        LEFT + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_TOP,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::TOP_RIGHT
+    );
+    _frameBuffer->drawVLine(
+        LEFT + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_TOP,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::TOP_RIGHT
+    );
+
+    // Bottom left QR border
+    _frameBuffer->drawHLine(
+        LEFT,
+        QR_TOP + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::BOTTOM_LEFT
+    );
+    _frameBuffer->drawVLine(
+        LEFT,
+        QR_TOP + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::BOTTOM_LEFT
+    );
+
+    // Bottom right QR border
+    _frameBuffer->drawHLine(
+        LEFT + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_TOP + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::BOTTOM_RIGHT
+    );
+    _frameBuffer->drawVLine(
+        LEFT + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_TOP + qrCode.getSize() * QR_SCALE + QR_MARGIN * 2,
+        QR_BORDER,
+        2,
+        FrameBuffer::BLACK,
+        FrameBuffer::BOTTOM_RIGHT
+    );
+
+    // QR Code
+    _frameBuffer->drawQrCode(qrCode, LEFT + QR_MARGIN, QR_TOP + QR_MARGIN, QR_SCALE);
+    const uint32_t qrX = LEFT + QR_MARGIN + (qrCode.getSize() * QR_SCALE / 2);
+    const uint32_t qrY = QR_TOP + QR_MARGIN + (qrCode.getSize() * QR_SCALE / 2);
+    _frameBuffer->fillRect(qrX, qrY, 66, 66, FrameBuffer::WHITE, FrameBuffer::CENTER);
+    _frameBuffer->drawImage(IMG_WIFI_48PX, qrX, qrY, FrameBuffer::CENTER);
+
+    // WiFi name/padssword
     _frameBuffer->drawMultilineText(
         "Wi-Fi Name: " + ssid + "\n"
         "Password: " + password,
         FONT_SMALL,
         qrX,
-        75 + qrCode.getSize() * QR_SCALE + 12,
+        QR_MARGIN * 3 + QR_TOP + qrCode.getSize() * QR_SCALE,
         0,
         FrameBuffer::TOP_CENTER
     );
 
+    // Instructions
     _frameBuffer->drawText("SETUP", FONT_MEDIUM, LEFT, 502);
     _frameBuffer->drawMultilineText(
         connectedWifiName.isEmpty()
