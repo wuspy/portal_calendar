@@ -153,6 +153,26 @@ const Locale LOCALES[] = {
         .days = {"SÖNDAG", "MÅNDAG", "TISDAG", "ONSDAG", "TORSDAG", "FREDAG", "LÖRDAG"},
         .dayAbbreviations = {"SÖN", "MÅN", "TIS", "ONS", "TORS", "FRE", "LÖR"},
     },
+    {
+        .code = "pt",
+        .name = "Português",
+        .months = {
+          "JANEIRO",
+          "FEVEREIRO",
+          "MARÇO",
+          "ABRIL",
+          "MAIO",
+          "JUNHO",
+          "JULHO",
+          "AGOSTO",
+          "SETEMBRO",
+          "OUTUBRO",
+          "NOVEMBRO",
+          "DEZEMBRO",
+        },
+        .days = {"DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"},
+        .dayAbbreviations = {"DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"},
+    },
 };
 
 const Locale getLocale(String code);
