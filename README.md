@@ -178,6 +178,10 @@ The build_font.py script will take in TrueType or OpenType fonts and output a bi
 
 # Changelog
 
+### 9/14/2025
+
+* Add Portuguese localization
+
 ### 5/25/2025
 
 * Add frame around start screen QR code

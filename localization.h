@@ -134,26 +134,6 @@ const Locale LOCALES[] = {
         .dayAbbreviations = {"ZO", "MA", "DI", "WO", "DO", "VR", "ZA"},
     },
     {
-        .code = "sv",
-        .name = "Svenska",
-        .months = {
-            "JANUARI",
-            "FEBRUARI",
-            "MARS",
-            "APRIL",
-            "MAJ",
-            "JUNI",
-            "JULI",
-            "AUGUSTI",
-            "SEPTEMBER",
-            "OKTOBER",
-            "NOVEMBER",
-            "DECEMBER",
-        },
-        .days = {"SÖNDAG", "MÅNDAG", "TISDAG", "ONSDAG", "TORSDAG", "FREDAG", "LÖRDAG"},
-        .dayAbbreviations = {"SÖN", "MÅN", "TIS", "ONS", "TORS", "FRE", "LÖR"},
-    },
-    {
         .code = "pt",
         .name = "Português",
         .months = {
@@ -173,6 +153,26 @@ const Locale LOCALES[] = {
         .days = {"DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"},
         .dayAbbreviations = {"DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"},
     },
+    {
+        .code = "sv",
+        .name = "Svenska",
+        .months = {
+            "JANUARI",
+            "FEBRUARI",
+            "MARS",
+            "APRIL",
+            "MAJ",
+            "JUNI",
+            "JULI",
+            "AUGUSTI",
+            "SEPTEMBER",
+            "OKTOBER",
+            "NOVEMBER",
+            "DECEMBER",
+        },
+        .days = {"SÖNDAG", "MÅNDAG", "TISDAG", "ONSDAG", "TORSDAG", "FREDAG", "LÖRDAG"},
+        .dayAbbreviations = {"SÖN", "MÅN", "TIS", "ONS", "TORS", "FRE", "LÖR"},
+    }
 };
 
 const Locale getLocale(String code);
