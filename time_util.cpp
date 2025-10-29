@@ -108,7 +108,7 @@ void advanceDay(int& month, int& mday, int& year)
 
 TimezonedResult getPosixTz(std::initializer_list<const String> servers, const String name, String &result)
 {
-    uint16_t i = TIMEZONED_LOCAL_PORT_START;
+    uint16_t i = 0;
     for (String server : servers) {
         if (server.isEmpty()) {
             continue;
@@ -170,7 +170,7 @@ TimezonedResult getPosixTz(std::initializer_list<const String> servers, const St
  */
 bool syncNtp(std::initializer_list<const String> servers, bool test)
 {
-    uint16_t i = NTP_LOCAL_PORT_START;
+    uint16_t i = 0;
     for (String server : servers) {
         if (server.isEmpty()) {
             continue;
